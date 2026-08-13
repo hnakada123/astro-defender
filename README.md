@@ -1,5 +1,7 @@
 # ASTRO DEFENDER — NEON ARCADE EDITION
 
+**▶ 今すぐプレイ: <https://hnakada123.github.io/astro-defender/>**
+
 ブラウザだけで遊べる、マウス操作のネオレトロ風固定画面シューティングゲームです。
 外部ライブラリ・外部素材は一切使わず、`index.html` 1 ファイルで完結しています。
 
