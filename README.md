@@ -14,6 +14,13 @@
 | :---: | :---: |
 | ![タイトル画面](screenshots/title.png) | ![プレイ画面](screenshots/gameplay.png) |
 
+## 使用技術
+
+- **HTML / CSS / JavaScript**（Vanilla JS。フレームワーク・外部ライブラリ・ビルドツール不使用）
+- 描画: **Canvas 2D API**（ドット絵スプライトは実行時にコードから生成）
+- サウンド: **Web Audio API**（効果音・BGM をリアルタイム合成、音源ファイルなし）
+- ハイスコア保存: **localStorage**
+
 ## 起動方法
 
 `index.html` をブラウザ（Chrome / Firefox / Edge など）で開くだけで遊べます。
