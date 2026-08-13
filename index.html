@@ -9,13 +9,14 @@
   html, body { height: 100%; }
   body {
     background: radial-gradient(1200px 800px at 50% -200px, #131a3d, #05060f);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    display: flex; flex-direction: column; align-items: center;
     gap: 10px; font-family: ui-monospace, 'Courier New', monospace; color: #9fb4ff;
   }
   .frame {
     position: relative; line-height: 0; border: 2px solid #33408a; border-radius: 12px;
     padding: 8px; background: #020308;
     box-shadow: 0 0 44px rgba(96,158,255,.30), 0 0 120px rgba(255,46,136,.12), inset 0 0 30px rgba(0,0,0,.8);
+    margin-top: auto; /* justify-content:center だとビューポートより高い時に上端が見切れるため */
   }
   canvas {
     width: min(72vh, 92vw); aspect-ratio: 3 / 4;
