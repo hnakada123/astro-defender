@@ -19,7 +19,7 @@
     margin-top: auto; /* justify-content:center だとビューポートより高い時に上端が見切れるため */
   }
   canvas {
-    width: min(72vh, 92vw); aspect-ratio: 3 / 4;
+    width: min(92vw, max(240px, calc(75dvh - 150px))); aspect-ratio: 3 / 4;
     image-rendering: pixelated; background: #04050c; border-radius: 6px;
     touch-action: none; user-select: none;
   }
@@ -31,12 +31,22 @@
       radial-gradient(ellipse at center, transparent 55%, rgba(0,0,10,.35));
   }
   .hint { font-size: 12px; letter-spacing: .08em; opacity: .75; line-height: 1.7; text-align: center; }
+  .actions { display: flex; gap: 10px; padding: 0 12px; }
+  .actions button { border: 1px solid #c5a3ff; border-radius: 7px; padding: 9px 14px; background: #15152f; color: #e4d8ff; font: bold 12px ui-monospace, monospace; cursor: pointer; touch-action: manipulation; }
+  .actions button:disabled { opacity: .45; cursor: default; }
+  .actions button:focus-visible { outline: 2px solid #ffe066; outline-offset: 3px; }
+  .hint { max-width: 760px; padding: 0 10px 10px; }
 </style>
 </head>
 <body>
 <div class="frame"><canvas id="game" width="480" height="640"></canvas></div>
+<div class="actions">
+  <button id="laserButton" type="button" disabled>Z 合体レーザー 0%</button>
+  <button id="bombButton" type="button" disabled>X ボム ×2</button>
+</div>
 <p class="hint">マウス移動: 自機を操作 ／ クリック（長押しで連射）: ショット ／ 落ちてくるカプセルでパワーアップ<br>
 W: 3方向ショット　R: 連射強化　S: シールド　B: ビーム砲連結（最大4門）<br>
+Z / 右クリック: 合体レーザー　X: ボム　強化選択: 1・2・3 / クリック<br>
 P: ポーズ ／ M: サウンド切替 ／ ← → ＋ スペースでも操作可</p>
 
 <script>
@@ -47,6 +57,8 @@ P: ポーズ ／ M: サウンド切替 ／ ← → ＋ スペースでも操作�
 const W = 480, H = 640;
 const cvs = document.getElementById("game");
 const ctx = cvs.getContext("2d");
+const laserButton = document.getElementById("laserButton");
+const bombButton = document.getElementById("bombButton");
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -442,6 +454,15 @@ const LIFE_STEP = 5000;
 const COMBO_WINDOW = 2.2;
 const MULT_COLORS = ["#cfd8ff", "#7df9ff", "#7dff7a", "#ffe066", "#ff9a5c", "#ff6ad5", "#ff4d6d", "#ff2e88"];
 const BEAM_OFFSETS = [-24, 24, -42, 42];
+const LASER_MAX = 100, BOMB_MAX = 3, BOMB_RADIUS = 240;
+const UPGRADE_DEFS = {
+  beam: { name: "ビーム強化", detail: "連結ビームの貫通数・威力と合体レーザーを強化", color: BEAM_COLOR, max: 5 },
+  speed: { name: "エンジン強化", detail: "移動速度 +15% / マウス・キーボード両対応", color: "#61e8ff", max: 5 },
+  magnet: { name: "回収フィールド", detail: "カプセルを引き寄せる範囲を拡大", color: "#7dff7a", max: 5 },
+  repair: { name: "緊急整備", detail: "残機 +1（最大5）/ 満タンなら +1000点", color: "#ff9a5c" },
+  supply: { name: "防衛補給", detail: "ボム +1（最大3）とシールド / +300点", color: "#ffe066" },
+  charge: { name: "エネルギー補給", detail: "合体レーザーを満充電 / +300点", color: "#ff6ad5" },
+};
 
 const PU_DEFS = {
   wide: { label: "W", color: "#61e8ff", dur: 8, name: "3-WAY!" },
@@ -451,7 +472,7 @@ const PU_DEFS = {
 };
 for (const k in PU_DEFS) PU_DEFS[k].glowImg = glowDot(PU_DEFS[k].color, 14);
 
-let state = "title";       // title | play | dying | clear | gameover
+let state = "title";       // title | play | dying | clear | upgrade | gameover
 let stateT = 0;
 let paused = false;
 
@@ -472,6 +493,10 @@ let saucer = null, saucerT = 15;
 let barriers = [], particles = [], popups = [], rings = [], powerups = [];
 const combo = { n: 0, t: 0, mult: 1 };
 const active = { wide: 0, rapid: 0, shield: 0, beam: 0 };
+const upgrades = { beam: 0, speed: 0, magnet: 0 };
+const special = { charge: 0, laserT: 0, laserW: 0, laserDps: 0, bombs: 2, bombT: 0 };
+let boss = null, flightT = 6, flightCount = 0;
+let upgradeChoices = [], upgradeIndex = 0;
 let shake = 0;
 
 const starLayers = [0, 1, 2].map(l => Array.from({ length: [36, 26, 14][l] }, () => ({
@@ -488,6 +513,7 @@ function setState(s) {
 
 function setPaused(v) {
   paused = v;
+  if (paused) releaseControls();
   cvs.style.cursor = (state === "play" && !paused) ? "none" : "pointer";
   if (paused) { saucerSoundStop(); musicStop(); }
   else {
@@ -506,6 +532,7 @@ function clampPlayerX(x) {
 
 function alienRect(a) {
   const t = TYPES[a.type];
+  if (a.flight) return { x: a.flight.x, y: a.flight.y, w: t.w, h: t.h };
   return {
     x: form.ox + a.c * CELL_W + (CELL_W - t.w) / 2,
     y: form.oy + a.r * CELL_H,
@@ -536,10 +563,14 @@ function makeBarriers() {
 
 function makeWave() {
   aliens = [];
-  for (let r = 0; r < ROWS; r++)
-    for (let c = 0; c < COLS; c++)
-      aliens.push({ r, c, type: ROW_TYPE[r], alive: true });
-  aliveN = TOTAL;
+  boss = null;
+  if (wave % 5 === 0) makeBoss();
+  else {
+    for (let r = 0; r < ROWS; r++)
+      for (let c = 0; c < COLS; c++)
+        aliens.push({ r, c, type: ROW_TYPE[r], alive: true });
+  }
+  aliveN = aliens.length;
   form.ox = 60;
   form.oy = 96 + Math.min(wave - 1, 5) * 10;
   form.dir = 1; form.anim = 0; form.animT = 0;
@@ -548,6 +579,8 @@ function makeWave() {
   fireT = 1.5; bannerT = 1.3; freezeT = 0;
   waveNoDamage = true; perfectBonus = 0;
   player.alive = true; player.inv = 1.5; player.cool = 0;
+  special.laserT = 0; special.bombT = 0;
+  flightT = 6; flightCount = 0; upgradeChoices = [];
   makeBarriers();
 }
 
@@ -555,6 +588,9 @@ function startGame() {
   score = 0; scoreShown = 0; wave = 1; lives = 3; nextLife = LIFE_STEP;
   newRecord = false; maxMult = 1;
   active.wide = 0; active.rapid = 0; active.shield = 0; active.beam = 0;
+  upgrades.beam = 0; upgrades.speed = 0; upgrades.magnet = 0;
+  special.charge = 0; special.bombs = 2;
+  paused = false; releaseControls();
   resetCombo();
   makeWave();
   setState("play");
@@ -565,7 +601,7 @@ function saveHi() { try { localStorage.setItem(HI_KEY, String(hi)); } catch (e) 
 function addScore(n) {
   score += n;
   if (score > hi) { hi = score; newRecord = true; }
-  if (score >= nextLife) {
+  while (score >= nextLife) {
     nextLife += LIFE_STEP;
     if (lives < 5) {
       lives++;
@@ -577,6 +613,7 @@ function addScore(n) {
 
 function gameOver() {
   player.alive = false;
+  special.laserT = 0; releaseControls();
   saucerSoundStop();
   saveHi();
   sfx.over();
@@ -620,6 +657,212 @@ function applyPU(type) {
   sfx.pickup();
 }
 
+/* ================= 必殺技・ウェーブ強化 ================= */
+
+function gainCharge(n) {
+  if (special.laserT > 0) return; // レーザー自身の撃破では再充電しない。
+  const before = special.charge;
+  special.charge = Math.min(LASER_MAX, special.charge + n);
+  if (before < LASER_MAX && special.charge === LASER_MAX) {
+    popup(W / 2, PLAYER_Y - 60, "LASER READY! [Z]", BEAM_COLOR, 16);
+    sfx.pickup();
+  }
+}
+
+function canUseSpecial() { return state === "play" && !paused && player.alive && bannerT <= 0; }
+
+function activateLaser() {
+  if (!canUseSpecial() || special.charge < LASER_MAX || special.laserT > 0) return false;
+  special.charge = 0;
+  special.laserT = 1.2;
+  special.laserW = 14 + active.beam * 10 + upgrades.beam * 3;
+  special.laserDps = 20 + active.beam * 8 + upgrades.beam * 4;
+  shake = 0.18;
+  beep({ f0: 180, f1: 1800, dur: 0.7, type: "sawtooth", vol: 0.1 });
+  return true;
+}
+
+function activateBomb() {
+  if (!canUseSpecial() || special.bombs <= 0 || special.bombT > 0) return false;
+  special.bombs--; special.bombT = 0.65;
+  player.inv = Math.max(player.inv, 1.6);
+  eBullets = [];
+  spawnRing(player.x, PLAYER_Y, "#ffe066", BOMB_RADIUS / 0.65, 0.65);
+  shake = 0.35; boom(0.55, 0.3, 800);
+  for (const a of aliens) {
+    if (!a.alive) continue;
+    const r = alienRect(a);
+    if (Math.hypot(r.x + r.w / 2 - player.x, r.y + r.h / 2 - PLAYER_Y) <= BOMB_RADIUS) killAlien(a, r);
+  }
+  if (boss) {
+    boss.warning = 0; boss.laserT = 0; boss.attackT = 2.5;
+    for (const part of boss.parts) damageBossPart(part, 10, "bomb");
+  }
+  return true;
+}
+
+function updateLaser(dt) {
+  if (special.laserT <= 0) return;
+  const duration = Math.min(dt, special.laserT);
+  const beam = { x: player.x - special.laserW / 2, y: 58, w: special.laserW, h: PLAYER_Y - 58 };
+  for (const a of aliens) if (a.alive && hit(beam, alienRect(a))) killAlien(a, alienRect(a));
+  eBullets = eBullets.filter(b => !hit(beam, b));
+  if (saucer && hit(beam, saucer)) killSaucer();
+  if (boss) {
+    for (const part of boss.parts) {
+      if (part.hp > 0 && hit(beam, bossPartRect(part))) damageBossPart(part, special.laserDps * duration, "laser");
+    }
+  }
+  special.laserT = Math.max(0, special.laserT - dt);
+}
+
+function openUpgrades() {
+  const pool = Object.keys(UPGRADE_DEFS).filter(k => !UPGRADE_DEFS[k].max || upgrades[k] < UPGRADE_DEFS[k].max);
+  upgradeChoices = [];
+  while (upgradeChoices.length < 3) upgradeChoices.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  upgradeIndex = 0;
+  releaseControls();
+  setState("upgrade");
+}
+
+function chooseUpgrade(index) {
+  if (state !== "upgrade" || paused || !upgradeChoices[index]) return false;
+  const key = upgradeChoices[index];
+  if (key in upgrades) upgrades[key]++;
+  else if (key === "repair") {
+    if (lives < 5) lives++; else addScore(1000);
+  } else if (key === "supply") {
+    special.bombs = Math.min(BOMB_MAX, special.bombs + 1); active.shield = 1; addScore(300);
+  } else if (key === "charge") {
+    special.charge = LASER_MAX; addScore(300);
+  }
+  releaseControls();
+  wave++; makeWave(); setState("play");
+  popup(W / 2, 350, UPGRADE_DEFS[key].name, UPGRADE_DEFS[key].color, 16);
+  sfx.pickup();
+  return true;
+}
+
+function upgradeCardRect(index) { return { x: 34, y: 242 + index * 88, w: W - 68, h: 76 }; }
+
+/* ================= 大型戦艦 ================= */
+
+function makeBoss() {
+  const level = wave / 5;
+  boss = {
+    x: W / 2, y: 112, t: 0, attackT: 2, warning: 0, laserT: 0, targetX: W / 2,
+    parts: [
+      { kind: "gun", offset: -54, hp: 14 + level * 4, max: 14 + level * 4, flash: 0 },
+      { kind: "gun", offset: 54, hp: 14 + level * 4, max: 14 + level * 4, flash: 0 },
+      { kind: "core", offset: 0, hp: 40 + level * 16, max: 40 + level * 16, flash: 0 },
+    ],
+  };
+}
+
+function bossPartRect(part) {
+  return { x: boss.x + part.offset - 14, y: boss.y + 10, w: 28, h: 30 };
+}
+
+function coreExposed() { return boss && boss.parts.slice(0, 2).every(p => p.hp <= 0); }
+
+function damageBossPart(part, amount, source = "shot") {
+  if (!boss || part.hp <= 0 || amount <= 0) return;
+  if (part.kind === "core" && !coreExposed()) return;
+  const r = bossPartRect(part), damage = Math.min(part.hp, amount);
+  part.hp = Math.max(0, part.hp - amount); part.flash = 0.08;
+  if (source === "shot") gainCharge(damage * 1.5);
+  if (part.hp > 0) return;
+  spawnBurst(r.x + 14, r.y + 15, "#ff9a5c", 28, 180);
+  spawnRing(r.x + 14, r.y + 15, "#ffe066", 220, 0.5);
+  addScore(part.kind === "core" ? 1000 + wave * 100 : 200);
+  boom(0.35, 0.2, 700);
+  if (part.kind === "core") {
+    boss = null; eBullets = [];
+    special.bombs = Math.min(BOMB_MAX, special.bombs + 1);
+    popup(W / 2, 205, "BOSS DOWN! / BOMB +1", "#ffe066", 18);
+    shake = 0.45;
+  } else if (coreExposed()) popup(W / 2, 205, "CORE OPEN!", "#ff6ad5", 18);
+}
+
+function hitBoss(rect, damage) {
+  if (!boss) return false;
+  for (const part of boss.parts) {
+    if (part.hp > 0 && hit(rect, bossPartRect(part))) { damageBossPart(part, damage); return true; }
+  }
+  return hit(rect, { x: boss.x - 80, y: boss.y, w: 160, h: 40 });
+}
+
+function updateBoss(dt) {
+  if (!boss || bannerT > 0) return;
+  boss.t += dt;
+  boss.parts.forEach(p => p.flash = Math.max(0, p.flash - dt));
+  if (boss.warning > 0) {
+    boss.warning = Math.max(0, boss.warning - dt);
+    if (boss.warning === 0) {
+      boss.laserT = 0.6;
+      for (const part of boss.parts) {
+        if (part.hp <= 0 || part.kind !== "gun") continue;
+        for (const vx of [-75, 0, 75]) eBullets.push({ x: boss.x + part.offset, y: boss.y + 40, w: 3, h: 9, vx, vy: 180 + Math.min(wave * 3, 90) });
+      }
+      beep({ f0: 300, f1: 80, dur: 0.35, type: "sawtooth", vol: 0.09 });
+    }
+  } else if (boss.laserT > 0) {
+    boss.laserT = Math.max(0, boss.laserT - dt);
+    const danger = { x: boss.targetX - 18, y: boss.y + 40, w: 36, h: GROUND_Y - boss.y - 40 };
+    if (boss.laserT > 0 && player.inv <= 0 && hit(danger, playerRect())) damagePlayer();
+  } else {
+    boss.x = W / 2 + Math.sin(boss.t * 0.65) * 130;
+    boss.attackT -= dt;
+    if (boss.attackT <= 0) {
+      boss.targetX = clamp(player.x, 22, W - 22);
+      boss.warning = 1.1;
+      boss.attackT = coreExposed() ? 1.5 : 2.2;
+      beep({ f0: 740, dur: 0.12, type: "square", vol: 0.07 });
+    }
+  }
+}
+
+/* ================= 編隊からの突入 ================= */
+
+function launchFlight(a, mode) {
+  const r = alienRect(a);
+  a.flight = { x: r.x, y: r.y, startX: r.x, t: 0, warning: 0.65, mode, phase: "exit",
+    vx: clamp((player.x - r.x) * 0.5, -90, 90), side: r.x < W / 2 ? -1 : 1 };
+}
+
+function updateFlights(dt) {
+  if (wave < 2 || boss || bannerT > 0) return;
+  flightT -= dt;
+  if (flightT <= 0) {
+    const candidates = aliens.filter(a => a.alive && !a.flight);
+    if (candidates.length && aliens.filter(a => a.alive && a.flight).length < Math.min(3, 1 + Math.floor(wave / 3))) {
+      launchFlight(candidates[Math.floor(Math.random() * candidates.length)], ["dive", "zigzag", "flank"][flightCount++ % 3]);
+    }
+    flightT = Math.max(2.5, 6 - wave * 0.25);
+  }
+  for (const a of aliens) {
+    if (!a.alive || !a.flight) continue;
+    const f = a.flight;
+    if (f.warning > 0) { f.warning = Math.max(0, f.warning - dt); continue; }
+    f.t += dt;
+    const speed = Math.min(260, 155 + wave * 7);
+    if (f.mode === "flank" && f.phase === "exit") {
+      f.x += f.side * speed * dt;
+      if (f.x < -30 || f.x > W + 30) {
+        f.phase = "attack"; f.y = PLAYER_Y - 160;
+        f.x = f.side < 0 ? -28 : W + 4;
+      }
+    } else {
+      f.y += speed * dt;
+      if (f.mode === "zigzag") f.x = clamp(f.startX + Math.sin(f.t * 5) * 54, 5, W - 29);
+      else f.x += (f.mode === "flank" ? -f.side * speed * 1.5 : f.vx) * dt;
+      if (player.alive && player.inv <= 0 && hit(alienRect(a), playerRect())) damagePlayer();
+      if (f.y > GROUND_Y + 24 || f.x < -60 || f.x > W + 60) a.flight = null;
+    }
+    if (state !== "play") return;
+  }
+}
+
 /* ================= エフェクト ================= */
 
 function spawnBurst(x, y, color, n = 12, sp = 110) {
@@ -647,6 +890,16 @@ function canvasX(e) {
   return ((e.clientX - r.left) * W) / r.width;
 }
 
+function releaseControls() {
+  shooting = false; keys.left = false; keys.right = false; keys.fire = false;
+}
+
+function upgradeAtPointer(e) {
+  const r = cvs.getBoundingClientRect();
+  const point = { x: canvasX(e), y: (e.clientY - r.top) * H / r.height, w: 1, h: 1 };
+  return upgradeChoices.findIndex((_, i) => hit(point, upgradeCardRect(i)));
+}
+
 function handlePress() {
   if (paused) { setPaused(false); return; }
   if (state === "title") startGame();
@@ -654,19 +907,27 @@ function handlePress() {
 }
 
 window.addEventListener("pointermove", e => {
+  if (e.target !== cvs) return;
+  if (state === "upgrade") { const i = upgradeAtPointer(e); if (i >= 0) upgradeIndex = i; return; }
   mouseX = clamp(canvasX(e), 0, W);
   inputMode = "mouse";
 });
 cvs.addEventListener("pointerdown", e => {
   e.preventDefault();
-  ac(); musicStart();
+  ac(); if (!paused) musicStart();
+  if (state === "upgrade") { if (e.button === 0) chooseUpgrade(upgradeAtPointer(e)); return; }
+  if (e.button === 2) { activateLaser(); return; }
+  if (e.button !== 0) return;
   mouseX = clamp(canvasX(e), 0, W);
   inputMode = "mouse";
   handlePress();
   if (state === "play" && !paused) shooting = true;
 });
 window.addEventListener("pointerup", () => { shooting = false; });
+window.addEventListener("pointercancel", releaseControls);
 cvs.addEventListener("contextmenu", e => e.preventDefault());
+laserButton.addEventListener("click", () => { ac(); activateLaser(); });
+bombButton.addEventListener("click", () => { ac(); activateBomb(); });
 
 function toggleMute() {
   muted = !muted;
@@ -680,12 +941,24 @@ function toggleMute() {
 
 window.addEventListener("keydown", e => {
   const k = e.key.toLowerCase();
-  if (k === " " || k === "enter") e.preventDefault();
+  if ([" ", "enter", "arrowleft", "arrowright", "arrowup", "arrowdown"].includes(k)) e.preventDefault();
   if (e.repeat) return;
+  if (state === "upgrade") {
+    if (["1", "2", "3"].includes(k)) chooseUpgrade(Number(k) - 1);
+    else if (k === "arrowup") upgradeIndex = (upgradeIndex + 2) % 3;
+    else if (k === "arrowdown") upgradeIndex = (upgradeIndex + 1) % 3;
+    else if (k === "enter" || k === " ") chooseUpgrade(upgradeIndex);
+    else if (k === "m") toggleMute();
+    return;
+  }
   if (k === "p" || k === "escape") {
     if (state === "play" || state === "dying") setPaused(!paused);
   } else if (k === "m") {
     toggleMute();
+  } else if (k === "z") {
+    activateLaser();
+  } else if (k === "x") {
+    activateBomb();
   } else if (k === " " || k === "enter") {
     ac(); musicStart(); handlePress(); keys.fire = true;
   } else if (k === "arrowleft" || k === "a") {
@@ -769,7 +1042,7 @@ function formSpeed() {
 function formBounds() {
   let min = Infinity, max = -Infinity;
   for (const a of aliens) {
-    if (!a.alive) continue;
+    if (!a.alive || a.flight) continue;
     const r = alienRect(a);
     if (r.x < min) min = r.x;
     if (r.x + r.w > max) max = r.x + r.w;
@@ -778,7 +1051,9 @@ function formBounds() {
 }
 
 function killAlien(a, r) {
+  if (!a.alive) return;
   a.alive = false; aliveN--;
+  gainCharge(6);
   bumpCombo();
   const gain = TYPES[a.type].pts * combo.mult;
   addScore(gain);
@@ -788,6 +1063,18 @@ function killAlien(a, r) {
   maybeDrop(r.x + r.w / 2, r.y + r.h / 2);
   freezeT = 0.025;
   sfx.alien();
+}
+
+function killSaucer() {
+  if (!saucer) return;
+  const pool = [50, 50, 50, 50, 100, 100, 100, 150, 150, 300];
+  const bonus = pool[(Math.random() * pool.length) | 0] * combo.mult;
+  addScore(bonus); gainCharge(15);
+  popup(saucer.x + 16, saucer.y, `${bonus}`, "#ffb454", 14);
+  spawnBurst(saucer.x + 16, saucer.y + 7, "#ffb454", 20, 150);
+  spawnRing(saucer.x + 16, saucer.y + 7, "#ffb454", 220, 0.4);
+  sfx.saucerKill();
+  saucer = null; saucerSoundStop(); saucerT = rand(14, 26);
 }
 
 function hitPlayer() {
@@ -800,6 +1087,7 @@ function hitPlayer() {
   shake = 0.5;
   player.alive = false;
   active.beam = 0;
+  special.laserT = 0;
   eBullets = [];
   shooting = false;
   setState("dying");
@@ -845,7 +1133,7 @@ function updateCommon(dt) {
   shake = Math.max(0, shake - dt * 1.2);
   scoreShown += (score - scoreShown) * Math.min(1, dt * 12);
   if (Math.abs(score - scoreShown) < 1) scoreShown = score;
-  if (state !== "title") {
+  if (state === "play" || state === "dying" || state === "clear") {
     combo.t -= dt;
     if (combo.t <= 0 && combo.n > 0) resetCombo();
   }
@@ -856,12 +1144,16 @@ function updatePlay(dt) {
   bannerT = Math.max(0, bannerT - dt);
 
   // --- 自機 ---
-  if (inputMode === "mouse") player.x = clampPlayerX(mouseX);
-  else player.x = clampPlayerX(player.x + 340 * dt * ((keys.right ? 1 : 0) - (keys.left ? 1 : 0)));
+  const speed = 340 * (1 + upgrades.speed * 0.15);
+  if (inputMode === "mouse") {
+    const target = clampPlayerX(mouseX);
+    player.x = clampPlayerX(player.x + clamp(target - player.x, -speed * dt * 2, speed * dt * 2));
+  } else player.x = clampPlayerX(player.x + speed * dt * ((keys.right ? 1 : 0) - (keys.left ? 1 : 0)));
   player.cool -= dt;
   player.inv = Math.max(0, player.inv - dt);
   active.wide = Math.max(0, active.wide - dt);
   active.rapid = Math.max(0, active.rapid - dt);
+  special.bombT = Math.max(0, special.bombT - dt);
 
   const cd = active.rapid > 0 ? 0.12 : 0.27;
   const maxB = (active.rapid > 0 || active.wide > 0) ? 12 : 3;
@@ -873,7 +1165,7 @@ function updatePlay(dt) {
     if (active.wide > 0) { mk(-70); mk(70); }
     for (let i = 0; i < active.beam; i++) {
       const x = player.x + BEAM_OFFSETS[i];
-      pBullets.push({ x: x - 2, y: PLAYER_Y - 32, w: 4, h: 28, vx: 0, beam: true });
+      pBullets.push({ x: x - 2, y: PLAYER_Y - 32, w: 4, h: 28, vx: 0, beam: true, pierce: 1 + upgrades.beam, damage: 1 + upgrades.beam * 0.5 });
       spawnBurst(x, PLAYER_Y - 4, BEAM_COLOR, 3, 55);
     }
     player.cool = cd;
@@ -891,8 +1183,12 @@ function updatePlay(dt) {
     });
   }
 
+  updateFlights(dt);
+  updateBoss(dt);
+  if (state !== "play") return;
+
   // --- 編隊移動 ---
-  if (aliveN > 0) {
+  if (aliens.some(a => a.alive && !a.flight)) {
     form.ox += form.dir * formSpeed() * dt;
     const b = formBounds();
     if (form.dir > 0 && b.max > W - 8) { form.ox -= b.max - (W - 8); form.dir = -1; form.oy += DROP; }
@@ -910,7 +1206,7 @@ function updatePlay(dt) {
     // 侵入チェック
     const prect = playerRect();
     for (const a of aliens) {
-      if (!a.alive) continue;
+      if (!a.alive || a.flight) continue;
       const r = alienRect(a);
       if (r.y + r.h >= PLAYER_Y + 8 || hit(r, prect)) {
         spawnBurst(prect.x + 13, prect.y + 8, "#c8f7ff", 26, 160);
@@ -931,7 +1227,7 @@ function updatePlay(dt) {
       const bottoms = [];
       for (let c = 0; c < COLS; c++) {
         let low = null;
-        for (const a of aliens) if (a.alive && a.c === c && (!low || a.r > low.r)) low = a;
+        for (const a of aliens) if (a.alive && !a.flight && a.c === c && (!low || a.r > low.r)) low = a;
         if (low) bottoms.push(low);
       }
       if (bottoms.length) {
@@ -967,12 +1263,21 @@ function updatePlay(dt) {
   for (let i = powerups.length - 1; i >= 0; i--) {
     const u = powerups[i];
     u.y += 62 * dt;
+    if (upgrades.magnet > 0) {
+      const dx = player.x - u.x, dy = PLAYER_Y - u.y, distance = Math.hypot(dx, dy);
+      if (distance > 0 && distance < 40 + upgrades.magnet * 35) {
+        const pull = Math.min(distance, 190 * dt);
+        u.x += dx / distance * pull; u.y += dy / distance * pull;
+      }
+    }
     if (u.y > GROUND_Y) { powerups.splice(i, 1); continue; }
     if (player.alive && hit({ x: u.x - 8, y: u.y - 8, w: 16, h: 16 }, prInf)) {
       applyPU(u.type);
       powerups.splice(i, 1);
     }
   }
+
+  updateLaser(dt);
 
   // --- 自弾 ---
   for (let i = pBullets.length - 1; i >= 0; i--) {
@@ -993,21 +1298,19 @@ function updatePlay(dt) {
       }
     }
     if (!dead && saucer && hit(p, saucer)) {
-      const pool = [50, 50, 50, 50, 100, 100, 100, 150, 150, 300];
-      const bonus = pool[(Math.random() * pool.length) | 0] * combo.mult;
-      addScore(bonus);
-      popup(saucer.x + 16, saucer.y, `${bonus}`, "#ffb454", 14);
-      spawnBurst(saucer.x + 16, saucer.y + 7, "#ffb454", 20, 150);
-      spawnRing(saucer.x + 16, saucer.y + 7, "#ffb454", 220, 0.4);
-      sfx.saucerKill();
-      saucer = null; saucerSoundStop(); saucerT = rand(14, 26);
+      killSaucer();
       dead = true;
     }
+    if (!dead && hitBoss(p, p.damage || 1)) dead = true;
     if (!dead) {
       for (const a of aliens) {
         if (!a.alive) continue;
         const r = alienRect(a);
-        if (hit(p, r)) { killAlien(a, r); dead = true; break; }
+        if (hit(p, r)) {
+          killAlien(a, r);
+          p.pierce = (p.pierce || 1) - 1;
+          if (p.pierce <= 0) { dead = true; break; }
+        }
       }
     }
     if (dead) pBullets.splice(i, 1);
@@ -1018,7 +1321,9 @@ function updatePlay(dt) {
   for (let i = eBullets.length - 1; i >= 0; i--) {
     const b = eBullets[i];
     b.y += b.vy * dt;
+    b.x += (b.vx || 0) * dt;
     let dead = false;
+    if (b.x < -20 || b.x > W + 20) dead = true;
     if (b.y + b.h > GROUND_Y) { spawnBurst(b.x + 1, GROUND_Y, "#ffd24d", 5, 60); dead = true; }
     if (!dead && barrierHit(b, 1)) dead = true;
     if (!dead && player.alive && player.inv <= 0 && hit(b, prect)) { dead = true; damagePlayer(); }
@@ -1027,9 +1332,10 @@ function updatePlay(dt) {
   }
 
   // --- ウェーブクリア ---
-  if (aliveN === 0) {
+  if (aliveN === 0 && !boss) {
     saucerSoundStop();
     pBullets = []; eBullets = []; powerups = [];
+    special.laserT = 0; releaseControls();
     if (waveNoDamage) {
       perfectBonus = 500 + wave * 100;
       addScore(perfectBonus);
@@ -1053,7 +1359,7 @@ function update(dt) {
       else gameOver();
     }
   } else if (state === "clear") {
-    if (stateT > 1.6) { wave++; makeWave(); setState("play"); }
+    if (stateT > 1.6) openUpgrades();
   }
 }
 
@@ -1193,6 +1499,13 @@ function drawHud() {
   }
   drawText(`HI ${pad6(hi)}`, W / 2, 20, { size: 12, color: "#8fa0d8" });
   drawText(`WAVE ${String(wave).padStart(2, "0")}`, W - 12, 20, { align: "right", size: 13, color: "#cfd8ff" });
+  const ready = special.charge >= LASER_MAX;
+  drawText("Z LASER", 12, 52, { align: "left", size: 10, color: BEAM_COLOR });
+  ctx.fillStyle = "#252039"; ctx.fillRect(64, 44, 100, 8);
+  ctx.fillStyle = ready ? "#ffffff" : BEAM_COLOR;
+  ctx.fillRect(64, 44, special.charge, 8);
+  drawText(ready ? "READY!" : `${Math.floor(special.charge)}%`, 172, 52, { align: "left", size: 10, color: ready ? "#ffe066" : BEAM_COLOR });
+  drawText(`X BOMB ${special.bombs}/${BOMB_MAX}`, W - 12, 52, { align: "right", size: 11, color: "#ffe066" });
 
   ctx.fillStyle = "#2f9e5f";
   ctx.fillRect(0, GROUND_Y, W, 2);
@@ -1228,6 +1541,100 @@ function drawHud() {
   drawText(muted ? "♪ OFF" : "♪ ON", W - 12, H - 10, { align: "right", size: 11, color: "#5f6fa8" });
 }
 
+function drawBoss(t) {
+  if (!boss) return;
+  if (boss.warning > 0 || boss.laserT > 0) {
+    const x = boss.targetX, y = boss.y + 40;
+    ctx.fillStyle = boss.laserT > 0 ? "#ff4d6dbb" : "#ff4d6d22";
+    ctx.fillRect(x - 18, y, 36, GROUND_Y - y);
+    ctx.strokeStyle = "#ff4d6d"; ctx.lineWidth = 2;
+    ctx.setLineDash(boss.warning > 0 ? [8, 6] : []);
+    ctx.strokeRect(x - 18, y, 36, GROUND_Y - y);
+    ctx.setLineDash([]);
+    if (boss.laserT > 0) {
+      ctx.fillStyle = "#fff0f4"; ctx.fillRect(x - 6, y, 12, GROUND_Y - y);
+    } else {
+      drawText("! DANGER !", clamp(x, 52, W - 52), GROUND_Y - 85, { size: 12, color: "#ff8a9e" });
+      drawText(`${boss.warning.toFixed(1)}s`, clamp(x, 30, W - 30), GROUND_Y - 65, { size: 11, color: "#ffe066" });
+    }
+  }
+  ctx.save();
+  ctx.translate(boss.x, boss.y);
+  ctx.shadowColor = "#ff6ad5"; ctx.shadowBlur = 14;
+  ctx.fillStyle = "#35294c"; ctx.strokeStyle = "#c5a3ff"; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-80, 32); ctx.lineTo(-65, 4); ctx.lineTo(-26, 4); ctx.lineTo(-18, -8);
+  ctx.lineTo(18, -8); ctx.lineTo(26, 4); ctx.lineTo(65, 4); ctx.lineTo(80, 32);
+  ctx.lineTo(62, 40); ctx.lineTo(-62, 40); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.shadowBlur = 0;
+  for (const part of boss.parts) {
+    const x = part.offset;
+    if (part.hp <= 0) {
+      ctx.fillStyle = "#15131d"; ctx.fillRect(x - 12, 12, 24, 26);
+      continue;
+    }
+    const exposed = part.kind !== "core" || coreExposed();
+    ctx.fillStyle = part.flash > 0 ? "#ffffff" : exposed ? "#ff9a5c" : "#6273a1";
+    ctx.fillRect(x - 14, 10, 28, 30);
+    ctx.fillStyle = "#21182d"; ctx.fillRect(x - 9, 14, 18, 16);
+    ctx.fillStyle = exposed ? "#ffe066" : "#91b2e4";
+    if (part.kind === "gun") ctx.fillRect(x - 4, 24, 8, 20);
+    else {
+      ctx.globalAlpha = 0.6 + Math.sin(t * 10) * 0.3;
+      ctx.fillRect(x - 6, 18, 12, 12); ctx.globalAlpha = 1;
+    }
+    ctx.fillStyle = "#191523"; ctx.fillRect(x - 15, 49, 30, 3);
+    ctx.fillStyle = "#ff9a5c"; ctx.fillRect(x - 15, 49, 30 * part.hp / part.max, 3);
+  }
+  ctx.restore();
+  const health = boss.parts.reduce((sum, p) => sum + p.hp, 0);
+  const maxHealth = boss.parts.reduce((sum, p) => sum + p.max, 0);
+  ctx.fillStyle = "#352033"; ctx.fillRect(72, 77, W - 144, 5);
+  ctx.fillStyle = "#ff6ad5"; ctx.fillRect(72, 77, (W - 144) * health / maxHealth, 5);
+  drawText(coreExposed() ? "中央コアを狙え！" : "BOSS / 左右の砲台を破壊せよ", W / 2, 71, { size: 10, color: "#ffb4e8" });
+}
+
+function drawSpecials(t) {
+  if (special.bombT > 0) {
+    ctx.fillStyle = `rgba(255,224,102,${special.bombT * 0.22})`;
+    ctx.fillRect(0, 58, W, GROUND_Y - 58);
+  }
+  if (special.laserT <= 0 || !player.alive) return;
+  const width = special.laserW, x = player.x, top = 58;
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  ctx.shadowColor = BEAM_COLOR; ctx.shadowBlur = 20;
+  ctx.fillStyle = "#b792ff66"; ctx.fillRect(x - width / 2 - 5, top, width + 10, PLAYER_Y - top);
+  ctx.fillStyle = "#d2afffcc"; ctx.fillRect(x - width / 2, top, width, PLAYER_Y - top);
+  ctx.fillStyle = "#ffffff"; ctx.fillRect(x - width * 0.2, top, width * 0.4, PLAYER_Y - top);
+  ctx.strokeStyle = "#e5cdff"; ctx.lineWidth = 3;
+  for (let i = 0; i < active.beam; i++) {
+    ctx.beginPath(); ctx.moveTo(x + BEAM_OFFSETS[i], PLAYER_Y - 4);
+    ctx.lineTo(x, PLAYER_Y - 44); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawUpgrades() {
+  ctx.fillStyle = "rgba(2,3,10,0.94)"; ctx.fillRect(0, 58, W, GROUND_Y - 58);
+  drawText("CHOOSE YOUR UPGRADE", W / 2, 166, { size: 23, color: "#ffe066" });
+  drawText(`WAVE ${wave} CLEAR → ${wave + 1}${(wave + 1) % 5 === 0 ? " / BOSS" : ""}`, W / 2, 192, { size: 12, color: "#9fb4ff" });
+  drawText("1つ選んで出撃 / 強化はミスしても継続", W / 2, 219, { size: 12, color: "#cfd8ff" });
+  upgradeChoices.forEach((key, i) => {
+    const d = UPGRADE_DEFS[key], r = upgradeCardRect(i), selected = i === upgradeIndex;
+    ctx.fillStyle = selected ? "#272039" : "#111527"; ctx.fillRect(r.x, r.y, r.w, r.h);
+    ctx.strokeStyle = selected ? d.color : "#334068"; ctx.lineWidth = selected ? 2 : 1;
+    ctx.strokeRect(r.x, r.y, r.w, r.h);
+    ctx.fillStyle = d.color; ctx.fillRect(r.x + 14, r.y + 16, 24, 24);
+    drawText(String(i + 1), r.x + 26, r.y + 33, { size: 16, color: "#080b16" });
+    drawText(d.name, r.x + 52, r.y + 31, { align: "left", size: 17, color: d.color });
+    if (d.max) drawText(`Lv.${upgrades[key]} → ${upgrades[key] + 1}`, r.x + r.w - 14, r.y + 31, { align: "right", size: 11, color: "#cfd8ff" });
+    drawText(d.detail, r.x + 14, r.y + 58, { align: "left", size: 10, color: "#cfd8ff" });
+  });
+  drawText("クリック / 1・2・3 / ↑↓ + Enter", W / 2, 533, { size: 12, color: "#ffe066" });
+  drawText(`強化Lv.  ビーム ${upgrades.beam}  速度 ${upgrades.speed}  回収 ${upgrades.magnet}`, W / 2, 561, { size: 11, color: "#9fb4ff" });
+}
+
 function drawGame(t) {
   drawBarriers();
   drawGlowPass(t);
@@ -1236,7 +1643,15 @@ function drawGame(t) {
     if (!a.alive) continue;
     const ty = TYPES[a.type], r = alienRect(a);
     ctx.drawImage(ty.img[form.anim], r.x, r.y);
+    if (a.flight) {
+      const warn = a.flight.warning > 0;
+      ctx.strokeStyle = warn ? "#ffe066" : "#ff9a5c"; ctx.lineWidth = 1;
+      ctx.strokeRect(r.x - 3, r.y - 3, r.w + 6, r.h + 6);
+      if (warn) drawText("!", r.x + r.w / 2, r.y - 8, { size: 16, color: "#ffe066" });
+    }
   }
+
+  drawBoss(t);
 
   if (saucer) ctx.drawImage(SAUCER_IMG, saucer.x, saucer.y);
 
@@ -1261,6 +1676,7 @@ function drawGame(t) {
   }
 
   for (const u of powerups) drawCapsule(u, t);
+  drawSpecials(t);
 
   if (player.alive && !(player.inv > 0 && Math.floor(t * 12) % 2 === 0)) {
     ctx.strokeStyle = BEAM_COLOR;
@@ -1289,7 +1705,7 @@ function drawGame(t) {
     const p = 1 - bannerT / 1.3;
     const size = 30 + 26 * Math.max(0, 1 - p * 4);
     ctx.globalAlpha = Math.min(1, bannerT * 2) * Math.min(1, p * 6 + 0.2);
-    drawText(`WAVE ${wave}`, W / 2, 300, { size, color: "#ffe066", weight: 900 });
+    drawText(boss ? `BOSS WAVE ${wave}` : `WAVE ${wave}`, W / 2, 300, { size: boss ? size * 0.7 : size, color: boss ? "#ff6ad5" : "#ffe066", weight: 900 });
     ctx.globalAlpha = 1;
   }
 }
@@ -1336,16 +1752,20 @@ function drawTitle(t) {
     drawText("クリック で スタート", W / 2, 488, { size: 19, color: "#ffe066" });
   }
   drawText("マウス移動で自機を操作 / 長押しで連射", W / 2, 530, { size: 12, color: "#8fa0d8" });
-  drawText("P: ポーズ   M: サウンド切替", W / 2, 550, { size: 12, color: "#8fa0d8" });
+  drawText("Z / 右クリック: 合体レーザー   X: ボム", W / 2, 550, { size: 12, color: BEAM_COLOR });
+  drawText("毎ウェーブ強化3択 / 5ウェーブごとにボス", W / 2, 572, { size: 12, color: "#ffe066" });
+  drawText("P: ポーズ   M: サウンド切替", W / 2, 596, { size: 11, color: "#8fa0d8" });
 }
 
 function drawOverlay(t) {
-  if (state === "clear") {
+  if (state === "upgrade") drawUpgrades();
+  else if (state === "clear") {
     drawText("WAVE CLEAR!", W / 2, 290, { size: 30, color: "#7dff7a", weight: 900 });
     if (perfectBonus > 0) {
       drawText(`PERFECT! +${perfectBonus}`, W / 2, 326, { size: 17, color: "#ffe066" });
     }
     drawText(`NEXT: WAVE ${wave + 1}`, W / 2, 356, { size: 14, color: "#cfd8ff" });
+    drawText("次は強化を1つ選択", W / 2, 385, { size: 12, color: "#ffe066" });
   } else if (state === "gameover") {
     ctx.fillStyle = "rgba(2,3,10,0.65)";
     ctx.fillRect(0, 0, W, H);
@@ -1373,6 +1793,10 @@ function drawOverlay(t) {
 }
 
 function draw(t) {
+  laserButton.disabled = !canUseSpecial() || special.charge < LASER_MAX || special.laserT > 0;
+  bombButton.disabled = !canUseSpecial() || special.bombs <= 0 || special.bombT > 0;
+  laserButton.textContent = special.charge >= LASER_MAX ? "Z 合体レーザー READY!" : `Z 合体レーザー ${Math.floor(special.charge)}%`;
+  bombButton.textContent = `X ボム ×${special.bombs}`;
   ctx.fillStyle = "#04050c";
   ctx.fillRect(0, 0, W, H);
 

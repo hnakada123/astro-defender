@@ -1,42 +1,6 @@
 const assert = require("node:assert/strict");
-const { readFileSync } = require("node:fs");
-const { join } = require("node:path");
 const { test } = require("node:test");
-const vm = require("node:vm");
-
-const html = readFileSync(join(__dirname, "..", "index.html"), "utf8");
-const source = html.match(/<script>([\s\S]*?)<\/script>/)[1];
-
-// 実際のゲームコードを実行し、ブラウザの描画・音声・タイマーだけを置き換える。
-function game() {
-  const noop = () => {};
-  const gradient = { addColorStop: noop };
-  const ctx = new Proxy({
-    createLinearGradient: () => gradient,
-    createRadialGradient: () => gradient,
-  }, { get: (target, key) => target[key] ?? noop });
-  const canvas = () => ({ getContext: () => ctx, style: {}, addEventListener: noop });
-  const context = vm.createContext({
-    document: { getElementById: canvas, createElement: canvas, addEventListener: noop },
-    window: { addEventListener: noop },
-    localStorage: { getItem: key => key.endsWith("muted") ? "1" : null, setItem: noop },
-    performance: { now: () => 0 },
-    requestAnimationFrame: noop,
-  });
-  vm.runInContext(source, context);
-  const run = code => vm.runInContext(code, context);
-  run(`
-    startGame();
-    player.inv = 0;
-    bannerT = 0;
-    fireT = saucerT = Infinity;
-    function collectBeam() {
-      powerups.push({ x: player.x, y: PLAYER_Y, type: "beam", ph: 0 });
-      updatePlay(0);
-    }
-  `);
-  return run;
-}
+const { game } = require("./helpers/game.cjs");
 
 test("B capsules can drop, fall, and be collected; repeated pickups stop at four cannons", () => {
   const run = game();
@@ -174,7 +138,7 @@ test("links last beyond timed upgrades and survive the next wave", () => {
   `);
   assert.equal(run("active.wide"), 0);
   assert.equal(run("active.beam"), 2);
-  run("aliens.forEach(a => a.alive = false); aliveN = 0; updatePlay(0); update(1.7)");
+  run("aliens.forEach(a => a.alive = false); aliveN = 0; updatePlay(0); update(1.7); chooseUpgrade(0)");
   assert.equal(run("wave"), 2);
   assert.equal(run("active.beam"), 2);
 });
