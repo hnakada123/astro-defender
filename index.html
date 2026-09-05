@@ -36,7 +36,8 @@
 <body>
 <div class="frame"><canvas id="game" width="480" height="640"></canvas></div>
 <p class="hint">マウス移動: 自機を操作 ／ クリック（長押しで連射）: ショット ／ 落ちてくるカプセルでパワーアップ<br>
-W: 3方向ショット　R: 連射強化　S: シールド ／ P: ポーズ ／ M: サウンド切替 ／ ← → ＋ スペースでも操作可</p>
+W: 3方向ショット　R: 連射強化　S: シールド　B: ビーム砲連結（最大4門）<br>
+P: ポーズ ／ M: サウンド切替 ／ ← → ＋ スペースでも操作可</p>
 
 <script>
 "use strict";
@@ -135,6 +136,7 @@ function saucerSoundStop() {
 
 const sfx = {
   shoot: () => beep({ f0: 900, f1: 240, dur: 0.09, type: "square", vol: 0.09 }),
+  beam: () => beep({ f0: 1500, f1: 360, dur: 0.13, type: "triangle", vol: 0.08 }),
   alien: () => { boom(0.14, 0.15, 1300); beep({ f0: 320, f1: 60, dur: 0.1, type: "sawtooth", vol: 0.08 }); },
   player: () => { boom(0.55, 0.3, 500); beep({ f0: 220, f1: 40, dur: 0.45, type: "sawtooth", vol: 0.14 }); },
   spark: () => beep({ f0: 1300, f1: 500, dur: 0.05, type: "square", vol: 0.06 }),
@@ -391,6 +393,22 @@ const SHIP_IMG = makeSprite([
 ], "#c8f7ff");
 const SHIP_GLOW = withGlow(SHIP_IMG, 4, 0.9);
 
+const BEAM_COLOR = "#c5a3ff";
+const CANNON_IMG = makeSprite([
+  "..X..",
+  "..X..",
+  ".XXX.",
+  ".XXX.",
+  "XXXXX",
+  "XX.XX",
+  "XXXXX",
+  ".XXX.",
+  "..X..",
+], BEAM_COLOR);
+const CANNON_GLOW = withGlow(CANNON_IMG, 3, 0.9);
+const BEAM_GLOW = glowDot(BEAM_COLOR, 15);
+const BEAM_TRAIL = makeTrail(BEAM_COLOR, 8, 42, true);
+
 const SAUCER_IMG = makeSprite([
   ".....XXXXXX.....",
   "...XX.XXXX.XX...",
@@ -423,11 +441,13 @@ const PLAYER_Y = H - 60;
 const LIFE_STEP = 5000;
 const COMBO_WINDOW = 2.2;
 const MULT_COLORS = ["#cfd8ff", "#7df9ff", "#7dff7a", "#ffe066", "#ff9a5c", "#ff6ad5", "#ff4d6d", "#ff2e88"];
+const BEAM_OFFSETS = [-24, 24, -42, 42];
 
 const PU_DEFS = {
   wide: { label: "W", color: "#61e8ff", dur: 8, name: "3-WAY!" },
   rapid: { label: "R", color: "#ffe066", dur: 8, name: "RAPID!" },
   shield: { label: "S", color: "#7dff7a", dur: 0, name: "SHIELD!" },
+  beam: { label: "B", color: BEAM_COLOR, dur: 0, name: "BEAM LINK", max: BEAM_OFFSETS.length },
 };
 for (const k in PU_DEFS) PU_DEFS[k].glowImg = glowDot(PU_DEFS[k].color, 14);
 
@@ -451,7 +471,7 @@ let pBullets = [], eBullets = [];
 let saucer = null, saucerT = 15;
 let barriers = [], particles = [], popups = [], rings = [], powerups = [];
 const combo = { n: 0, t: 0, mult: 1 };
-const active = { wide: 0, rapid: 0, shield: 0 };
+const active = { wide: 0, rapid: 0, shield: 0, beam: 0 };
 let shake = 0;
 
 const starLayers = [0, 1, 2].map(l => Array.from({ length: [36, 26, 14][l] }, () => ({
@@ -477,6 +497,12 @@ function setPaused(v) {
 }
 
 function playerRect() { return { x: player.x - 13, y: PLAYER_Y, w: 26, h: 16 }; }
+
+function clampPlayerX(x) {
+  // 連結砲も画面内に収める。当たり判定は自機本体のみ。
+  const margin = active.beam > 0 ? Math.abs(BEAM_OFFSETS[active.beam - 1]) + 8 : 20;
+  return clamp(x, margin, W - margin);
+}
 
 function alienRect(a) {
   const t = TYPES[a.type];
@@ -528,7 +554,7 @@ function makeWave() {
 function startGame() {
   score = 0; scoreShown = 0; wave = 1; lives = 3; nextLife = LIFE_STEP;
   newRecord = false; maxMult = 1;
-  active.wide = 0; active.rapid = 0; active.shield = 0;
+  active.wide = 0; active.rapid = 0; active.shield = 0; active.beam = 0;
   resetCombo();
   makeWave();
   setState("play");
@@ -580,9 +606,17 @@ function maybeDrop(x, y) {
 
 function applyPU(type) {
   const d = PU_DEFS[type];
+  let name = d.name;
   if (type === "shield") active.shield = 1;
+  else if (type === "beam") {
+    const wasMax = active.beam === d.max;
+    active.beam = Math.min(d.max, active.beam + 2);
+    player.x = clampPlayerX(player.x);
+    name = wasMax ? "BEAM LINK MAX!" : `${d.name} ×${active.beam}!`;
+    spawnRing(player.x, PLAYER_Y + 8, d.color, 180, 0.35);
+  }
   else active[type] = d.dur;
-  popup(player.x, PLAYER_Y - 24, d.name, d.color, 13);
+  popup(player.x, PLAYER_Y - 24, name, d.color, 13);
   sfx.pickup();
 }
 
@@ -765,6 +799,7 @@ function hitPlayer() {
   sfx.player();
   shake = 0.5;
   player.alive = false;
+  active.beam = 0;
   eBullets = [];
   shooting = false;
   setState("dying");
@@ -821,8 +856,8 @@ function updatePlay(dt) {
   bannerT = Math.max(0, bannerT - dt);
 
   // --- 自機 ---
-  if (inputMode === "mouse") player.x = clamp(mouseX, 20, W - 20);
-  else player.x = clamp(player.x + 340 * dt * ((keys.right ? 1 : 0) - (keys.left ? 1 : 0)), 20, W - 20);
+  if (inputMode === "mouse") player.x = clampPlayerX(mouseX);
+  else player.x = clampPlayerX(player.x + 340 * dt * ((keys.right ? 1 : 0) - (keys.left ? 1 : 0)));
   player.cool -= dt;
   player.inv = Math.max(0, player.inv - dt);
   active.wide = Math.max(0, active.wide - dt);
@@ -830,16 +865,24 @@ function updatePlay(dt) {
 
   const cd = active.rapid > 0 ? 0.12 : 0.27;
   const maxB = (active.rapid > 0 || active.wide > 0) ? 12 : 3;
-  if ((shooting || keys.fire) && player.cool <= 0 && pBullets.length < maxB) {
+  // ビームは通常弾の上限に数えず、共通のクールダウンで同時発射する。
+  const normalBulletCount = pBullets.reduce((n, p) => n + (p.beam ? 0 : 1), 0);
+  if ((shooting || keys.fire) && player.cool <= 0 && normalBulletCount < maxB) {
     const mk = vx => pBullets.push({ x: player.x - 1, y: PLAYER_Y - 10, w: 2, h: 10, vx });
     mk(0);
     if (active.wide > 0) { mk(-70); mk(70); }
+    for (let i = 0; i < active.beam; i++) {
+      const x = player.x + BEAM_OFFSETS[i];
+      pBullets.push({ x: x - 2, y: PLAYER_Y - 32, w: 4, h: 28, vx: 0, beam: true });
+      spawnBurst(x, PLAYER_Y - 4, BEAM_COLOR, 3, 55);
+    }
     player.cool = cd;
     for (let i = 0; i < 3; i++) particles.push({
       x: player.x + rand(-3, 3), y: PLAYER_Y - 8, vx: rand(-20, 20), vy: rand(-90, -40),
       life: 0.1, max: 0.1, color: "#7df9ff", size: 2,
     });
     sfx.shoot();
+    if (active.beam > 0) sfx.beam();
   }
   if (player.alive) {
     particles.push({
@@ -1062,8 +1105,13 @@ function drawGlowPass(t) {
   if (saucer) ctx.drawImage(SAUCER_GLOW.img, saucer.x - SAUCER_GLOW.pad, saucer.y - SAUCER_GLOW.pad);
 
   for (const p of pBullets) {
-    ctx.drawImage(P_TRAIL, p.x - 1, p.y);
-    ctx.drawImage(P_GLOW, p.x - 8, p.y - 4);
+    if (p.beam) {
+      ctx.drawImage(BEAM_TRAIL, p.x - 2, p.y);
+      ctx.drawImage(BEAM_GLOW, p.x - 13, p.y - 10);
+    } else {
+      ctx.drawImage(P_TRAIL, p.x - 1, p.y);
+      ctx.drawImage(P_GLOW, p.x - 8, p.y - 4);
+    }
   }
   for (const b of eBullets) {
     ctx.drawImage(E_TRAIL, b.x - 0.5, b.y + b.h - 20);
@@ -1079,6 +1127,9 @@ function drawGlowPass(t) {
 
   if (player.alive) {
     ctx.drawImage(SHIP_GLOW.img, player.x - 13 - SHIP_GLOW.pad, PLAYER_Y - SHIP_GLOW.pad);
+    for (let i = 0; i < active.beam; i++) {
+      ctx.drawImage(CANNON_GLOW.img, player.x + BEAM_OFFSETS[i] - 5 - CANNON_GLOW.pad, PLAYER_Y - 4 - CANNON_GLOW.pad);
+    }
     if (active.shield > 0) {
       ctx.globalAlpha = 0.45 + 0.25 * Math.sin(t * 6);
       ctx.strokeStyle = "#7dff7a";
@@ -1147,22 +1198,32 @@ function drawHud() {
   ctx.fillRect(0, GROUND_Y, W, 2);
   for (let i = 0; i < lives; i++) ctx.drawImage(SHIP_IMG, 10 + i * 28, H - 21, 20, 12);
 
-  let hy = H - 34;
+  // 装備は地面より下に並べ、画面端の自機や連結砲と重ねない。
+  let hx = 164;
+  const hy = H - 10;
   for (const k of ["wide", "rapid"]) {
     if (active[k] <= 0) continue;
     const d = PU_DEFS[k];
     ctx.fillStyle = d.color;
-    ctx.fillRect(W - 64, hy - 9, 11, 11);
-    drawText(d.label, W - 58.5, hy, { size: 9, color: "#04050c", weight: 900 });
+    ctx.fillRect(hx, hy - 9, 11, 11);
+    drawText(d.label, hx + 5.5, hy, { size: 9, color: "#04050c", weight: 900 });
     ctx.fillStyle = d.color + "88";
-    ctx.fillRect(W - 49, hy - 6, 37 * clamp(active[k] / d.dur, 0, 1), 4);
-    hy -= 17;
+    ctx.fillRect(hx + 15, hy - 6, 24 * clamp(active[k] / d.dur, 0, 1), 4);
+    hx += 48;
+  }
+  if (active.beam > 0) {
+    const d = PU_DEFS.beam;
+    ctx.fillStyle = d.color;
+    ctx.fillRect(hx, hy - 9, 11, 11);
+    drawText(d.label, hx + 5.5, hy, { size: 9, color: "#04050c", weight: 900 });
+    drawText(`${active.beam}/${d.max}`, hx + 15, hy, { align: "left", size: 11, color: d.color });
+    hx += 48;
   }
   if (active.shield > 0) {
     const d = PU_DEFS.shield;
     ctx.fillStyle = d.color;
-    ctx.fillRect(W - 64, hy - 9, 11, 11);
-    drawText(d.label, W - 58.5, hy, { size: 9, color: "#04050c", weight: 900 });
+    ctx.fillRect(hx, hy - 9, 11, 11);
+    drawText(d.label, hx + 5.5, hy, { size: 9, color: "#04050c", weight: 900 });
   }
   drawText(muted ? "♪ OFF" : "♪ ON", W - 12, H - 10, { align: "right", size: 11, color: "#5f6fa8" });
 }
@@ -1179,8 +1240,17 @@ function drawGame(t) {
 
   if (saucer) ctx.drawImage(SAUCER_IMG, saucer.x, saucer.y);
 
-  ctx.fillStyle = "#eaffff";
-  for (const p of pBullets) ctx.fillRect(p.x, p.y, p.w, p.h);
+  for (const p of pBullets) {
+    if (p.beam) {
+      ctx.fillStyle = BEAM_COLOR;
+      ctx.fillRect(p.x - 1, p.y, p.w + 2, p.h);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(p.x + 1, p.y, 2, p.h);
+    } else {
+      ctx.fillStyle = "#eaffff";
+      ctx.fillRect(p.x, p.y, p.w, p.h);
+    }
+  }
 
   ctx.fillStyle = "#ffd24d";
   for (const b of eBullets) {
@@ -1193,6 +1263,19 @@ function drawGame(t) {
   for (const u of powerups) drawCapsule(u, t);
 
   if (player.alive && !(player.inv > 0 && Math.floor(t * 12) % 2 === 0)) {
+    ctx.strokeStyle = BEAM_COLOR;
+    ctx.lineWidth = 2;
+    for (let i = 0; i < active.beam; i++) {
+      const offset = BEAM_OFFSETS[i];
+      const inner = i < 2 ? Math.sign(offset) * 10 : BEAM_OFFSETS[i - 2];
+      ctx.beginPath();
+      ctx.moveTo(player.x + inner, PLAYER_Y + 11);
+      ctx.lineTo(player.x + offset, PLAYER_Y + 11);
+      ctx.stroke();
+    }
+    for (let i = 0; i < active.beam; i++) {
+      ctx.drawImage(CANNON_IMG, player.x + BEAM_OFFSETS[i] - 5, PLAYER_Y - 4);
+    }
     ctx.drawImage(SHIP_IMG, player.x - 13, PLAYER_Y);
   }
 
@@ -1247,6 +1330,7 @@ function drawTitle(t) {
 
   drawText("連続撃破でコンボ倍率 ×8 まで上昇!", W / 2, 420, { size: 12, color: "#ffe066" });
   drawText("W: 3方向  R: 連射  S: シールド", W / 2, 440, { size: 12, color: "#7dff7a" });
+  drawText("B: ビーム砲を左右に連結・最大4門 / ミスで解除", W / 2, 460, { size: 11, color: BEAM_COLOR });
 
   if (Math.floor(t * 2) % 2 === 0) {
     drawText("クリック で スタート", W / 2, 488, { size: 19, color: "#ffe066" });
