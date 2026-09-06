@@ -19,11 +19,14 @@ function game() {
   const canvas = () => ({ getContext: () => ctx, style: {}, addEventListener: listen,
     getBoundingClientRect: () => ({ left: 0, top: 0, width: 480, height: 640 }) });
   const mainCanvas = canvas();
-  const buttons = { laserButton: { addEventListener: noop }, bombButton: { addEventListener: noop } };
+  const element = () => ({ addEventListener: noop, setAttribute: noop });
+  const elements = { laserButton: element(), bombButton: element(), langJa: element(), langEn: element(), hint: element() };
   const context = vm.createContext({
-    document: { getElementById: id => buttons[id] || mainCanvas, createElement: canvas, addEventListener: listen },
+    document: { getElementById: id => elements[id] || mainCanvas, createElement: canvas, addEventListener: listen,
+      documentElement: {} },
     window: { addEventListener: listen, AudioContext: class { state = "running"; } },
     localStorage: { getItem: key => key.endsWith("muted") ? "1" : null, setItem: noop },
+    navigator: { language: "ja" },
     performance: { now: () => 0 },
     requestAnimationFrame: noop,
   });

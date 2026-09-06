@@ -36,6 +36,10 @@
   .actions button:disabled { opacity: .45; cursor: default; }
   .actions button:focus-visible { outline: 2px solid #ffe066; outline-offset: 3px; }
   .hint { max-width: 760px; padding: 0 10px 10px; }
+  .lang { display: flex; gap: 6px; padding: 0 12px 14px; }
+  .lang button { border: 1px solid #33408a; border-radius: 6px; padding: 5px 12px; background: #0d1024; color: #8fa0d8; font: bold 11px ui-monospace, monospace; letter-spacing: .06em; cursor: pointer; touch-action: manipulation; }
+  .lang button[aria-pressed="true"] { border-color: #7df9ff; background: #16213f; color: #eaffff; }
+  .lang button:focus-visible { outline: 2px solid #ffe066; outline-offset: 3px; }
 </style>
 </head>
 <body>
@@ -44,10 +48,11 @@
   <button id="laserButton" type="button" disabled>Z 合体レーザー 0%</button>
   <button id="bombButton" type="button" disabled>X ボム ×2</button>
 </div>
-<p class="hint">マウス移動: 自機を操作 ／ クリック（長押しで連射）: ショット ／ 落ちてくるカプセルでパワーアップ<br>
-W: 3方向ショット　R: 連射強化　S: シールド　B: ビーム砲連結（最大4門）<br>
-Z / 右クリック: 合体レーザー　X: ボム　強化選択: 1・2・3 / クリック<br>
-P: ポーズ ／ M: サウンド切替 ／ ← → ＋ スペースでも操作可</p>
+<p class="hint" id="hint"></p>
+<div class="lang" role="group" aria-label="Language / 言語">
+  <button id="langJa" type="button" aria-pressed="true">日本語</button>
+  <button id="langEn" type="button" aria-pressed="false">ENGLISH</button>
+</div>
 
 <script>
 "use strict";
@@ -67,6 +72,99 @@ const pad6 = n => String(n).padStart(6, "0");
 
 const HI_KEY = "astro-defender-hiscore";
 const MUTE_KEY = "astro-defender-muted";
+const LANG_KEY = "astro-defender-lang";
+
+/* ================= 表示言語 / Localization ================= */
+
+const STRINGS = {
+  ja: {
+    hint: [
+      "マウス移動: 自機を操作 ／ クリック（長押しで連射）: ショット ／ 落ちてくるカプセルでパワーアップ",
+      "W: 3方向ショット　R: 連射強化　S: シールド　B: ビーム砲連結（最大4門）",
+      "Z / 右クリック: 合体レーザー　X: ボム　強化選択: 1・2・3 / クリック",
+      "P: ポーズ ／ M: サウンド切替 ／ ← → ＋ スペースでも操作可",
+    ],
+    laserBtn: gauge => `Z 合体レーザー ${gauge}`,
+    bombBtn: n => `X ボム ×${n}`,
+    upgrades: {
+      beam: { name: "ビーム強化", detail: "連結ビームの貫通数・威力と合体レーザーを強化" },
+      speed: { name: "エンジン強化", detail: "移動速度 +15% / マウス・キーボード両対応" },
+      magnet: { name: "回収フィールド", detail: "カプセルを引き寄せる範囲を拡大" },
+      repair: { name: "緊急整備", detail: "残機 +1（最大5）/ 満タンなら +1000点" },
+      supply: { name: "防衛補給", detail: "ボム +1（最大3）とシールド / +300点" },
+      charge: { name: "エネルギー補給", detail: "合体レーザーを満充電 / +300点" },
+    },
+    bossCore: "中央コアを狙え！",
+    bossGuns: "BOSS / 左右の砲台を破壊せよ",
+    upgradePick: "1つ選んで出撃 / 強化はミスしても継続",
+    upgradeKeys: "クリック / 1・2・3 / ↑↓ + Enter",
+    upgradeLevels: (beam, speed, magnet) => `強化Lv.  ビーム ${beam}  速度 ${speed}  回収 ${magnet}`,
+    titleCombo: "連続撃破でコンボ倍率 ×8 まで上昇!",
+    titlePowerups: "W: 3方向  R: 連射  S: シールド",
+    titleBeam: "B: ビーム砲を左右に連結・最大4門 / ミスで解除",
+    titleStart: "クリック で スタート",
+    titleMove: "マウス移動で自機を操作 / 長押しで連射",
+    titleSpecial: "Z / 右クリック: 合体レーザー   X: ボム",
+    titleWave: "毎ウェーブ強化3択 / 5ウェーブごとにボス",
+    titleSystem: "P: ポーズ   M: サウンド切替",
+    clearNext: "次は強化を1つ選択",
+    retry: "クリックでもう一度",
+    resume: "P で再開",
+  },
+  en: {
+    hint: [
+      "Move the mouse to fly / Click (hold to auto-fire) to shoot / Grab falling capsules to power up",
+      "W: 3-way shot / R: rapid fire / S: shield / B: beam link (up to 4 cannons)",
+      "Z or right-click: link laser / X: bomb / Upgrade select: 1, 2, 3 or click",
+      "P: pause / M: toggle sound / Arrow keys + Space also work",
+    ],
+    laserBtn: gauge => `Z LINK LASER ${gauge}`,
+    bombBtn: n => `X BOMB ×${n}`,
+    upgrades: {
+      beam: { name: "BEAM UPGRADE", detail: "More link-beam pierce and power / stronger link laser" },
+      speed: { name: "ENGINE UPGRADE", detail: "Move speed +15% / works with mouse and keyboard" },
+      magnet: { name: "MAGNET FIELD", detail: "Widens the range that pulls capsules in" },
+      repair: { name: "EMERGENCY REPAIR", detail: "Life +1 (max 5) / +1000 pts when already full" },
+      supply: { name: "DEFENSE SUPPLY", detail: "Bomb +1 (max 3) and a shield / +300 pts" },
+      charge: { name: "ENERGY CHARGE", detail: "Fills the link laser gauge / +300 pts" },
+    },
+    bossCore: "AIM FOR THE CORE!",
+    bossGuns: "BOSS / DESTROY BOTH TURRETS",
+    upgradePick: "PICK ONE AND LAUNCH / UPGRADES SURVIVE A MISS",
+    upgradeKeys: "CLICK / 1 2 3 / ↑↓ + ENTER",
+    upgradeLevels: (beam, speed, magnet) => `UPGRADE Lv.  BEAM ${beam}  SPEED ${speed}  MAGNET ${magnet}`,
+    titleCombo: "CHAIN YOUR KILLS FOR A COMBO UP TO ×8!",
+    titlePowerups: "W: 3-WAY  R: RAPID  S: SHIELD",
+    titleBeam: "B: LINK UP TO 4 BEAM CANNONS / LOST ON A MISS",
+    titleStart: "CLICK TO START",
+    titleMove: "MOVE THE MOUSE TO FLY / HOLD TO AUTO-FIRE",
+    titleSpecial: "Z / RIGHT-CLICK: LINK LASER   X: BOMB",
+    titleWave: "1 OF 3 UPGRADES PER WAVE / BOSS EVERY 5 WAVES",
+    titleSystem: "P: PAUSE   M: TOGGLE SOUND",
+    clearNext: "CHOOSE AN UPGRADE NEXT",
+    retry: "CLICK TO PLAY AGAIN",
+    resume: "PRESS P TO RESUME",
+  },
+};
+
+function detectLang() {
+  try {
+    const saved = localStorage.getItem(LANG_KEY);
+    if (Object.hasOwn(STRINGS, saved)) return saved;
+  } catch (e) {}
+  const tag = typeof navigator !== "undefined" ? String(navigator.language || "") : "";
+  return tag.toLowerCase().startsWith("ja") ? "ja" : "en";
+}
+
+let lang = detectLang();
+
+// 引数を取る文言は関数で持ち、T() が呼び出しまで面倒を見る。
+function T(key, ...args) {
+  const v = STRINGS[lang][key];
+  return typeof v === "function" ? v(...args) : v;
+}
+
+function upgradeText(key) { return STRINGS[lang].upgrades[key]; }
 
 function drawText(s, x, y, o = {}) {
   ctx.font = `${o.weight || 700} ${o.size || 13}px 'Courier New', ui-monospace, monospace`;
@@ -456,12 +554,12 @@ const MULT_COLORS = ["#cfd8ff", "#7df9ff", "#7dff7a", "#ffe066", "#ff9a5c", "#ff
 const BEAM_OFFSETS = [-24, 24, -42, 42];
 const LASER_MAX = 100, BOMB_MAX = 3, BOMB_RADIUS = 240;
 const UPGRADE_DEFS = {
-  beam: { name: "ビーム強化", detail: "連結ビームの貫通数・威力と合体レーザーを強化", color: BEAM_COLOR, max: 5 },
-  speed: { name: "エンジン強化", detail: "移動速度 +15% / マウス・キーボード両対応", color: "#61e8ff", max: 5 },
-  magnet: { name: "回収フィールド", detail: "カプセルを引き寄せる範囲を拡大", color: "#7dff7a", max: 5 },
-  repair: { name: "緊急整備", detail: "残機 +1（最大5）/ 満タンなら +1000点", color: "#ff9a5c" },
-  supply: { name: "防衛補給", detail: "ボム +1（最大3）とシールド / +300点", color: "#ffe066" },
-  charge: { name: "エネルギー補給", detail: "合体レーザーを満充電 / +300点", color: "#ff6ad5" },
+  beam: { color: BEAM_COLOR, max: 5 },
+  speed: { color: "#61e8ff", max: 5 },
+  magnet: { color: "#7dff7a", max: 5 },
+  repair: { color: "#ff9a5c" },
+  supply: { color: "#ffe066" },
+  charge: { color: "#ff6ad5" },
 };
 
 const PU_DEFS = {
@@ -738,7 +836,7 @@ function chooseUpgrade(index) {
   }
   releaseControls();
   wave++; makeWave(); setState("play");
-  popup(W / 2, 350, UPGRADE_DEFS[key].name, UPGRADE_DEFS[key].color, 16);
+  popup(W / 2, 350, upgradeText(key).name, UPGRADE_DEFS[key].color, 16);
   sfx.pickup();
   return true;
 }
@@ -928,6 +1026,23 @@ window.addEventListener("pointercancel", releaseControls);
 cvs.addEventListener("contextmenu", e => e.preventDefault());
 laserButton.addEventListener("click", () => { ac(); activateLaser(); });
 bombButton.addEventListener("click", () => { ac(); activateBomb(); });
+
+const langButtons = { ja: document.getElementById("langJa"), en: document.getElementById("langEn") };
+
+function applyLang(next) {
+  if (next && next !== lang) {
+    lang = next;
+    try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
+  }
+  if (document.documentElement) document.documentElement.lang = lang;
+  const hintEl = document.getElementById("hint");
+  if (hintEl) hintEl.innerHTML = T("hint").join("<br>");
+  for (const code in langButtons) langButtons[code].setAttribute("aria-pressed", String(code === lang));
+  refreshActionButtons();
+}
+
+for (const code in langButtons) langButtons[code].addEventListener("click", () => applyLang(code));
+applyLang();
 
 function toggleMute() {
   muted = !muted;
@@ -1591,7 +1706,7 @@ function drawBoss(t) {
   const maxHealth = boss.parts.reduce((sum, p) => sum + p.max, 0);
   ctx.fillStyle = "#352033"; ctx.fillRect(72, 77, W - 144, 5);
   ctx.fillStyle = "#ff6ad5"; ctx.fillRect(72, 77, (W - 144) * health / maxHealth, 5);
-  drawText(coreExposed() ? "中央コアを狙え！" : "BOSS / 左右の砲台を破壊せよ", W / 2, 71, { size: 10, color: "#ffb4e8" });
+  drawText(T(coreExposed() ? "bossCore" : "bossGuns"), W / 2, 71, { size: 10, color: "#ffb4e8" });
 }
 
 function drawSpecials(t) {
@@ -1619,20 +1734,20 @@ function drawUpgrades() {
   ctx.fillStyle = "rgba(2,3,10,0.94)"; ctx.fillRect(0, 58, W, GROUND_Y - 58);
   drawText("CHOOSE YOUR UPGRADE", W / 2, 166, { size: 23, color: "#ffe066" });
   drawText(`WAVE ${wave} CLEAR → ${wave + 1}${(wave + 1) % 5 === 0 ? " / BOSS" : ""}`, W / 2, 192, { size: 12, color: "#9fb4ff" });
-  drawText("1つ選んで出撃 / 強化はミスしても継続", W / 2, 219, { size: 12, color: "#cfd8ff" });
+  drawText(T("upgradePick"), W / 2, 219, { size: 12, color: "#cfd8ff" });
   upgradeChoices.forEach((key, i) => {
-    const d = UPGRADE_DEFS[key], r = upgradeCardRect(i), selected = i === upgradeIndex;
+    const d = UPGRADE_DEFS[key], txt = upgradeText(key), r = upgradeCardRect(i), selected = i === upgradeIndex;
     ctx.fillStyle = selected ? "#272039" : "#111527"; ctx.fillRect(r.x, r.y, r.w, r.h);
     ctx.strokeStyle = selected ? d.color : "#334068"; ctx.lineWidth = selected ? 2 : 1;
     ctx.strokeRect(r.x, r.y, r.w, r.h);
     ctx.fillStyle = d.color; ctx.fillRect(r.x + 14, r.y + 16, 24, 24);
     drawText(String(i + 1), r.x + 26, r.y + 33, { size: 16, color: "#080b16" });
-    drawText(d.name, r.x + 52, r.y + 31, { align: "left", size: 17, color: d.color });
+    drawText(txt.name, r.x + 52, r.y + 31, { align: "left", size: 17, color: d.color });
     if (d.max) drawText(`Lv.${upgrades[key]} → ${upgrades[key] + 1}`, r.x + r.w - 14, r.y + 31, { align: "right", size: 11, color: "#cfd8ff" });
-    drawText(d.detail, r.x + 14, r.y + 58, { align: "left", size: 10, color: "#cfd8ff" });
+    drawText(txt.detail, r.x + 14, r.y + 58, { align: "left", size: 10, color: "#cfd8ff" });
   });
-  drawText("クリック / 1・2・3 / ↑↓ + Enter", W / 2, 533, { size: 12, color: "#ffe066" });
-  drawText(`強化Lv.  ビーム ${upgrades.beam}  速度 ${upgrades.speed}  回収 ${upgrades.magnet}`, W / 2, 561, { size: 11, color: "#9fb4ff" });
+  drawText(T("upgradeKeys"), W / 2, 533, { size: 12, color: "#ffe066" });
+  drawText(T("upgradeLevels", upgrades.beam, upgrades.speed, upgrades.magnet), W / 2, 561, { size: 11, color: "#9fb4ff" });
 }
 
 function drawGame(t) {
@@ -1744,17 +1859,17 @@ function drawTitle(t) {
     drawText(row.txt, 212, y + 5, { align: "left", size: 15, color: row.color });
   });
 
-  drawText("連続撃破でコンボ倍率 ×8 まで上昇!", W / 2, 420, { size: 12, color: "#ffe066" });
-  drawText("W: 3方向  R: 連射  S: シールド", W / 2, 440, { size: 12, color: "#7dff7a" });
-  drawText("B: ビーム砲を左右に連結・最大4門 / ミスで解除", W / 2, 460, { size: 11, color: BEAM_COLOR });
+  drawText(T("titleCombo"), W / 2, 420, { size: 12, color: "#ffe066" });
+  drawText(T("titlePowerups"), W / 2, 440, { size: 12, color: "#7dff7a" });
+  drawText(T("titleBeam"), W / 2, 460, { size: 11, color: BEAM_COLOR });
 
   if (Math.floor(t * 2) % 2 === 0) {
-    drawText("クリック で スタート", W / 2, 488, { size: 19, color: "#ffe066" });
+    drawText(T("titleStart"), W / 2, 488, { size: 19, color: "#ffe066" });
   }
-  drawText("マウス移動で自機を操作 / 長押しで連射", W / 2, 530, { size: 12, color: "#8fa0d8" });
-  drawText("Z / 右クリック: 合体レーザー   X: ボム", W / 2, 550, { size: 12, color: BEAM_COLOR });
-  drawText("毎ウェーブ強化3択 / 5ウェーブごとにボス", W / 2, 572, { size: 12, color: "#ffe066" });
-  drawText("P: ポーズ   M: サウンド切替", W / 2, 596, { size: 11, color: "#8fa0d8" });
+  drawText(T("titleMove"), W / 2, 530, { size: 12, color: "#8fa0d8" });
+  drawText(T("titleSpecial"), W / 2, 550, { size: 12, color: BEAM_COLOR });
+  drawText(T("titleWave"), W / 2, 572, { size: 12, color: "#ffe066" });
+  drawText(T("titleSystem"), W / 2, 596, { size: 11, color: "#8fa0d8" });
 }
 
 function drawOverlay(t) {
@@ -1765,7 +1880,7 @@ function drawOverlay(t) {
       drawText(`PERFECT! +${perfectBonus}`, W / 2, 326, { size: 17, color: "#ffe066" });
     }
     drawText(`NEXT: WAVE ${wave + 1}`, W / 2, 356, { size: 14, color: "#cfd8ff" });
-    drawText("次は強化を1つ選択", W / 2, 385, { size: 12, color: "#ffe066" });
+    drawText(T("clearNext"), W / 2, 385, { size: 12, color: "#ffe066" });
   } else if (state === "gameover") {
     ctx.fillStyle = "rgba(2,3,10,0.65)";
     ctx.fillRect(0, 0, W, H);
@@ -1781,22 +1896,26 @@ function drawOverlay(t) {
       drawText("NEW RECORD!", W / 2, 386, { size: 16, color: "#ffe066" });
     }
     if (stateT > 0.6 && Math.floor(t * 2) % 2 === 0) {
-      drawText("クリックでもう一度", W / 2, 430, { size: 16, color: "#ffe066" });
+      drawText(T("retry"), W / 2, 430, { size: 16, color: "#ffe066" });
     }
   }
   if (paused) {
     ctx.fillStyle = "rgba(2,3,10,0.55)";
     ctx.fillRect(0, 0, W, H);
     drawText("PAUSED", W / 2, 310, { size: 32, color: "#ffe066", weight: 900 });
-    drawText("P で再開", W / 2, 344, { size: 14, color: "#cfd8ff" });
+    drawText(T("resume"), W / 2, 344, { size: 14, color: "#cfd8ff" });
   }
 }
 
-function draw(t) {
+function refreshActionButtons() {
   laserButton.disabled = !canUseSpecial() || special.charge < LASER_MAX || special.laserT > 0;
   bombButton.disabled = !canUseSpecial() || special.bombs <= 0 || special.bombT > 0;
-  laserButton.textContent = special.charge >= LASER_MAX ? "Z 合体レーザー READY!" : `Z 合体レーザー ${Math.floor(special.charge)}%`;
-  bombButton.textContent = `X ボム ×${special.bombs}`;
+  laserButton.textContent = T("laserBtn", special.charge >= LASER_MAX ? "READY!" : `${Math.floor(special.charge)}%`);
+  bombButton.textContent = T("bombBtn", special.bombs);
+}
+
+function draw(t) {
+  refreshActionButtons();
   ctx.fillStyle = "#04050c";
   ctx.fillRect(0, 0, W, H);
 
