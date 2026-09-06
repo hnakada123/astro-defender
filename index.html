@@ -58,6 +58,7 @@
 
 /* ================= 基本ユーティリティ ================= */
 
+const VERSION = "1.0.0"; // セマンティック バージョニング。上げ方は README の「バージョン」を参照
 const W = 480, H = 640;
 const cvs = document.getElementById("game");
 const ctx = cvs.getContext("2d");
@@ -1869,6 +1870,7 @@ function drawTitle(t) {
   drawText(T("titleSpecial"), W / 2, 550, { size: 12, color: BEAM_COLOR });
   drawText(T("titleWave"), W / 2, 572, { size: 12, color: "#ffe066" });
   drawText(T("titleSystem"), W / 2, 596, { size: 11, color: "#8fa0d8" });
+  drawText(`v${VERSION}`, W - 10, H - 10, { align: "right", size: 10, color: "#5f6fa8" });
 }
 
 function drawOverlay(t) {

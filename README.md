@@ -3,6 +3,9 @@
 *[English version / 英語版はこちら](README.en.md)*
 
 **▶ 今すぐプレイ: <https://hnakada123.github.io/astro-defender/>**
+**📖 ソースコード解説: <https://hnakada123.github.io/astro-defender/doc/>**（初学者向け・全23章）
+
+現在のバージョン: **v1.0.0**（[更新履歴](CHANGELOG.md)）
 
 ブラウザだけで遊べる、マウス操作のネオレトロ風固定画面シューティングゲームです。
 外部ライブラリ・外部素材は一切使わず、`index.html` 1 ファイルで完結しています。
@@ -99,6 +102,15 @@ python3 -m http.server 8000
   ボスの各部位にもダメージを与え、ボスの予告・発射中のレーザーを中断します。
   使用後1.6秒間は無敵。バリアは傷つけず、ミスでは補充されません
 
+## ソースコード解説
+
+`index.html` の中身を初学者向けに 23 章で読み解く解説ページを用意しています。
+ゲームループ・状態遷移・スプライト生成・当たり判定・Web Audio による音の合成などを、
+実ソースの行番号つき抜粋と、ブラウザ上で触れる実験コーナーで説明しています。
+
+- 日本語: <https://hnakada123.github.io/astro-defender/doc/>（[doc/index.html](doc/index.html)）
+- English: <https://hnakada123.github.io/astro-defender/doc/index.en.html>（[doc/index.en.html](doc/index.en.html)）
+
 ## 開発用テスト
 
 Node.js の組み込みテスト機能で、連結砲・必殺技・ボス・強化選択・突入する敵・入力・
@@ -107,6 +119,18 @@ Node.js の組み込みテスト機能で、連結砲・必殺技・ボス・強
 ```sh
 node --test tests/*.test.cjs
 ```
+
+## バージョン
+
+[セマンティック バージョニング](https://semver.org/lang/ja/)に従い、リリースを `vX.Y.Z` の git タグで記録します。
+現在は **v1.0.0** です。タイトル画面の右下にも表示され、変更内容は [CHANGELOG.md](CHANGELOG.md) にまとめています。
+
+- X（メジャー）: 操作やルールが変わるなど、遊び方の互換性に影響する変更
+- Y（マイナー）: 新しい機能・敵・演出の追加
+- Z（パッチ）: 不具合修正や数値の微調整
+
+バージョンを上げるときは、`index.html` 冒頭の `VERSION` 定数、この README、`CHANGELOG.md` を更新し、
+`git tag vX.Y.Z` を打って `git push --tags` します。
 
 ## 権利について
 

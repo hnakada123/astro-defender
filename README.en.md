@@ -3,6 +3,9 @@
 *[日本語版はこちら / Japanese version](README.md)*
 
 **▶ Play now: <https://hnakada123.github.io/astro-defender/>**
+**📖 Source code guide: <https://hnakada123.github.io/astro-defender/doc/index.en.html>** (beginner-friendly, 23 chapters)
+
+Current version: **v1.0.0** ([changelog](CHANGELOG.en.md))
 
 A neo-retro fixed-screen shooter you play in the browser with the mouse.
 No external libraries and no external assets — everything lives in the single `index.html` file.
@@ -103,6 +106,15 @@ python3 -m http.server 8000
   interrupts the boss's telegraphed or firing laser. You are invincible for 1.6 seconds afterwards.
   It leaves the barriers intact, and a miss does not restock it
 
+## Source code guide
+
+A beginner-friendly guide walks through `index.html` in 23 chapters: the game loop, the state machine,
+sprite generation, collision detection, sound synthesis with Web Audio, and more, with line-numbered
+excerpts from the real source and interactive labs that run in the browser.
+
+- English: <https://hnakada123.github.io/astro-defender/doc/index.en.html> ([doc/index.en.html](doc/index.en.html))
+- 日本語: <https://hnakada123.github.io/astro-defender/doc/> ([doc/index.html](doc/index.html))
+
 ## Tests
 
 Node.js's built-in test runner covers the linked cannons, the special attacks, the boss,
@@ -112,6 +124,18 @@ wave transition (no extra packages required).
 ```sh
 node --test tests/*.test.cjs
 ```
+
+## Versioning
+
+Releases follow [Semantic Versioning](https://semver.org/) and are recorded as `vX.Y.Z` git tags.
+The current version is **v1.0.0**. It is also shown in the bottom-right corner of the title screen, and the changes are listed in [CHANGELOG.en.md](CHANGELOG.en.md).
+
+- X (major): changes that affect how the game plays, such as new controls or rules
+- Y (minor): new features, enemies or effects
+- Z (patch): bug fixes and small balance tweaks
+
+To bump the version, update the `VERSION` constant at the top of `index.html`, this README and `CHANGELOG.en.md`,
+then run `git tag vX.Y.Z` and `git push --tags`.
 
 ## Rights
 
