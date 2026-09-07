@@ -61,9 +61,11 @@
 const VERSION = "1.0.0"; // セマンティック バージョニング。上げ方は README の「バージョン」を参照
 const W = 480, H = 640;
 const cvs = document.getElementById("game");
-const ctx = cvs.getContext("2d");
+const ctx = cvs.getContext("2d", { alpha: false }); // 毎フレーム全面を塗るので不透明にし、ページとの合成コストを下げる
 const laserButton = document.getElementById("laserButton");
 const bombButton = document.getElementById("bombButton");
+// ボタンに直前に書いた内容。同じなら DOM に書き込まない(毎フレームの textContent 更新はレイアウト再計算を招く)。
+const shownButtons = { laserOn: null, gauge: null, bombOn: null, bombs: null, lang: null };
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -166,13 +168,15 @@ function T(key, ...args) {
 
 function upgradeText(key) { return STRINGS[lang].upgrades[key]; }
 
-function drawText(s, x, y, o = {}) {
-  ctx.font = `${o.weight || 700} ${o.size || 13}px 'Courier New', ui-monospace, monospace`;
-  ctx.fillStyle = o.color || "#cfd8ff";
-  ctx.textAlign = o.align || "center";
-  ctx.textBaseline = "alphabetic";
-  ctx.fillText(s, x, y);
+function drawTextOn(g, s, x, y, o = {}) {
+  g.font = `${o.weight || 700} ${o.size || 13}px 'Courier New', ui-monospace, monospace`;
+  g.fillStyle = o.color || "#cfd8ff";
+  g.textAlign = o.align || "center";
+  g.textBaseline = "alphabetic";
+  g.fillText(s, x, y);
 }
+
+function drawText(s, x, y, o) { drawTextOn(ctx, s, x, y, o); }
 
 /* ================= サウンド（Web Audio 合成・全て自作） ================= */
 
@@ -204,16 +208,15 @@ function beep({ f0 = 440, f1 = f0, dur = 0.1, type = "square", vol = 0.12, delay
 function boom(dur = 0.35, vol = 0.25, fc = 700) {
   if (muted) return;
   try {
-    const a = ac();
-    const len = Math.max(1, (dur * a.sampleRate) | 0);
-    const buf = a.createBuffer(1, len, a.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
-    const n = a.createBufferSource(); n.buffer = buf;
+    // 共有ノイズバッファを再生し、減衰はゲインで付ける(以前は呼ぶたびに乱数でバッファを作っていた)。
+    const a = ac(), t = a.currentTime;
+    const n = a.createBufferSource(); n.buffer = ensureNoise(a); n.loop = true;
     const f = a.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = fc;
-    const g = a.createGain(); g.gain.value = vol;
+    const g = a.createGain();
+    g.gain.setValueAtTime(vol, t);
+    g.gain.linearRampToValueAtTime(0, t + dur);
     n.connect(f); f.connect(g); g.connect(a.destination);
-    n.start();
+    n.start(t); n.stop(t + dur);
   } catch (e) {}
 }
 
@@ -269,9 +272,9 @@ const CHORDS = [110, 87.31, 130.81, 98];      // A2 F2 C3 G2
 const LEADS = [440, 349.23, 523.25, 392];
 let noiseBuf = null;
 
-function ensureNoise(a) {
+function ensureNoise(a) { // 効果音と BGM で共有する 1 秒分のホワイトノイズ
   if (noiseBuf) return noiseBuf;
-  const len = (0.1 * a.sampleRate) | 0;
+  const len = a.sampleRate | 0;
   noiseBuf = a.createBuffer(1, len, a.sampleRate);
   const d = noiseBuf.getChannelData(0);
   for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
@@ -400,6 +403,14 @@ function makeTrail(hex, w, h, brightAtTop) {
   gr.addColorStop(brightAtTop ? 1 : 0, hex + "00");
   g.fillStyle = gr;
   g.fillRect(0, 0, w, h);
+  return c;
+}
+
+// shadowBlur 付きの描画は毎フレーム行うと重いので、形が変わらないものは一度だけ画像にしておく。
+function prerender(w, h, paint, opts) {
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  paint(c.getContext("2d", opts));
   return c;
 }
 
@@ -535,6 +546,69 @@ const E_GLOW = glowDot("#ffd24d", 8);
 const P_TRAIL = makeTrail("#7df9ff", 4, 26, true);
 const E_TRAIL = makeTrail("#ffd24d", 4, 20, false);
 
+// タイトルロゴ: 光彩層と文字層に分け、光彩層の透明度を揺らして脈動させる。
+const TITLE_LOGO_Y = 80; // ロゴ画像を置くキャンバス上の y
+function paintTitleLogo(g, glow) {
+  const y = -TITLE_LOGO_Y;
+  try { g.letterSpacing = "8px"; } catch (e) {}
+  if (glow) { g.shadowColor = "#7df9ff"; g.shadowBlur = 20; }
+  drawTextOn(g, "ASTRO", W / 2 + 3, 149 + y, { size: 54, color: "#ff2e88", weight: 900 });
+  drawTextOn(g, "ASTRO", W / 2, 146 + y, { size: 54, color: "#7df9ff", weight: 900 });
+  if (glow) g.shadowColor = "#ff2e88";
+  drawTextOn(g, "DEFENDER", W / 2 + 2, 194 + y, { size: 31, color: "#7df9ff", weight: 900 });
+  drawTextOn(g, "DEFENDER", W / 2, 192 + y, { size: 31, color: "#ffffff", weight: 900 });
+}
+const TITLE_GLOW = prerender(W, 160, g => paintTitleLogo(g, true));
+const TITLE_TEXT = prerender(W, 160, g => {
+  paintTitleLogo(g, false);
+  try { g.letterSpacing = "3px"; } catch (e) {}
+  drawTextOn(g, "- NEON ARCADE EDITION -", W / 2, 222 - TITLE_LOGO_Y, { size: 11, color: "#ff6ad5" });
+});
+
+const GAMEOVER_Y = 194;
+const GAMEOVER_TEXT = prerender(W, 80, g => {
+  g.shadowColor = "#ff4d6d"; g.shadowBlur = 16;
+  drawTextOn(g, "GAME OVER", W / 2, 244 - GAMEOVER_Y, { size: 40, color: "#ff4d6d", weight: 900 });
+});
+
+// ボスの船体(砲台とコアは毎フレーム描く)。原点は船体中心で、光彩のはみ出し分を余白に取る。
+const BOSS_HULL_PAD = 24;
+const BOSS_HULL = prerender(160 + BOSS_HULL_PAD * 2, 48 + BOSS_HULL_PAD * 2, g => {
+  g.translate(80 + BOSS_HULL_PAD, 8 + BOSS_HULL_PAD);
+  g.shadowColor = "#ff6ad5"; g.shadowBlur = 14;
+  g.fillStyle = "#35294c"; g.strokeStyle = "#c5a3ff"; g.lineWidth = 2;
+  g.beginPath();
+  g.moveTo(-80, 32); g.lineTo(-65, 4); g.lineTo(-26, 4); g.lineTo(-18, -8);
+  g.lineTo(18, -8); g.lineTo(26, 4); g.lineTo(65, 4); g.lineTo(80, 32);
+  g.lineTo(62, 40); g.lineTo(-62, 40); g.closePath(); g.fill(); g.stroke();
+});
+
+// 合体レーザーの光彩付きの柱。幅ごとに一度だけ短い柱を描いておき、上下の端(光彩のはみ出し)はそのまま、
+// 中央の帯だけを縦に引き伸ばして任意の長さにする。
+const LASER_BLUR = 20, LASER_CAP = 70, LASER_BAND = 20, laserStrips = new Map();
+function laserStrip(width) {
+  let strip = laserStrips.get(width);
+  if (strip) return strip;
+  const w = Math.ceil(width + 10 + LASER_BLUR * 4), h = LASER_CAP * 2 + LASER_BAND, y0 = LASER_BLUR * 2, hh = h - y0 * 2;
+  strip = prerender(w, h, g => {
+    const x = w / 2;
+    g.globalCompositeOperation = "lighter";
+    g.shadowColor = BEAM_COLOR; g.shadowBlur = LASER_BLUR;
+    g.fillStyle = "#b792ff66"; g.fillRect(x - width / 2 - 5, y0, width + 10, hh);
+    g.fillStyle = "#d2afffcc"; g.fillRect(x - width / 2, y0, width, hh);
+    g.fillStyle = "#ffffff"; g.fillRect(x - width * 0.2, y0, width * 0.4, hh);
+  });
+  laserStrips.set(width, strip);
+  return strip;
+}
+
+function drawLaserColumn(strip, cx, top, bottom) {
+  const w = strip.width, x = cx - w / 2, y0 = LASER_BLUR * 2, cap = LASER_CAP - y0;
+  ctx.drawImage(strip, 0, 0, w, LASER_CAP, x, top - y0, w, LASER_CAP);
+  ctx.drawImage(strip, 0, LASER_CAP, w, LASER_BAND, x, top + cap, w, bottom - top - cap * 2);
+  ctx.drawImage(strip, 0, LASER_CAP + LASER_BAND, w, LASER_CAP, x, bottom - cap, w, LASER_CAP);
+}
+
 const NEBULAE = [
   { img: makeNebula("#4b2d8f", 170), x: 90, y: 150, dx: 40, dy: 24, ph: 0 },
   { img: makeNebula("#0e5d84", 200), x: 380, y: 300, dx: 55, dy: 30, ph: 2.1 },
@@ -548,6 +622,8 @@ const ROW_TYPE = ["a", "b", "b", "c", "c"];
 const TOTAL = ROWS * COLS;
 const GROUND_Y = H - 26;
 const PLAYER_Y = H - 60;
+const STAR_COLORS = ["#39456e", "#6f83c9", "#bcd0ff"];
+const DASH_WARNING = [8, 6], DASH_NONE = [];
 const LIFE_STEP = 5000;
 const COMBO_WINDOW = 2.2;
 const MULT_COLORS = ["#cfd8ff", "#7df9ff", "#7dff7a", "#ffe066", "#ff9a5c", "#ff6ad5", "#ff4d6d", "#ff2e88"];
@@ -600,9 +676,12 @@ let shake = 0;
 const starLayers = [0, 1, 2].map(l => Array.from({ length: [36, 26, 14][l] }, () => ({
   x: Math.random() * W, y: Math.random() * H,
   sp: [6, 14, 26][l], size: l === 2 ? 2 : 1,
-  col: ["#39456e", "#6f83c9", "#bcd0ff"][l],
   tw: Math.random() * 6.28,
 })));
+
+const HORIZON_GLOW = ctx.createLinearGradient(0, GROUND_Y - 14, 0, GROUND_Y);
+HORIZON_GLOW.addColorStop(0, "#2f9e5f00");
+HORIZON_GLOW.addColorStop(1, "#2f9e5f66");
 
 function setState(s) {
   state = s; stateT = 0;
@@ -617,6 +696,7 @@ function setPaused(v) {
   else {
     if (saucer && state === "play") saucerSoundStart();
     musicStart();
+    ensureLoop();
   }
 }
 
@@ -628,15 +708,17 @@ function clampPlayerX(x) {
   return clamp(x, margin, W - margin);
 }
 
-function alienRect(a) {
+// 毎フレーム何百回も呼ぶ当たり判定では SCRATCH に書き込んで使い回し、オブジェクト生成(GC 負荷)を避ける。
+// SCRATCH の中身は次の alienRectInto 呼び出しで上書きされるので、保持せずその場で使い切ること。
+const SCRATCH = { x: 0, y: 0, w: 0, h: 0 };
+function alienRectInto(a, out) {
   const t = TYPES[a.type];
-  if (a.flight) return { x: a.flight.x, y: a.flight.y, w: t.w, h: t.h };
-  return {
-    x: form.ox + a.c * CELL_W + (CELL_W - t.w) / 2,
-    y: form.oy + a.r * CELL_H,
-    w: t.w, h: t.h,
-  };
+  if (a.flight) { out.x = a.flight.x; out.y = a.flight.y; }
+  else { out.x = form.ox + a.c * CELL_W + (CELL_W - t.w) / 2; out.y = form.oy + a.r * CELL_H; }
+  out.w = t.w; out.h = t.h;
+  return out;
 }
+function alienRect(a) { return alienRectInto(a, { x: 0, y: 0, w: 0, h: 0 }); }
 
 function makeBarriers() {
   barriers = [];
@@ -655,7 +737,7 @@ function makeBarriers() {
       }
       g.push(line);
     }
-    barriers.push({ x, y, cell, cols, rows, g });
+    barriers.push({ x, y, w: bw, h: rows * cell, cell, cols, rows, g });
   }
 }
 
@@ -803,7 +885,11 @@ function updateLaser(dt) {
   if (special.laserT <= 0) return;
   const duration = Math.min(dt, special.laserT);
   const beam = { x: player.x - special.laserW / 2, y: 58, w: special.laserW, h: PLAYER_Y - 58 };
-  for (const a of aliens) if (a.alive && hit(beam, alienRect(a))) killAlien(a, alienRect(a));
+  for (const a of aliens) {
+    if (!a.alive) continue;
+    const r = alienRectInto(a, SCRATCH);
+    if (hit(beam, r)) killAlien(a, r);
+  }
   eBullets = eBullets.filter(b => !hit(beam, b));
   if (saucer && hit(beam, saucer)) killSaucer();
   if (boss) {
@@ -1039,6 +1125,7 @@ function applyLang(next) {
   if (hintEl) hintEl.innerHTML = T("hint").join("<br>");
   for (const code in langButtons) langButtons[code].setAttribute("aria-pressed", String(code === lang));
   refreshActionButtons();
+  redrawIfPaused();
 }
 
 for (const code in langButtons) langButtons[code].addEventListener("click", () => applyLang(code));
@@ -1052,6 +1139,7 @@ function toggleMute() {
     if (saucer && state === "play" && !paused) saucerSoundStart();
     if (actx && !paused) musicStart();
   }
+  redrawIfPaused();
 }
 
 window.addEventListener("keydown", e => {
@@ -1103,8 +1191,7 @@ document.addEventListener("visibilitychange", () => {
 
 function barrierHit(rect, blast) {
   for (const b of barriers) {
-    const bb = { x: b.x, y: b.y, w: b.cols * b.cell, h: b.rows * b.cell };
-    if (!hit(rect, bb)) continue;
+    if (!hit(rect, b)) continue;
     const c0 = Math.max(0, Math.floor((rect.x - b.x) / b.cell));
     const c1 = Math.min(b.cols - 1, Math.floor((rect.x + rect.w - 0.01 - b.x) / b.cell));
     const r0 = Math.max(0, Math.floor((rect.y - b.y) / b.cell));
@@ -1130,10 +1217,9 @@ function barrierHit(rect, blast) {
 function erodeBarriers() {
   for (const al of aliens) {
     if (!al.alive) continue;
-    const r = alienRect(al);
+    const r = alienRectInto(al, SCRATCH);
     for (const b of barriers) {
-      const bb = { x: b.x, y: b.y, w: b.cols * b.cell, h: b.rows * b.cell };
-      if (!hit(r, bb)) continue;
+      if (!hit(r, b)) continue;
       const c0 = Math.max(0, Math.floor((r.x - b.x) / b.cell));
       const c1 = Math.min(b.cols - 1, Math.floor((r.x + r.w - 0.01 - b.x) / b.cell));
       const r0 = Math.max(0, Math.floor((r.y - b.y) / b.cell));
@@ -1158,7 +1244,7 @@ function formBounds() {
   let min = Infinity, max = -Infinity;
   for (const a of aliens) {
     if (!a.alive || a.flight) continue;
-    const r = alienRect(a);
+    const r = alienRectInto(a, SCRATCH);
     if (r.x < min) min = r.x;
     if (r.x + r.w > max) max = r.x + r.w;
   }
@@ -1222,8 +1308,14 @@ function damagePlayer() {
   hitPlayer();
 }
 
+// 末尾の要素と入れ替えて削除する。splice の詰め直し(O(n))を避ける。
+// パーティクルとリングは加算合成で描くので順序が変わっても見た目は同じ。
+function removeAt(arr, i) {
+  const last = arr.pop();
+  if (i < arr.length) arr[i] = last;
+}
+
 function updateCommon(dt) {
-  const t = performance.now() / 1000;
   for (const layer of starLayers) {
     for (const s of layer) {
       s.y += s.sp * dt;
@@ -1233,12 +1325,12 @@ function updateCommon(dt) {
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
     p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 160 * dt; p.life -= dt;
-    if (p.life <= 0) particles.splice(i, 1);
+    if (p.life <= 0) removeAt(particles, i);
   }
   for (let i = rings.length - 1; i >= 0; i--) {
     const r = rings[i];
     r.r += r.vr * dt; r.life -= dt;
-    if (r.life <= 0) rings.splice(i, 1);
+    if (r.life <= 0) removeAt(rings, i);
   }
   for (let i = popups.length - 1; i >= 0; i--) {
     const p = popups[i];
@@ -1322,7 +1414,7 @@ function updatePlay(dt) {
     const prect = playerRect();
     for (const a of aliens) {
       if (!a.alive || a.flight) continue;
-      const r = alienRect(a);
+      const r = alienRectInto(a, SCRATCH);
       if (r.y + r.h >= PLAYER_Y + 8 || hit(r, prect)) {
         spawnBurst(prect.x + 13, prect.y + 8, "#c8f7ff", 26, 160);
         boom(0.6, 0.3, 500);
@@ -1420,7 +1512,7 @@ function updatePlay(dt) {
     if (!dead) {
       for (const a of aliens) {
         if (!a.alive) continue;
-        const r = alienRect(a);
+        const r = alienRectInto(a, SCRATCH);
         if (hit(p, r)) {
           killAlien(a, r);
           p.pierce = (p.pierce || 1) - 1;
@@ -1480,25 +1572,40 @@ function update(dt) {
 
 /* ================= 描画 ================= */
 
-function drawBackground(t) {
-  ctx.globalCompositeOperation = "lighter";
+// 星雲はごくゆっくりしか動かないので、15fps で描き直した 1 枚の画像を毎フレーム貼る
+// (半透明の加算合成 3 回 → 不透明なコピー 1 回)。
+const SKY_INTERVAL = 1 / 15;
+const sky = { img: null, g: null, t: -Infinity };
+sky.img = prerender(W, H, g => { sky.g = g; }, { alpha: false });
+
+function refreshSky(t) {
+  if (t - sky.t < SKY_INTERVAL) return;
+  sky.t = t;
+  const g = sky.g;
+  g.globalCompositeOperation = "source-over";
+  g.fillStyle = "#04050c"; g.fillRect(0, 0, W, H);
+  g.globalCompositeOperation = "lighter";
   for (const n of NEBULAE) {
     const ox = Math.sin(t * 0.11 + n.ph) * n.dx;
     const oy = Math.cos(t * 0.13 + n.ph) * n.dy;
-    ctx.globalAlpha = 0.5 + 0.25 * Math.sin(t * 0.3 + n.ph);
-    ctx.drawImage(n.img, n.x + ox - n.img.width / 2, n.y + oy - n.img.height / 2);
+    g.globalAlpha = 0.5 + 0.25 * Math.sin(t * 0.3 + n.ph);
+    g.drawImage(n.img, n.x + ox - n.img.width / 2, n.y + oy - n.img.height / 2);
   }
-  ctx.globalAlpha = 1;
-  ctx.globalCompositeOperation = "source-over";
+  g.globalAlpha = 1;
+  g.globalCompositeOperation = "source-over";
+}
 
-  for (const layer of starLayers) {
+function drawBackground(t) {
+  refreshSky(t);
+  ctx.drawImage(sky.img, 0, 0);
+
+  starLayers.forEach((layer, l) => {
+    ctx.fillStyle = STAR_COLORS[l];
     for (const s of layer) {
-      const a = 0.35 + 0.55 * (0.5 + 0.5 * Math.sin(t * 2 + s.tw));
-      ctx.globalAlpha = a;
-      ctx.fillStyle = s.col;
+      ctx.globalAlpha = 0.35 + 0.55 * (0.5 + 0.5 * Math.sin(t * 2 + s.tw));
       ctx.fillRect(s.x, s.y, s.size, s.size);
     }
-  }
+  });
   ctx.globalAlpha = 1;
 }
 
@@ -1514,13 +1621,59 @@ function drawBarriers() {
   }
 }
 
+/* 編隊レイヤー: 編隊は一体で動くので、スプライトと光彩をそれぞれ 1 枚の画像にまとめておき、
+   生存状況かアニメ番号が変わった時だけ描き直す。毎フレームの drawImage が最大 100 回 → 2 回になる。 */
+const FORM_PAD = 12; // 光彩のはみ出し分(withGlow の pad = 9 より大きく)
+const FORM_W = COLS * CELL_W + FORM_PAD * 2, FORM_H = ROWS * CELL_H + FORM_PAD * 2;
+const formLayer = { key: NaN, list: null, empty: true, sprite: null, glow: null, sg: null, gg: null, sx: 0, sy: 0, sw: 0, sh: 0 };
+formLayer.sprite = prerender(FORM_W, FORM_H, g => { formLayer.sg = g; });
+formLayer.glow = prerender(FORM_W, FORM_H, g => { formLayer.gg = g; g.globalCompositeOperation = "lighter"; });
+
+function formationKey() {
+  // アニメ番号と「生存かつ編隊内」のビット列を 1 つの整数にまとめる(50 体 + 先頭ビットで 2^53 に収まる)。
+  let key = form.anim + 2;
+  for (const a of aliens) key = key * 2 + (a.alive && !a.flight ? 1 : 0);
+  return key;
+}
+
+function refreshFormLayer() {
+  const key = formationKey();
+  if (key === formLayer.key && aliens === formLayer.list) return;
+  formLayer.key = key; formLayer.list = aliens; formLayer.empty = true;
+  const sg = formLayer.sg, gg = formLayer.gg;
+  sg.clearRect(0, 0, FORM_W, FORM_H);
+  gg.clearRect(0, 0, FORM_W, FORM_H);
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const a of aliens) {
+    if (!a.alive || a.flight) continue;
+    const ty = TYPES[a.type], gl = ty.glow[form.anim];
+    const x = a.c * CELL_W + (CELL_W - ty.w) / 2 + FORM_PAD, y = a.r * CELL_H + FORM_PAD;
+    sg.drawImage(ty.img[form.anim], x, y);
+    gg.drawImage(gl.img, x - gl.pad, y - gl.pad);
+    // 光彩はスプライトを内包するので、光彩の範囲が描いた領域の外接矩形になる。
+    x0 = Math.min(x0, x - gl.pad); y0 = Math.min(y0, y - gl.pad);
+    x1 = Math.max(x1, x - gl.pad + gl.img.width); y1 = Math.max(y1, y - gl.pad + gl.img.height);
+    formLayer.empty = false;
+  }
+  formLayer.sx = x0; formLayer.sy = y0; formLayer.sw = x1 - x0; formLayer.sh = y1 - y0;
+}
+
+// レイヤーのうち、生存エイリアンが描かれている範囲だけを転送する(残りが少ないほど安くなる)。
+function blitFormLayer(img) {
+  if (formLayer.empty) return;
+  const { sx, sy, sw, sh } = formLayer;
+  ctx.drawImage(img, sx, sy, sw, sh, form.ox - FORM_PAD + sx, form.oy - FORM_PAD + sy, sw, sh);
+}
+
 function drawGlowPass(t) {
   ctx.globalCompositeOperation = "lighter";
 
+  refreshFormLayer();
+  blitFormLayer(formLayer.glow);
   for (const a of aliens) {
-    if (!a.alive) continue;
-    const ty = TYPES[a.type], r = alienRect(a), gl = ty.glow[form.anim];
-    ctx.drawImage(gl.img, r.x - gl.pad, r.y - gl.pad);
+    if (!a.alive || !a.flight) continue;
+    const gl = TYPES[a.type].glow[form.anim];
+    ctx.drawImage(gl.img, a.flight.x - gl.pad, a.flight.y - gl.pad);
   }
 
   if (saucer) ctx.drawImage(SAUCER_GLOW.img, saucer.x - SAUCER_GLOW.pad, saucer.y - SAUCER_GLOW.pad);
@@ -1580,10 +1733,7 @@ function drawGlowPass(t) {
   ctx.globalAlpha = 1;
 
   // 地平線のネオン
-  const hg = ctx.createLinearGradient(0, GROUND_Y - 14, 0, GROUND_Y);
-  hg.addColorStop(0, "#2f9e5f00");
-  hg.addColorStop(1, "#2f9e5f66");
-  ctx.fillStyle = hg;
+  ctx.fillStyle = HORIZON_GLOW;
   ctx.fillRect(0, GROUND_Y - 14, W, 14);
 
   ctx.globalCompositeOperation = "source-over";
@@ -1663,9 +1813,9 @@ function drawBoss(t) {
     ctx.fillStyle = boss.laserT > 0 ? "#ff4d6dbb" : "#ff4d6d22";
     ctx.fillRect(x - 18, y, 36, GROUND_Y - y);
     ctx.strokeStyle = "#ff4d6d"; ctx.lineWidth = 2;
-    ctx.setLineDash(boss.warning > 0 ? [8, 6] : []);
+    ctx.setLineDash(boss.warning > 0 ? DASH_WARNING : DASH_NONE);
     ctx.strokeRect(x - 18, y, 36, GROUND_Y - y);
-    ctx.setLineDash([]);
+    ctx.setLineDash(DASH_NONE);
     if (boss.laserT > 0) {
       ctx.fillStyle = "#fff0f4"; ctx.fillRect(x - 6, y, 12, GROUND_Y - y);
     } else {
@@ -1673,15 +1823,9 @@ function drawBoss(t) {
       drawText(`${boss.warning.toFixed(1)}s`, clamp(x, 30, W - 30), GROUND_Y - 65, { size: 11, color: "#ffe066" });
     }
   }
+  ctx.drawImage(BOSS_HULL, boss.x - 80 - BOSS_HULL_PAD, boss.y - 8 - BOSS_HULL_PAD);
   ctx.save();
   ctx.translate(boss.x, boss.y);
-  ctx.shadowColor = "#ff6ad5"; ctx.shadowBlur = 14;
-  ctx.fillStyle = "#35294c"; ctx.strokeStyle = "#c5a3ff"; ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(-80, 32); ctx.lineTo(-65, 4); ctx.lineTo(-26, 4); ctx.lineTo(-18, -8);
-  ctx.lineTo(18, -8); ctx.lineTo(26, 4); ctx.lineTo(65, 4); ctx.lineTo(80, 32);
-  ctx.lineTo(62, 40); ctx.lineTo(-62, 40); ctx.closePath(); ctx.fill(); ctx.stroke();
-  ctx.shadowBlur = 0;
   for (const part of boss.parts) {
     const x = part.offset;
     if (part.hp <= 0) {
@@ -1715,13 +1859,11 @@ function drawSpecials(t) {
     ctx.fillRect(0, 58, W, GROUND_Y - 58);
   }
   if (special.laserT <= 0 || !player.alive) return;
-  const width = special.laserW, x = player.x, top = 58;
+  const width = special.laserW, x = player.x, top = 58, strip = laserStrip(width);
   ctx.save();
   ctx.globalCompositeOperation = "lighter";
-  ctx.shadowColor = BEAM_COLOR; ctx.shadowBlur = 20;
-  ctx.fillStyle = "#b792ff66"; ctx.fillRect(x - width / 2 - 5, top, width + 10, PLAYER_Y - top);
-  ctx.fillStyle = "#d2afffcc"; ctx.fillRect(x - width / 2, top, width, PLAYER_Y - top);
-  ctx.fillStyle = "#ffffff"; ctx.fillRect(x - width * 0.2, top, width * 0.4, PLAYER_Y - top);
+  drawLaserColumn(strip, x, top, PLAYER_Y);
+  ctx.shadowColor = BEAM_COLOR; ctx.shadowBlur = LASER_BLUR;
   ctx.strokeStyle = "#e5cdff"; ctx.lineWidth = 3;
   for (let i = 0; i < active.beam; i++) {
     ctx.beginPath(); ctx.moveTo(x + BEAM_OFFSETS[i], PLAYER_Y - 4);
@@ -1754,16 +1896,14 @@ function drawGame(t) {
   drawBarriers();
   drawGlowPass(t);
 
+  blitFormLayer(formLayer.sprite);
   for (const a of aliens) {
-    if (!a.alive) continue;
-    const ty = TYPES[a.type], r = alienRect(a);
-    ctx.drawImage(ty.img[form.anim], r.x, r.y);
-    if (a.flight) {
-      const warn = a.flight.warning > 0;
-      ctx.strokeStyle = warn ? "#ffe066" : "#ff9a5c"; ctx.lineWidth = 1;
-      ctx.strokeRect(r.x - 3, r.y - 3, r.w + 6, r.h + 6);
-      if (warn) drawText("!", r.x + r.w / 2, r.y - 8, { size: 16, color: "#ffe066" });
-    }
+    if (!a.alive || !a.flight) continue;
+    const ty = TYPES[a.type], f = a.flight, warn = f.warning > 0;
+    ctx.drawImage(ty.img[form.anim], f.x, f.y);
+    ctx.strokeStyle = warn ? "#ffe066" : "#ff9a5c"; ctx.lineWidth = 1;
+    ctx.strokeRect(f.x - 3, f.y - 3, ty.w + 6, ty.h + 6);
+    if (warn) drawText("!", f.x + ty.w / 2, f.y - 8, { size: 16, color: "#ffe066" });
   }
 
   drawBoss(t);
@@ -1783,8 +1923,8 @@ function drawGame(t) {
   }
 
   ctx.fillStyle = "#ffd24d";
+  const wig = (Math.floor(t * 18) % 2) * 2 - 1;
   for (const b of eBullets) {
-    const wig = (Math.floor(t * 18) % 2) * 2 - 1;
     ctx.fillRect(b.x + wig, b.y, 3, 3);
     ctx.fillRect(b.x - wig, b.y + 3, 3, 3);
     ctx.fillRect(b.x + wig, b.y + 6, 3, 3);
@@ -1825,26 +1965,13 @@ function drawGame(t) {
   }
 }
 
-function setSpacing(px) {
-  try { ctx.letterSpacing = px + "px"; } catch (e) {}
-}
-
 function drawTitle(t) {
   drawText(`HI-SCORE ${pad6(hi)}`, W / 2, 84, { size: 14, color: "#8fa0d8" });
 
-  ctx.save();
-  setSpacing(8);
-  ctx.shadowColor = "#7df9ff";
-  ctx.shadowBlur = 14 + 6 * Math.sin(t * 2);
-  drawText("ASTRO", W / 2 + 3, 149, { size: 54, color: "#ff2e88", weight: 900 });
-  drawText("ASTRO", W / 2, 146, { size: 54, color: "#7df9ff", weight: 900 });
-  ctx.shadowColor = "#ff2e88";
-  drawText("DEFENDER", W / 2 + 2, 194, { size: 31, color: "#7df9ff", weight: 900 });
-  drawText("DEFENDER", W / 2, 192, { size: 31, color: "#ffffff", weight: 900 });
-  ctx.restore();
-  setSpacing(3);
-  drawText("- NEON ARCADE EDITION -", W / 2, 222, { size: 11, color: "#ff6ad5" });
-  setSpacing(0);
+  ctx.globalAlpha = 0.7 + 0.3 * Math.sin(t * 2); // 光彩の脈動
+  ctx.drawImage(TITLE_GLOW, 0, TITLE_LOGO_Y);
+  ctx.globalAlpha = 1;
+  ctx.drawImage(TITLE_TEXT, 0, TITLE_LOGO_Y);
 
   const f = Math.floor(t * 2) % 2;
   const table = [
@@ -1885,11 +2012,7 @@ function drawOverlay(t) {
   } else if (state === "gameover") {
     ctx.fillStyle = "rgba(2,3,10,0.65)";
     ctx.fillRect(0, 0, W, H);
-    ctx.save();
-    ctx.shadowColor = "#ff4d6d";
-    ctx.shadowBlur = 16;
-    drawText("GAME OVER", W / 2, 244, { size: 40, color: "#ff4d6d", weight: 900 });
-    ctx.restore();
+    ctx.drawImage(GAMEOVER_TEXT, 0, GAMEOVER_Y);
     drawText(`SCORE ${pad6(score)}`, W / 2, 300, { size: 17, color: "#ffffff" });
     drawText(`HI-SCORE ${pad6(hi)}`, W / 2, 326, { size: 14, color: "#8fa0d8" });
     drawText(`WAVE ${wave}   MAX COMBO ×${maxMult}`, W / 2, 352, { size: 13, color: "#cfd8ff" });
@@ -1909,10 +2032,22 @@ function drawOverlay(t) {
 }
 
 function refreshActionButtons() {
-  laserButton.disabled = !canUseSpecial() || special.charge < LASER_MAX || special.laserT > 0;
-  bombButton.disabled = !canUseSpecial() || special.bombs <= 0 || special.bombT > 0;
-  laserButton.textContent = T("laserBtn", special.charge >= LASER_MAX ? "READY!" : `${Math.floor(special.charge)}%`);
-  bombButton.textContent = T("bombBtn", special.bombs);
+  const usable = canUseSpecial();
+  const laserOn = usable && special.charge >= LASER_MAX && special.laserT <= 0;
+  const bombOn = usable && special.bombs > 0 && special.bombT <= 0;
+  const gauge = Math.floor(special.charge);
+  const langChanged = lang !== shownButtons.lang;
+  if (langChanged || laserOn !== shownButtons.laserOn || gauge !== shownButtons.gauge) {
+    shownButtons.laserOn = laserOn; shownButtons.gauge = gauge;
+    laserButton.disabled = !laserOn;
+    laserButton.textContent = T("laserBtn", gauge >= LASER_MAX ? "READY!" : `${gauge}%`);
+  }
+  if (langChanged || bombOn !== shownButtons.bombOn || special.bombs !== shownButtons.bombs) {
+    shownButtons.bombOn = bombOn; shownButtons.bombs = special.bombs;
+    bombButton.disabled = !bombOn;
+    bombButton.textContent = T("bombBtn", special.bombs);
+  }
+  shownButtons.lang = lang;
 }
 
 function draw(t) {
@@ -1938,14 +2073,35 @@ function draw(t) {
 /* ================= メインループ ================= */
 
 let last = performance.now();
+let rafId = 0; // 予約中の requestAnimationFrame。0 ならループは止まっている
+const IDLE_FRAME_MS = 1000 / 30; // タイトルとゲームオーバーは動きが少ないので 30fps に抑える
+
 function frame(now) {
+  rafId = 0;
+  if ((state === "title" || state === "gameover") && now - last < IDLE_FRAME_MS - 1) {
+    rafId = requestAnimationFrame(frame);
+    return;
+  }
   const dt = Math.min((now - last) / 1000, 0.05);
   last = now;
   if (!paused) update(dt);
   draw(now / 1000);
-  requestAnimationFrame(frame);
+  // ポーズ中は静止画のままにしてループを止める。再開は setPaused(false) → ensureLoop()。
+  if (!paused) rafId = requestAnimationFrame(frame);
 }
-requestAnimationFrame(frame);
+
+function ensureLoop() {
+  if (rafId || paused) return;
+  last = performance.now();
+  rafId = requestAnimationFrame(frame);
+}
+
+// ポーズ中はループが止まっているので、表示に関わる設定を変えた時は 1 フレームだけ描き直す。
+function redrawIfPaused() {
+  if (paused) draw(performance.now() / 1000);
+}
+
+ensureLoop();
 </script>
 </body>
 </html>
