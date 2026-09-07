@@ -5,7 +5,7 @@
 **▶ Play now: <https://hnakada123.github.io/astro-defender/>**
 **📖 Source code guide: <https://hnakada123.github.io/astro-defender/doc/index.en.html>** (beginner-friendly, 23 chapters)
 
-Current version: **v1.0.0** ([changelog](CHANGELOG.en.md))
+Current version: **v1.0.1** ([changelog](CHANGELOG.en.md))
 
 A neo-retro fixed-screen shooter you play in the browser with the mouse.
 No external libraries and no external assets — everything lives in the single `index.html` file.
@@ -128,7 +128,7 @@ node --test tests/*.test.cjs
 ## Versioning
 
 Releases follow [Semantic Versioning](https://semver.org/) and are recorded as `vX.Y.Z` git tags.
-The current version is **v1.0.0**. It is also shown in the bottom-right corner of the title screen, and the changes are listed in [CHANGELOG.en.md](CHANGELOG.en.md).
+The current version is **v1.0.1**. It is also shown in the bottom-right corner of the title screen, and the changes are listed in [CHANGELOG.en.md](CHANGELOG.en.md).
 
 - X (major): changes that affect how the game plays, such as new controls or rules
 - Y (minor): new features, enemies or effects

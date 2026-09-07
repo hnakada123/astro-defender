@@ -5,7 +5,7 @@
 このプロジェクトは[セマンティック バージョニング](https://semver.org/lang/ja/)に従います。
 書式は [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) を参考にしています。
 
-## [Unreleased]
+## [1.0.1] - 2026-09-07
 
 ### 変更
 
@@ -34,5 +34,5 @@
 - 初学者向けソースコード解説ページ（日本語 / 英語）
 - タイトル画面右下のバージョン表示
 
-[Unreleased]: https://github.com/hnakada123/astro-defender/compare/v1.0.0...HEAD
+[1.0.1]: https://github.com/hnakada123/astro-defender/releases/tag/v1.0.1
 [1.0.0]: https://github.com/hnakada123/astro-defender/releases/tag/v1.0.0
