@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>画面と状態遷移 | ASTRO DEFENDER ソースコード解説</title>
+  <meta name="description" content="タイトル、プレイ、ミス、クリア、強化選択、ゲームオーバーを状態で管理します。">
+  <link rel="stylesheet" href="../guide.css">
+  <script src="../guide.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">本文へ移動</a>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true">A</span>ASTRO DEFENDER</a>
+    <nav class="header-links" aria-label="サイトメニュー">
+      <a href="../index.html#chapters">解説一覧</a>
+      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
+      <a href="../index.en.html" lang="en" hreflang="en">English</a>
+    </nav>
+  </div>
+</header>
+<div class="doc-layout">
+<details class="sidebar" open><summary>ソースコード解説・目次</summary><nav aria-label="解説の各項目">
+<p class="nav-group">ゲームの土台を知る</p><ol>
+<li><a href="getting-started.html"><span>00</span>この解説の読み方</a></li>
+<li><a href="architecture.html"><span>01</span>1ファイルの全体構成</a></li>
+<li><a href="game-loop.html"><span>02</span>ゲームループと時間</a></li>
+<li><a href="state-machine.html" aria-current="page"><span>03</span>画面と状態遷移</a></li>
+<li><a href="canvas.html"><span>04</span>Canvas の座標と描画</a></li>
+<li><a href="sprites.html"><span>05</span>文字列からドット絵を作る</a></li>
+<li><a href="collision.html"><span>06</span>四角形の当たり判定</a></li>
+</ol>
+<p class="nav-group">戦闘の仕組みを追う</p><ol>
+<li><a href="formation.html"><span>07</span>敵の編隊とウェーブ生成</a></li>
+<li><a href="input.html"><span>08</span>自機の移動と入力</a></li>
+<li><a href="bullets.html"><span>09</span>弾の移動と衝突の順序</a></li>
+<li><a href="barriers.html"><span>10</span>崩れるバリアの実装</a></li>
+<li><a href="score.html"><span>11</span>スコア・コンボ・残機</a></li>
+<li><a href="powerups.html"><span>12</span>カプセルと連結ビーム砲</a></li>
+</ol>
+<p class="nav-group">戦闘と成長を広げる</p><ol>
+<li><a href="specials.html"><span>13</span>合体レーザーとボム</a></li>
+<li><a href="upgrades.html"><span>14</span>ウェーブクリアと強化3択</a></li>
+<li><a href="boss.html"><span>15</span>大型戦艦のボス戦</a></li>
+<li><a href="flights.html"><span>16</span>編隊から突入する敵</a></li>
+</ol>
+<p class="nav-group">演出・品質・改造を学ぶ</p><ol>
+<li><a href="effects.html"><span>17</span>演出と描画の高速化</a></li>
+<li><a href="audio.html"><span>18</span>効果音と BGM の合成</a></li>
+<li><a href="localization.html"><span>19</span>日本語・英語と設定の保存</a></li>
+<li><a href="tests.html"><span>20</span>ゲームロジックのテスト</a></li>
+<li><a href="modding.html"><span>21</span>改造するときの着眼点</a></li>
+<li><a href="glossary.html"><span>22</span>用語集と読み返し先</a></li>
+</ol>
+</nav></details>
+<main id="main" class="doc-main">
+<nav class="breadcrumb" aria-label="現在の位置"><a href="../index.html">ソースコード解説</a> / 03 画面と状態遷移</nav>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 03 · 全23項目</p><h1>画面と状態遷移</h1><p class="lead">タイトル、プレイ、ミス、クリア、強化選択、ゲームオーバーを状態で管理します。</p><p class="source-ref">主な参照先：state / stateT / setState / setPaused</p></header>
+<h2 id="section-1">画面名を1つの変数で表す</h2>
+<figure class="code-block"><figcaption><span>index.html · L649–651</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L649-L651">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L649–651"><code>let state = &quot;title&quot;;       // title | play | dying | clear | upgrade | gameover
+let stateT = 0;
+let paused = false;</code></pre></figure>
+<div class="table-wrap" tabindex="0" role="region" aria-label="状態・起きること・次の状態"><table><thead><tr><th scope="col">状態</th><th scope="col">起きること</th><th scope="col">次の状態</th></tr></thead><tbody><tr><th scope="row"><code>title</code></th><td>開始入力を待つ</td><td><code>startGame()</code> で <code>play</code></td></tr><tr><th scope="row"><code>play</code></th><td>移動・射撃・衝突を処理</td><td>被弾で <code>dying</code>、全滅で <code>clear</code>、侵入で <code>gameover</code></td></tr><tr><th scope="row"><code>dying</code></th><td>ミスの演出を待つ</td><td>1.15秒を超えると残機に応じて復帰か終了</td></tr><tr><th scope="row"><code>clear</code></th><td>クリア演出を表示</td><td>1.6秒を超えると <code>upgrade</code></td></tr><tr><th scope="row"><code>upgrade</code></th><td>強化カードの選択を待つ</td><td>選択後に次のウェーブの <code>play</code></td></tr><tr><th scope="row"><code>gameover</code></th><td>結果を表示</td><td>0.6秒を超えてから開始入力で再挑戦</td></tr></tbody></table></div>
+<h2 id="section-2">状態の切り替えと経過時間</h2>
+<figure class="code-block"><figcaption><span>index.html · L686–689</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L686-L689">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L686–689"><code>function setState(s) {
+  state = s; stateT = 0;
+  cvs.style.cursor = (s === &quot;play&quot; &amp;&amp; !paused) ? &quot;none&quot; : &quot;pointer&quot;;
+}</code></pre></figure>
+<figure class="code-block"><figcaption><span>index.html · L1558–1571</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L1558-L1571">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L1558–1571"><code>function update(dt) {
+  stateT += dt;
+  updateCommon(dt);
+  if (state === &quot;play&quot;) {
+    updatePlay(dt);
+  } else if (state === &quot;dying&quot;) {
+    if (stateT &gt; 1.15) {
+      if (lives &gt; 0) { player.alive = true; player.inv = 2; setState(&quot;play&quot;); }
+      else gameOver();
+    }
+  } else if (state === &quot;clear&quot;) {
+    if (stateT &gt; 1.6) openUpgrades();
+  }
+}</code></pre></figure>
+<p><code>stateT</code> は現在の状態になってからの秒数です。切り替えるたびに0へ戻すことで、「ミスしてから何秒待つか」をその状態だけの条件として書けます。<code>updateCommon()</code> は星やパーティクルなどの共通処理、<code>updatePlay()</code> は戦闘専用の処理です。</p>
+<h2 id="section-3">ポーズは別のフラグ</h2>
+<p><code>paused</code> は <code>state</code> と独立しています。プレイ中またはミスの演出中に一時停止しても、どちらの状態だったかは失われません。<code>setPaused(true)</code> は押しっぱなしの入力を解放し、音の予約を止めます。</p>
+<aside class="note"><strong>読み解くポイント</strong><p>画面の描き分けとルールの進行は別です。強化画面でも背景は動きますが、<code>state === &quot;play&quot;</code> ではないため戦闘は進みません。</p>
+</aside>
+<aside class="exercise"><strong>確かめてみよう</strong><p><code>setState(</code> を検索し、それぞれがどの条件で呼ばれるかを見てください。残機が0になる瞬間と、ゲームオーバー画面へ移る瞬間の違いが分かります。</p>
+</aside>
+</article>
+<nav class="page-nav" aria-label="前後の項目">
+<a href="game-loop.html"><span>← 前の項目</span>02 ゲームループと時間</a>
+<a href="canvas.html"><span>次の項目 →</span>04 Canvas の座標と描画</a>
+</nav></main></div>
+<footer class="site-footer"><div class="container footer-inner">
+  <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
+  <p><a href="../index.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+</div></footer>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>自機の移動と入力 | ASTRO DEFENDER ソースコード解説</title>
+  <meta name="description" content="ポインターとキーボードを共通の状態にまとめ、移動速度と連射を制御します。">
+  <link rel="stylesheet" href="../guide.css">
+  <script src="../guide.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">本文へ移動</a>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true">A</span>ASTRO DEFENDER</a>
+    <nav class="header-links" aria-label="サイトメニュー">
+      <a href="../index.html#chapters">解説一覧</a>
+      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
+      <a href="../index.en.html" lang="en" hreflang="en">English</a>
+    </nav>
+  </div>
+</header>
+<div class="doc-layout">
+<details class="sidebar" open><summary>ソースコード解説・目次</summary><nav aria-label="解説の各項目">
+<p class="nav-group">ゲームの土台を知る</p><ol>
+<li><a href="getting-started.html"><span>00</span>この解説の読み方</a></li>
+<li><a href="architecture.html"><span>01</span>1ファイルの全体構成</a></li>
+<li><a href="game-loop.html"><span>02</span>ゲームループと時間</a></li>
+<li><a href="state-machine.html"><span>03</span>画面と状態遷移</a></li>
+<li><a href="canvas.html"><span>04</span>Canvas の座標と描画</a></li>
+<li><a href="sprites.html"><span>05</span>文字列からドット絵を作る</a></li>
+<li><a href="collision.html"><span>06</span>四角形の当たり判定</a></li>
+</ol>
+<p class="nav-group">戦闘の仕組みを追う</p><ol>
+<li><a href="formation.html"><span>07</span>敵の編隊とウェーブ生成</a></li>
+<li><a href="input.html" aria-current="page"><span>08</span>自機の移動と入力</a></li>
+<li><a href="bullets.html"><span>09</span>弾の移動と衝突の順序</a></li>
+<li><a href="barriers.html"><span>10</span>崩れるバリアの実装</a></li>
+<li><a href="score.html"><span>11</span>スコア・コンボ・残機</a></li>
+<li><a href="powerups.html"><span>12</span>カプセルと連結ビーム砲</a></li>
+</ol>
+<p class="nav-group">戦闘と成長を広げる</p><ol>
+<li><a href="specials.html"><span>13</span>合体レーザーとボム</a></li>
+<li><a href="upgrades.html"><span>14</span>ウェーブクリアと強化3択</a></li>
+<li><a href="boss.html"><span>15</span>大型戦艦のボス戦</a></li>
+<li><a href="flights.html"><span>16</span>編隊から突入する敵</a></li>
+</ol>
+<p class="nav-group">演出・品質・改造を学ぶ</p><ol>
+<li><a href="effects.html"><span>17</span>演出と描画の高速化</a></li>
+<li><a href="audio.html"><span>18</span>効果音と BGM の合成</a></li>
+<li><a href="localization.html"><span>19</span>日本語・英語と設定の保存</a></li>
+<li><a href="tests.html"><span>20</span>ゲームロジックのテスト</a></li>
+<li><a href="modding.html"><span>21</span>改造するときの着眼点</a></li>
+<li><a href="glossary.html"><span>22</span>用語集と読み返し先</a></li>
+</ol>
+</nav></details>
+<main id="main" class="doc-main">
+<nav class="breadcrumb" aria-label="現在の位置"><a href="../index.html">ソースコード解説</a> / 08 自機の移動と入力</nav>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 08 · 全23項目</p><h1>自機の移動と入力</h1><p class="lead">ポインターとキーボードを共通の状態にまとめ、移動速度と連射を制御します。</p><p class="source-ref">主な参照先：keys / mouseX / inputMode / releaseControls / updatePlay</p></header>
+<h2 id="section-1">イベントでは操作を覚えておく</h2>
+<figure class="code-block"><figcaption><span>index.html · L1077–1079</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L1077-L1079">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L1077–1079"><code>function releaseControls() {
+  shooting = false; keys.left = false; keys.right = false; keys.fire = false;
+}</code></pre></figure>
+<p>ポインター移動は目標位置 <code>mouseX</code>、左右キーは <code>keys.left</code> と <code>keys.right</code>、射撃は <code>shooting</code> または <code>keys.fire</code> に記録します。実際の移動と弾の生成は、毎フレームの <code>updatePlay()</code> が担当します。</p>
+<h2 id="section-2">どちらの入力も速度を通して動かす</h2>
+<figure class="code-block"><figcaption><span>index.html · L1354–1362</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L1354-L1362">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L1354–1362"><code>  const speed = 340 * (1 + upgrades.speed * 0.15);
+  if (inputMode === &quot;mouse&quot;) {
+    const target = clampPlayerX(mouseX);
+    player.x = clampPlayerX(player.x + clamp(target - player.x, -speed * dt * 2, speed * dt * 2));
+  } else player.x = clampPlayerX(player.x + speed * dt * ((keys.right ? 1 : 0) - (keys.left ? 1 : 0)));
+  player.cool -= dt;
+  player.inv = Math.max(0, player.inv - dt);
+  active.wide = Math.max(0, active.wide - dt);
+  active.rapid = Math.max(0, active.rapid - dt);</code></pre></figure>
+<p>キーボードは左右の真偽値を -1・0・1の向きに変換します。ポインター操作は目標へ瞬間移動するのではなく、1回に進める距離を制限して追従します。エンジン強化の速度倍率は両方に効き、ポインターの追従上限はキーボード移動の2倍です。</p>
+<p><code>clampPlayerX()</code> は画面端で位置を制限します。連結砲があるときは砲の幅も考慮しますが、敵弾と当たるのは自機本体だけです。</p>
+<h2 id="section-3">長押しの射撃はクールダウンで調整する</h2>
+<p><code>player.cool</code> が0以下で、通常弾数が上限未満なら発射します。基本間隔は0.27秒、連射強化中は0.12秒です。通常弾の上限は基本3、3方向ショットまたは連射強化中は12を条件判定に使います。連結ビームはこの通常弾数に数えません。</p>
+<h2 id="section-4">入力が残る場面をなくす</h2>
+<p>キーを離す、ポインターを離す、操作がキャンセルされる、といったイベントで入力を解除します。ポーズや強化選択への遷移時も <code>releaseControls()</code> を呼びます。ウィンドウがフォーカスを失うと、プレイ中なら自動でポーズになります。</p>
+<aside class="exercise"><strong>確かめてみよう</strong><p>左右キーを押したままポーズを入れてから、キーを離して再開します。移動が勝手に続かないことと、<code>setPaused()</code> の入力解除を対応させてください。</p>
+</aside>
+</article>
+<nav class="page-nav" aria-label="前後の項目">
+<a href="formation.html"><span>← 前の項目</span>07 敵の編隊とウェーブ生成</a>
+<a href="bullets.html"><span>次の項目 →</span>09 弾の移動と衝突の順序</a>
+</nav></main></div>
+<footer class="site-footer"><div class="container footer-inner">
+  <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
+  <p><a href="../index.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+</div></footer>
+</body>
+</html>

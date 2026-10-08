@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>文字列からドット絵を作る | ASTRO DEFENDER ソースコード解説</title>
+  <meta name="description" content="X と . の配列を画像に変換し、2コマのスプライトとして再利用します。">
+  <link rel="stylesheet" href="../guide.css">
+  <script src="../guide.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">本文へ移動</a>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true">A</span>ASTRO DEFENDER</a>
+    <nav class="header-links" aria-label="サイトメニュー">
+      <a href="../index.html#chapters">解説一覧</a>
+      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
+      <a href="../index.en.html" lang="en" hreflang="en">English</a>
+    </nav>
+  </div>
+</header>
+<div class="doc-layout">
+<details class="sidebar" open><summary>ソースコード解説・目次</summary><nav aria-label="解説の各項目">
+<p class="nav-group">ゲームの土台を知る</p><ol>
+<li><a href="getting-started.html"><span>00</span>この解説の読み方</a></li>
+<li><a href="architecture.html"><span>01</span>1ファイルの全体構成</a></li>
+<li><a href="game-loop.html"><span>02</span>ゲームループと時間</a></li>
+<li><a href="state-machine.html"><span>03</span>画面と状態遷移</a></li>
+<li><a href="canvas.html"><span>04</span>Canvas の座標と描画</a></li>
+<li><a href="sprites.html" aria-current="page"><span>05</span>文字列からドット絵を作る</a></li>
+<li><a href="collision.html"><span>06</span>四角形の当たり判定</a></li>
+</ol>
+<p class="nav-group">戦闘の仕組みを追う</p><ol>
+<li><a href="formation.html"><span>07</span>敵の編隊とウェーブ生成</a></li>
+<li><a href="input.html"><span>08</span>自機の移動と入力</a></li>
+<li><a href="bullets.html"><span>09</span>弾の移動と衝突の順序</a></li>
+<li><a href="barriers.html"><span>10</span>崩れるバリアの実装</a></li>
+<li><a href="score.html"><span>11</span>スコア・コンボ・残機</a></li>
+<li><a href="powerups.html"><span>12</span>カプセルと連結ビーム砲</a></li>
+</ol>
+<p class="nav-group">戦闘と成長を広げる</p><ol>
+<li><a href="specials.html"><span>13</span>合体レーザーとボム</a></li>
+<li><a href="upgrades.html"><span>14</span>ウェーブクリアと強化3択</a></li>
+<li><a href="boss.html"><span>15</span>大型戦艦のボス戦</a></li>
+<li><a href="flights.html"><span>16</span>編隊から突入する敵</a></li>
+</ol>
+<p class="nav-group">演出・品質・改造を学ぶ</p><ol>
+<li><a href="effects.html"><span>17</span>演出と描画の高速化</a></li>
+<li><a href="audio.html"><span>18</span>効果音と BGM の合成</a></li>
+<li><a href="localization.html"><span>19</span>日本語・英語と設定の保存</a></li>
+<li><a href="tests.html"><span>20</span>ゲームロジックのテスト</a></li>
+<li><a href="modding.html"><span>21</span>改造するときの着眼点</a></li>
+<li><a href="glossary.html"><span>22</span>用語集と読み返し先</a></li>
+</ol>
+</nav></details>
+<main id="main" class="doc-main">
+<nav class="breadcrumb" aria-label="現在の位置"><a href="../index.html">ソースコード解説</a> / 05 文字列からドット絵を作る</nav>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 05 · 全23項目</p><h1>文字列からドット絵を作る</h1><p class="lead">X と . の配列を画像に変換し、2コマのスプライトとして再利用します。</p><p class="source-ref">主な参照先：makeSprite / TYPES / withGlow / prerender</p></header>
+<h2 id="section-1">X のマスを塗るだけで画像になる</h2>
+<figure class="code-block"><figcaption><span>index.html · L348–358</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L348-L358">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L348–358"><code>function makeSprite(rows, color, scale = 2) {
+  const c = document.createElement(&quot;canvas&quot;);
+  c.width = rows[0].length * scale;
+  c.height = rows.length * scale;
+  const g = c.getContext(&quot;2d&quot;);
+  g.fillStyle = color;
+  rows.forEach((row, y) =&gt; {
+    for (let x = 0; x &lt; row.length; x++) if (row[x] === &quot;X&quot;) g.fillRect(x * scale, y * scale, scale, scale);
+  });
+  return c;
+}</code></pre></figure>
+<p><code>rows</code> は1行ずつの文字列を入れた配列です。<code>X</code> の位置だけを四角く塗り、ほかは透明のまま残します。<code>scale = 2</code> なら、文字列の1文字を2 × 2 pxに変換します。生成した Canvas はそのまま <code>drawImage()</code> の画像として使えます。</p>
+<section class="lab" data-lab="sprite"><h3>実験：文字列を描き換える</h3><p>X が塗るマス、. が透明なマスです。下の見本は編集するとすぐに変わります。</p><label for="sprite-rows">ドット絵の文字列</label><textarea id="sprite-rows" rows="8" maxlength="400" spellcheck="false">....X....
+...XXX...
+..XXXXX..
+.XX.X.XX.
+XXXXXXXXX
+..X...X..
+.X.....X.</textarea><label for="sprite-color">ドットの色</label><input id="sprite-color" type="color" value="#315c45"><canvas width="360" height="220" role="img" aria-label="入力したXの位置を塗ったドット絵">Xの位置を四角く塗って表示します。</canvas><output for="sprite-rows sprite-color" aria-live="polite"></output><noscript>操作にはJavaScriptが必要です。上のmakeSprite()で同じ仕組みを確認できます。</noscript></section><h2 id="section-2">データと描画処理を分ける</h2>
+<p>敵の <code>TYPES</code> には得点 <code>pts</code>、色 <code>color</code>、2コマ分の <code>frames</code> をまとめています。起動時に <code>frames</code> を画像へ変換し、戦闘中は <code>form.anim</code> でどちらを描くか選びます。文字列を毎フレーム解析する必要はありません。</p>
+<figure class="code-block"><figcaption><span>index.html · L430–441</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L430-L441">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L430–441"><code>  a: { // トゲ型エイリアン
+    pts: 30, color: &quot;#ff6ad5&quot;,
+    frames: [[
+      &quot;.X..XX..X.&quot;,
+      &quot;..X.XX.X..&quot;,
+      &quot;.XXXXXXXX.&quot;,
+      &quot;XXX.XX.XXX&quot;,
+      &quot;XXXXXXXXXX&quot;,
+      &quot;.XXXXXXXX.&quot;,
+      &quot;..X....X..&quot;,
+      &quot;.X......X.&quot;,
+    ], [</code></pre></figure>
+<h2 id="section-3">光彩も先に作る</h2>
+<p><code>withGlow()</code> は元画像をぼかした別画像を作ります。ぼかしが端で切れないよう余白 <code>pad</code> を持たせ、描くときにその分だけ位置を戻します。<code>prerender()</code> も同じ考え方で、タイトルやボスの船体など変わりにくい絵を一度だけ描いて使い回します。</p>
+<aside class="exercise"><strong>確かめてみよう</strong><p>足の位置だけが違う2枚の文字列を作ってみましょう。交互に表示するだけで、少ないデータから歩く動きを表せます。</p>
+</aside>
+</article>
+<nav class="page-nav" aria-label="前後の項目">
+<a href="canvas.html"><span>← 前の項目</span>04 Canvas の座標と描画</a>
+<a href="collision.html"><span>次の項目 →</span>06 四角形の当たり判定</a>
+</nav></main></div>
+<footer class="site-footer"><div class="container footer-inner">
+  <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
+  <p><a href="../index.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+</div></footer>
+</body>
+</html>

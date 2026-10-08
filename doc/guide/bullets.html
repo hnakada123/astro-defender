@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>弾の移動と衝突の順序 | ASTRO DEFENDER ソースコード解説</title>
+  <meta name="description" content="配列の逆順走査、弾が消える条件、シールドとミスの分岐を説明します。">
+  <link rel="stylesheet" href="../guide.css">
+  <script src="../guide.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">本文へ移動</a>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true">A</span>ASTRO DEFENDER</a>
+    <nav class="header-links" aria-label="サイトメニュー">
+      <a href="../index.html#chapters">解説一覧</a>
+      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
+      <a href="../index.en.html" lang="en" hreflang="en">English</a>
+    </nav>
+  </div>
+</header>
+<div class="doc-layout">
+<details class="sidebar" open><summary>ソースコード解説・目次</summary><nav aria-label="解説の各項目">
+<p class="nav-group">ゲームの土台を知る</p><ol>
+<li><a href="getting-started.html"><span>00</span>この解説の読み方</a></li>
+<li><a href="architecture.html"><span>01</span>1ファイルの全体構成</a></li>
+<li><a href="game-loop.html"><span>02</span>ゲームループと時間</a></li>
+<li><a href="state-machine.html"><span>03</span>画面と状態遷移</a></li>
+<li><a href="canvas.html"><span>04</span>Canvas の座標と描画</a></li>
+<li><a href="sprites.html"><span>05</span>文字列からドット絵を作る</a></li>
+<li><a href="collision.html"><span>06</span>四角形の当たり判定</a></li>
+</ol>
+<p class="nav-group">戦闘の仕組みを追う</p><ol>
+<li><a href="formation.html"><span>07</span>敵の編隊とウェーブ生成</a></li>
+<li><a href="input.html"><span>08</span>自機の移動と入力</a></li>
+<li><a href="bullets.html" aria-current="page"><span>09</span>弾の移動と衝突の順序</a></li>
+<li><a href="barriers.html"><span>10</span>崩れるバリアの実装</a></li>
+<li><a href="score.html"><span>11</span>スコア・コンボ・残機</a></li>
+<li><a href="powerups.html"><span>12</span>カプセルと連結ビーム砲</a></li>
+</ol>
+<p class="nav-group">戦闘と成長を広げる</p><ol>
+<li><a href="specials.html"><span>13</span>合体レーザーとボム</a></li>
+<li><a href="upgrades.html"><span>14</span>ウェーブクリアと強化3択</a></li>
+<li><a href="boss.html"><span>15</span>大型戦艦のボス戦</a></li>
+<li><a href="flights.html"><span>16</span>編隊から突入する敵</a></li>
+</ol>
+<p class="nav-group">演出・品質・改造を学ぶ</p><ol>
+<li><a href="effects.html"><span>17</span>演出と描画の高速化</a></li>
+<li><a href="audio.html"><span>18</span>効果音と BGM の合成</a></li>
+<li><a href="localization.html"><span>19</span>日本語・英語と設定の保存</a></li>
+<li><a href="tests.html"><span>20</span>ゲームロジックのテスト</a></li>
+<li><a href="modding.html"><span>21</span>改造するときの着眼点</a></li>
+<li><a href="glossary.html"><span>22</span>用語集と読み返し先</a></li>
+</ol>
+</nav></details>
+<main id="main" class="doc-main">
+<nav class="breadcrumb" aria-label="現在の位置"><a href="../index.html">ソースコード解説</a> / 09 弾の移動と衝突の順序</nav>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 09 · 全23項目</p><h1>弾の移動と衝突の順序</h1><p class="lead">配列の逆順走査、弾が消える条件、シールドとミスの分岐を説明します。</p><p class="source-ref">主な参照先：pBullets / eBullets / damagePlayer / hitPlayer</p></header>
+<h2 id="section-1">弾は位置と速度を持つオブジェクト</h2>
+<figure class="code-block"><figcaption><span>index.html · L1489–1496</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L1489-L1496">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L1489–1496"><code>  // --- 自弾 ---
+  for (let i = pBullets.length - 1; i &gt;= 0; i--) {
+    const p = pBullets[i];
+    p.y -= 470 * dt;
+    p.x += (p.vx || 0) * dt;
+    let dead = p.y + p.h &lt; 0 || p.x &lt; -20 || p.x &gt; W + 20;
+    if (!dead &amp;&amp; barrierHit(p, 1)) dead = true;
+    if (!dead) {</code></pre></figure>
+<p>自弾は毎秒470 pxで上へ進み、横方向の速度がある弾は xも変化します。画面外へ出たら削除対象です。敵弾は各オブジェクトの <code>vy</code>、必要なら <code>vx</code> を使って進めます。</p>
+<h2 id="section-2">衝突を調べる順番にも意味がある</h2>
+<div class="table-wrap" tabindex="0" role="region" aria-label="順番・自弾の処理"><table><thead><tr><th scope="col">順番</th><th scope="col">自弾の処理</th></tr></thead><tbody><tr><th scope="row">1</th><td>画面外かどうかを調べる</td></tr><tr><th scope="row">2</th><td>バリアと当たればバリアを削り、弾を消す</td></tr><tr><th scope="row">3</th><td>敵弾と相殺する</td></tr><tr><th scope="row">4</th><td>ボーナス円盤、ボスとの衝突を調べる</td></tr><tr><th scope="row">5</th><td>通常の敵に当たれば撃破し、貫通数を減らす</td></tr></tbody></table></div>
+<p><code>dead</code> が true になった弾は後続の対象を攻撃しません。連結ビームは敵への命中で <code>pierce</code> を減らし、残りがあれば別の敵も調べます。ただしバリアや敵弾への接触では通常弾と同様に消えます。合体レーザーは別の処理です。</p>
+<h2 id="section-3">削除しながら調べるなら後ろから</h2>
+<p><code>splice(i, 1)</code> は要素を消し、後ろの要素を前へ詰めます。前から進むループだと、詰まってきた要素を飛ばすことがあります。末尾から先頭へ調べれば、まだ調べていない要素の位置は変わりません。</p>
+<h2 id="section-4">シールドと残機減少を分ける</h2>
+<figure class="code-block"><figcaption><span>index.html · L1297–1309</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L1297-L1309">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L1297–1309"><code>function damagePlayer() {
+  waveNoDamage = false;
+  resetCombo();
+  if (active.shield &gt; 0) {
+    active.shield = 0;
+    player.inv = 1.2;
+    spawnRing(player.x, PLAYER_Y + 8, &quot;#7dff7a&quot;, 240, 0.4);
+    popup(player.x, PLAYER_Y - 24, &quot;SHIELD BREAK&quot;, &quot;#7dff7a&quot;, 12);
+    sfx.shieldBreak();
+    return;
+  }
+  hitPlayer();
+}</code></pre></figure>
+<p>ダメージを受けると、まずノーダメージ記録とコンボを解除します。シールドがあればそれを消費し、1.2秒の無敵時間を与えます。シールドがなければ <code>hitPlayer()</code> が残機を減らし、連結砲を解除して <code>dying</code> に移します。</p>
+<aside class="exercise"><strong>確かめてみよう</strong><p><code>damagePlayer()</code> と <code>hitPlayer()</code> の役割を分けて確認してください。シールドで防いでもノーダメージボーナスの条件から外れる理由を説明できますか。</p>
+</aside>
+</article>
+<nav class="page-nav" aria-label="前後の項目">
+<a href="input.html"><span>← 前の項目</span>08 自機の移動と入力</a>
+<a href="barriers.html"><span>次の項目 →</span>10 崩れるバリアの実装</a>
+</nav></main></div>
+<footer class="site-footer"><div class="container footer-inner">
+  <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
+  <p><a href="../index.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+</div></footer>
+</body>
+</html>

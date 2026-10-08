@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>1ファイルの全体構成 | ASTRO DEFENDER ソースコード解説</title>
+  <meta name="description" content="HTML・CSS・JavaScript の役割と、入力から描画までのデータの流れを整理します。">
+  <link rel="stylesheet" href="../guide.css">
+  <script src="../guide.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">本文へ移動</a>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true">A</span>ASTRO DEFENDER</a>
+    <nav class="header-links" aria-label="サイトメニュー">
+      <a href="../index.html#chapters">解説一覧</a>
+      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
+      <a href="../index.en.html" lang="en" hreflang="en">English</a>
+    </nav>
+  </div>
+</header>
+<div class="doc-layout">
+<details class="sidebar" open><summary>ソースコード解説・目次</summary><nav aria-label="解説の各項目">
+<p class="nav-group">ゲームの土台を知る</p><ol>
+<li><a href="getting-started.html"><span>00</span>この解説の読み方</a></li>
+<li><a href="architecture.html" aria-current="page"><span>01</span>1ファイルの全体構成</a></li>
+<li><a href="game-loop.html"><span>02</span>ゲームループと時間</a></li>
+<li><a href="state-machine.html"><span>03</span>画面と状態遷移</a></li>
+<li><a href="canvas.html"><span>04</span>Canvas の座標と描画</a></li>
+<li><a href="sprites.html"><span>05</span>文字列からドット絵を作る</a></li>
+<li><a href="collision.html"><span>06</span>四角形の当たり判定</a></li>
+</ol>
+<p class="nav-group">戦闘の仕組みを追う</p><ol>
+<li><a href="formation.html"><span>07</span>敵の編隊とウェーブ生成</a></li>
+<li><a href="input.html"><span>08</span>自機の移動と入力</a></li>
+<li><a href="bullets.html"><span>09</span>弾の移動と衝突の順序</a></li>
+<li><a href="barriers.html"><span>10</span>崩れるバリアの実装</a></li>
+<li><a href="score.html"><span>11</span>スコア・コンボ・残機</a></li>
+<li><a href="powerups.html"><span>12</span>カプセルと連結ビーム砲</a></li>
+</ol>
+<p class="nav-group">戦闘と成長を広げる</p><ol>
+<li><a href="specials.html"><span>13</span>合体レーザーとボム</a></li>
+<li><a href="upgrades.html"><span>14</span>ウェーブクリアと強化3択</a></li>
+<li><a href="boss.html"><span>15</span>大型戦艦のボス戦</a></li>
+<li><a href="flights.html"><span>16</span>編隊から突入する敵</a></li>
+</ol>
+<p class="nav-group">演出・品質・改造を学ぶ</p><ol>
+<li><a href="effects.html"><span>17</span>演出と描画の高速化</a></li>
+<li><a href="audio.html"><span>18</span>効果音と BGM の合成</a></li>
+<li><a href="localization.html"><span>19</span>日本語・英語と設定の保存</a></li>
+<li><a href="tests.html"><span>20</span>ゲームロジックのテスト</a></li>
+<li><a href="modding.html"><span>21</span>改造するときの着眼点</a></li>
+<li><a href="glossary.html"><span>22</span>用語集と読み返し先</a></li>
+</ol>
+</nav></details>
+<main id="main" class="doc-main">
+<nav class="breadcrumb" aria-label="現在の位置"><a href="../index.html">ソースコード解説</a> / 01 1ファイルの全体構成</nav>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 01 · 全23項目</p><h1>1ファイルの全体構成</h1><p class="lead">HTML・CSS・JavaScript の役割と、入力から描画までのデータの流れを整理します。</p><p class="source-ref">主な参照先：cvs / ctx / player / update / draw</p></header>
+<h2 id="section-1">画面の骨組みとゲーム本体</h2>
+<p>HTML はゲーム画面用の Canvas、必殺技と言語のボタン、操作説明を配置します。CSS は画面の大きさや周囲の装飾を担当します。自機・敵・弾は HTML 要素ではなく、JavaScript が Canvas に描く図形です。</p>
+<figure class="code-block"><figcaption><span>index.html · L45–54</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L45-L54">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L45–54"><code>&lt;div class=&quot;frame&quot;&gt;&lt;canvas id=&quot;game&quot; width=&quot;480&quot; height=&quot;640&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;
+&lt;div class=&quot;actions&quot;&gt;
+  &lt;button id=&quot;laserButton&quot; type=&quot;button&quot; disabled&gt;Z 合体レーザー 0%&lt;/button&gt;
+  &lt;button id=&quot;bombButton&quot; type=&quot;button&quot; disabled&gt;X ボム ×2&lt;/button&gt;
+  &lt;div class=&quot;lang&quot; role=&quot;group&quot; aria-label=&quot;Language / 言語&quot;&gt;
+    &lt;button id=&quot;langJa&quot; type=&quot;button&quot; aria-pressed=&quot;true&quot;&gt;日本語&lt;/button&gt;
+    &lt;button id=&quot;langEn&quot; type=&quot;button&quot; aria-pressed=&quot;false&quot;&gt;ENGLISH&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;p class=&quot;hint&quot; id=&quot;hint&quot;&gt;&lt;/p&gt;</code></pre></figure>
+<div class="table-wrap" tabindex="0" role="region" aria-label="層・役割・読む場所"><table><thead><tr><th scope="col">層</th><th scope="col">役割</th><th scope="col">読む場所</th></tr></thead><tbody><tr><th scope="row">HTML</th><td>Canvas・ボタン・操作説明を置く</td><td><code>&lt;body&gt;</code> の冒頭</td></tr><tr><th scope="row">CSS</th><td>表示サイズ、枠、走査線を整える</td><td><code>&lt;style&gt;</code></td></tr><tr><th scope="row">JavaScript</th><td>状態を更新し、絵と音を出す</td><td><code>&lt;script&gt;</code></td></tr></tbody></table></div>
+<h2 id="section-2">入力・状態・描画を分けて読む</h2>
+<ol class="flow"><li><strong>1. 入力</strong><small><code>keys</code> や <code>mouseX</code> を更新</small></li><li><strong>2. 計算</strong><small><code>update(dt)</code> が状態を進める</small></li><li><strong>3. 描画</strong><small><code>draw(t)</code> が画面を作る</small></li></ol>
+<p>例えば右キーを押すと、入力イベントが <code>keys.right</code> を true にします。<code>updatePlay()</code> がそれを読んで <code>player.x</code> を増やし、<code>drawGame()</code> が新しい座標に自機を描きます。入力イベントと描画の間にゲーム状態がある、と考えると読みやすくなります。</p>
+<h2 id="section-3">ソースを探すための地図</h2>
+<div class="table-wrap" tabindex="0" role="region" aria-label="まとまり・主な名前"><table><thead><tr><th scope="col">まとまり</th><th scope="col">主な名前</th></tr></thead><tbody><tr><th scope="row">基本設定・文言</th><td><code>W</code>、<code>H</code>、<code>STRINGS</code>、<code>T()</code></td></tr><tr><th scope="row">音と画像の準備</th><td><code>beep()</code>、<code>musicTick()</code>、<code>makeSprite()</code>、<code>prerender()</code></td></tr><tr><th scope="row">ゲームの状態</th><td><code>player</code>、<code>aliens</code>、<code>active</code>、<code>upgrades</code>、<code>special</code></td></tr><tr><th scope="row">ルールと入力</th><td><code>makeWave()</code>、<code>activateLaser()</code>、<code>updateBoss()</code>、イベント登録</td></tr><tr><th scope="row">フレーム処理</th><td><code>update()</code>、<code>draw()</code>、<code>frame()</code></td></tr></tbody></table></div>
+<aside class="note"><strong>読み解くポイント</strong><p>関数はファイル末尾からさかのぼって読む方法も有効です。<code>ensureLoop()</code> → <code>frame()</code> → <code>update()</code> と <code>draw()</code> の順に呼び出し先を追うと、プログラム全体の入口をつかめます。</p>
+</aside>
+</article>
+<nav class="page-nav" aria-label="前後の項目">
+<a href="getting-started.html"><span>← 前の項目</span>00 この解説の読み方</a>
+<a href="game-loop.html"><span>次の項目 →</span>02 ゲームループと時間</a>
+</nav></main></div>
+<footer class="site-footer"><div class="container footer-inner">
+  <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
+  <p><a href="../index.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+</div></footer>
+</body>
+</html>

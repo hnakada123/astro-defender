@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>スコア・コンボ・残機 | ASTRO DEFENDER ソースコード解説</title>
+  <meta name="description" content="撃破時の加点、2.2秒のコンボ猶予、残機の増加とハイスコア保存を追います。">
+  <link rel="stylesheet" href="../guide.css">
+  <script src="../guide.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">本文へ移動</a>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true">A</span>ASTRO DEFENDER</a>
+    <nav class="header-links" aria-label="サイトメニュー">
+      <a href="../index.html#chapters">解説一覧</a>
+      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
+      <a href="../index.en.html" lang="en" hreflang="en">English</a>
+    </nav>
+  </div>
+</header>
+<div class="doc-layout">
+<details class="sidebar" open><summary>ソースコード解説・目次</summary><nav aria-label="解説の各項目">
+<p class="nav-group">ゲームの土台を知る</p><ol>
+<li><a href="getting-started.html"><span>00</span>この解説の読み方</a></li>
+<li><a href="architecture.html"><span>01</span>1ファイルの全体構成</a></li>
+<li><a href="game-loop.html"><span>02</span>ゲームループと時間</a></li>
+<li><a href="state-machine.html"><span>03</span>画面と状態遷移</a></li>
+<li><a href="canvas.html"><span>04</span>Canvas の座標と描画</a></li>
+<li><a href="sprites.html"><span>05</span>文字列からドット絵を作る</a></li>
+<li><a href="collision.html"><span>06</span>四角形の当たり判定</a></li>
+</ol>
+<p class="nav-group">戦闘の仕組みを追う</p><ol>
+<li><a href="formation.html"><span>07</span>敵の編隊とウェーブ生成</a></li>
+<li><a href="input.html"><span>08</span>自機の移動と入力</a></li>
+<li><a href="bullets.html"><span>09</span>弾の移動と衝突の順序</a></li>
+<li><a href="barriers.html"><span>10</span>崩れるバリアの実装</a></li>
+<li><a href="score.html" aria-current="page"><span>11</span>スコア・コンボ・残機</a></li>
+<li><a href="powerups.html"><span>12</span>カプセルと連結ビーム砲</a></li>
+</ol>
+<p class="nav-group">戦闘と成長を広げる</p><ol>
+<li><a href="specials.html"><span>13</span>合体レーザーとボム</a></li>
+<li><a href="upgrades.html"><span>14</span>ウェーブクリアと強化3択</a></li>
+<li><a href="boss.html"><span>15</span>大型戦艦のボス戦</a></li>
+<li><a href="flights.html"><span>16</span>編隊から突入する敵</a></li>
+</ol>
+<p class="nav-group">演出・品質・改造を学ぶ</p><ol>
+<li><a href="effects.html"><span>17</span>演出と描画の高速化</a></li>
+<li><a href="audio.html"><span>18</span>効果音と BGM の合成</a></li>
+<li><a href="localization.html"><span>19</span>日本語・英語と設定の保存</a></li>
+<li><a href="tests.html"><span>20</span>ゲームロジックのテスト</a></li>
+<li><a href="modding.html"><span>21</span>改造するときの着眼点</a></li>
+<li><a href="glossary.html"><span>22</span>用語集と読み返し先</a></li>
+</ol>
+</nav></details>
+<main id="main" class="doc-main">
+<nav class="breadcrumb" aria-label="現在の位置"><a href="../index.html">ソースコード解説</a> / 11 スコア・コンボ・残機</nav>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 11 · 全23項目</p><h1>スコア・コンボ・残機</h1><p class="lead">撃破時の加点、2.2秒のコンボ猶予、残機の増加とハイスコア保存を追います。</p><p class="source-ref">主な参照先：killAlien / bumpCombo / addScore / saveHi</p></header>
+<h2 id="section-1">撃破の処理は1か所に集める</h2>
+<p><code>killAlien()</code> は生存フラグを確認してから敵を消し、生存数を減らします。その後、ゲージ充電、コンボ更新、加点、粒子やリング、カプセル抽選、ヒットストップ、効果音をまとめて処理します。複数の弾が同じ敵を調べても、二重に得点しないための入口にもなっています。</p>
+<h2 id="section-2">4体ごとに倍率が増える</h2>
+<figure class="code-block"><figcaption><span>index.html · L807–816</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L807-L816">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L807–816"><code>function bumpCombo() {
+  combo.n++; combo.t = COMBO_WINDOW;
+  const m = Math.min(8, 1 + Math.floor(combo.n / 4));
+  if (m &gt; combo.mult) {
+    combo.mult = m;
+    maxMult = Math.max(maxMult, m);
+    popup(player.x, PLAYER_Y - 34, `COMBO ×${m}`, MULT_COLORS[m - 1], 13);
+    sfx.tier(m);
+  }
+}</code></pre></figure>
+<p>撃破するたびに残り時間を <code>COMBO_WINDOW</code>、つまり2.2秒へ戻します。4体で×2、8体で×3となり、最大は×8です。通常の敵の素点は上段30点、中段20点、下段10点。倍率を更新してから加点するので、4体目から新しい倍率が適用されます。</p>
+<h2 id="section-3">5000点ごとに残機を増やす</h2>
+<figure class="code-block"><figcaption><span>index.html · L781–792</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L781-L792">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L781–792"><code>function addScore(n) {
+  score += n;
+  if (score &gt; hi) { hi = score; newRecord = true; }
+  while (score &gt;= nextLife) {
+    nextLife += LIFE_STEP;
+    if (lives &lt; 5) {
+      lives++;
+      popup(W / 2, H / 2 - 40, &quot;1UP!&quot;, &quot;#ffe066&quot;, 20);
+      sfx.oneUp();
+    }
+  }
+}</code></pre></figure>
+<p>次の残機獲得ラインを <code>nextLife</code> で管理します。大きな加点で複数のラインをまたいでも処理できるよう <code>while</code> を使います。残機は最大5ですが、満タンでもライン自体は先へ進みます。</p>
+<h2 id="section-4">保存する値と表示する値</h2>
+<figure class="code-block"><figcaption><span>index.html · L779–779</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L779-L779">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L779–779"><code>function saveHi() { try { localStorage.setItem(HI_KEY, String(hi)); } catch (e) {} }</code></pre></figure>
+<p>ハイスコアはゲームオーバー時に <code>localStorage</code> へ文字列として保存します。読み書きに失敗してもゲームを続けられるよう <code>try</code> / <code>catch</code> で囲っています。画面用の <code>scoreShown</code> は実際の <code>score</code> に少しずつ近づけ、数字が滑らかに増える演出に使います。</p>
+<aside class="exercise"><strong>確かめてみよう</strong><p><code>combo.n</code> が3と4のときの <code>Math.floor(combo.n / 4)</code> を計算し、倍率の境目を確かめてください。</p>
+</aside>
+</article>
+<nav class="page-nav" aria-label="前後の項目">
+<a href="barriers.html"><span>← 前の項目</span>10 崩れるバリアの実装</a>
+<a href="powerups.html"><span>次の項目 →</span>12 カプセルと連結ビーム砲</a>
+</nav></main></div>
+<footer class="site-footer"><div class="container footer-inner">
+  <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
+  <p><a href="../index.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+</div></footer>
+</body>
+</html>

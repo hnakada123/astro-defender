@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>効果音と BGM の合成 | ASTRO DEFENDER ソースコード解説</title>
+  <meta name="description" content="発振器・音量・ノイズから音を作り、BGMを少し先の時刻へ予約します。">
+  <link rel="stylesheet" href="../guide.css">
+  <script src="../guide.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">本文へ移動</a>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true">A</span>ASTRO DEFENDER</a>
+    <nav class="header-links" aria-label="サイトメニュー">
+      <a href="../index.html#chapters">解説一覧</a>
+      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
+      <a href="../index.en.html" lang="en" hreflang="en">English</a>
+    </nav>
+  </div>
+</header>
+<div class="doc-layout">
+<details class="sidebar" open><summary>ソースコード解説・目次</summary><nav aria-label="解説の各項目">
+<p class="nav-group">ゲームの土台を知る</p><ol>
+<li><a href="getting-started.html"><span>00</span>この解説の読み方</a></li>
+<li><a href="architecture.html"><span>01</span>1ファイルの全体構成</a></li>
+<li><a href="game-loop.html"><span>02</span>ゲームループと時間</a></li>
+<li><a href="state-machine.html"><span>03</span>画面と状態遷移</a></li>
+<li><a href="canvas.html"><span>04</span>Canvas の座標と描画</a></li>
+<li><a href="sprites.html"><span>05</span>文字列からドット絵を作る</a></li>
+<li><a href="collision.html"><span>06</span>四角形の当たり判定</a></li>
+</ol>
+<p class="nav-group">戦闘の仕組みを追う</p><ol>
+<li><a href="formation.html"><span>07</span>敵の編隊とウェーブ生成</a></li>
+<li><a href="input.html"><span>08</span>自機の移動と入力</a></li>
+<li><a href="bullets.html"><span>09</span>弾の移動と衝突の順序</a></li>
+<li><a href="barriers.html"><span>10</span>崩れるバリアの実装</a></li>
+<li><a href="score.html"><span>11</span>スコア・コンボ・残機</a></li>
+<li><a href="powerups.html"><span>12</span>カプセルと連結ビーム砲</a></li>
+</ol>
+<p class="nav-group">戦闘と成長を広げる</p><ol>
+<li><a href="specials.html"><span>13</span>合体レーザーとボム</a></li>
+<li><a href="upgrades.html"><span>14</span>ウェーブクリアと強化3択</a></li>
+<li><a href="boss.html"><span>15</span>大型戦艦のボス戦</a></li>
+<li><a href="flights.html"><span>16</span>編隊から突入する敵</a></li>
+</ol>
+<p class="nav-group">演出・品質・改造を学ぶ</p><ol>
+<li><a href="effects.html"><span>17</span>演出と描画の高速化</a></li>
+<li><a href="audio.html" aria-current="page"><span>18</span>効果音と BGM の合成</a></li>
+<li><a href="localization.html"><span>19</span>日本語・英語と設定の保存</a></li>
+<li><a href="tests.html"><span>20</span>ゲームロジックのテスト</a></li>
+<li><a href="modding.html"><span>21</span>改造するときの着眼点</a></li>
+<li><a href="glossary.html"><span>22</span>用語集と読み返し先</a></li>
+</ol>
+</nav></details>
+<main id="main" class="doc-main">
+<nav class="breadcrumb" aria-label="現在の位置"><a href="../index.html">ソースコード解説</a> / 18 効果音と BGM の合成</nav>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 18 · 全23項目</p><h1>効果音と BGM の合成</h1><p class="lead">発振器・音量・ノイズから音を作り、BGMを少し先の時刻へ予約します。</p><p class="source-ref">主な参照先：ac / beep / boom / musicTick / scheduleStep</p></header>
+<h2 id="section-1">音を作り、音量を通して出力する</h2>
+<ol class="flow"><li><strong>発振器</strong><small><code>OscillatorNode</code> が波形を作る</small></li><li><strong>音量</strong><small><code>GainNode</code> が減衰を付ける</small></li><li><strong>出力</strong><small><code>destination</code> へ接続</small></li></ol>
+<p><code>ac()</code> は初めて必要になったときに AudioContext を作り、中断中なら再開します。クリックやキー入力の入口で呼ぶ構成です。既存の音源ファイルを再生するのではなく、波形と音量の変化から効果音を作ります。</p>
+<figure class="code-block"><figcaption><span>index.html · L193–206</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L193-L206">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L193–206"><code>function beep({ f0 = 440, f1 = f0, dur = 0.1, type = &quot;square&quot;, vol = 0.12, delay = 0 }) {
+  if (muted) return;
+  try {
+    const a = ac(), t = a.currentTime + delay;
+    const o = a.createOscillator(), g = a.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(f0, t);
+    o.frequency.exponentialRampToValueAtTime(Math.max(f1, 1), t + dur);
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(a.destination);
+    o.start(t); o.stop(t + dur + 0.02);
+  } catch (e) {}
+}</code></pre></figure>
+<p><code>f0</code> から <code>f1</code> へ周波数を変えると、上昇音や下降音になります。音量を短時間で小さくすることで、鳴りっぱなしの波形を射撃音などに変えます。指数的な変化では0を使わず、音量の終点を小さな正数にしています。</p>
+<h2 id="section-2">爆発はノイズとフィルター</h2>
+<p><code>ensureNoise()</code> は1秒分のホワイトノイズを一度作って共有します。<code>boom()</code> はそのバッファを再生し、ローパスフィルターで高い音を削り、音量を減衰させます。発射するたびにノイズ全体を作り直さないことが負荷の削減につながります。</p>
+<h2 id="section-3">BGMはオーディオの時計で予約する</h2>
+<figure class="code-block"><figcaption><span>index.html · L328–336</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L328-L336">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L328–336"><code>function musicTick() {
+  if (!actx) return;
+  while (music.next &lt; actx.currentTime + 0.16) {
+    if (music.next &lt; actx.currentTime) music.next = actx.currentTime + 0.05;
+    scheduleStep(music.step, music.next);
+    music.step = (music.step + 1) % 32;
+    music.next += MSTEP;
+  }
+}</code></pre></figure>
+<p>BGMは112 BPMの8分音符を1ステップとし、32ステップで循環します。50ミリ秒ごとのタイマーは音を直接鳴らすためではなく、オーディオ時刻の0.16秒先まで予約を補充するために使います。<code>scheduleStep()</code> がステップ番号からベース、キック、ハイハット、旋律を選びます。</p>
+<h2 id="section-4">停止とミュート</h2>
+<p>ポーズやミュートでは <code>musicStop()</code> が予約を補充するタイマーを止めます。すでに予約済みの短い音まで一括で取り消す構造ではないため、停止直後に短い余韻が残る場合があります。ミュート設定はブラウザへ保存されます。</p>
+<aside class="exercise"><strong>確かめてみよう</strong><p>射撃音の <code>f0</code>・<code>f1</code>・<code>dur</code> を1つずつ変え、音の高さの変化と長さがそれぞれ何を担当するか聴き比べてください。</p>
+</aside>
+</article>
+<nav class="page-nav" aria-label="前後の項目">
+<a href="effects.html"><span>← 前の項目</span>17 演出と描画の高速化</a>
+<a href="localization.html"><span>次の項目 →</span>19 日本語・英語と設定の保存</a>
+</nav></main></div>
+<footer class="site-footer"><div class="container footer-inner">
+  <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
+  <p><a href="../index.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+</div></footer>
+</body>
+</html>

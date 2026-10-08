@@ -104,9 +104,10 @@ python3 -m http.server 8000
 
 ## ソースコード解説
 
-`index.html` の中身を初学者向けに 23 章で読み解く解説ページを用意しています。
+`index.html` の中身を初学者向けに 23 項目で読み解く解説ページを用意しています。
+日本語版は4つの分野に分けた項目一覧から、各項目の詳細ページへ移動できます。
 ゲームループ・状態遷移・スプライト生成・当たり判定・Web Audio による音の合成などを、
-実ソースの行番号つき抜粋と、ブラウザ上で触れる実験コーナーで説明しています。
+実ソースの行番号つき抜粋、確認課題、ブラウザ上で触れる実験コーナーで説明しています。
 
 - 日本語: <https://hnakada123.github.io/astro-defender/doc/>（[doc/index.html](doc/index.html)）
 - English: <https://hnakada123.github.io/astro-defender/doc/index.en.html>（[doc/index.en.html](doc/index.en.html)）

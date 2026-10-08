@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>大型戦艦のボス戦 | ASTRO DEFENDER ソースコード解説</title>
+  <meta name="description" content="部位ごとの耐久値、コアの保護、予告位置を固定する攻撃を実装します。">
+  <link rel="stylesheet" href="../guide.css">
+  <script src="../guide.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">本文へ移動</a>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true">A</span>ASTRO DEFENDER</a>
+    <nav class="header-links" aria-label="サイトメニュー">
+      <a href="../index.html#chapters">解説一覧</a>
+      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
+      <a href="../index.en.html" lang="en" hreflang="en">English</a>
+    </nav>
+  </div>
+</header>
+<div class="doc-layout">
+<details class="sidebar" open><summary>ソースコード解説・目次</summary><nav aria-label="解説の各項目">
+<p class="nav-group">ゲームの土台を知る</p><ol>
+<li><a href="getting-started.html"><span>00</span>この解説の読み方</a></li>
+<li><a href="architecture.html"><span>01</span>1ファイルの全体構成</a></li>
+<li><a href="game-loop.html"><span>02</span>ゲームループと時間</a></li>
+<li><a href="state-machine.html"><span>03</span>画面と状態遷移</a></li>
+<li><a href="canvas.html"><span>04</span>Canvas の座標と描画</a></li>
+<li><a href="sprites.html"><span>05</span>文字列からドット絵を作る</a></li>
+<li><a href="collision.html"><span>06</span>四角形の当たり判定</a></li>
+</ol>
+<p class="nav-group">戦闘の仕組みを追う</p><ol>
+<li><a href="formation.html"><span>07</span>敵の編隊とウェーブ生成</a></li>
+<li><a href="input.html"><span>08</span>自機の移動と入力</a></li>
+<li><a href="bullets.html"><span>09</span>弾の移動と衝突の順序</a></li>
+<li><a href="barriers.html"><span>10</span>崩れるバリアの実装</a></li>
+<li><a href="score.html"><span>11</span>スコア・コンボ・残機</a></li>
+<li><a href="powerups.html"><span>12</span>カプセルと連結ビーム砲</a></li>
+</ol>
+<p class="nav-group">戦闘と成長を広げる</p><ol>
+<li><a href="specials.html"><span>13</span>合体レーザーとボム</a></li>
+<li><a href="upgrades.html"><span>14</span>ウェーブクリアと強化3択</a></li>
+<li><a href="boss.html" aria-current="page"><span>15</span>大型戦艦のボス戦</a></li>
+<li><a href="flights.html"><span>16</span>編隊から突入する敵</a></li>
+</ol>
+<p class="nav-group">演出・品質・改造を学ぶ</p><ol>
+<li><a href="effects.html"><span>17</span>演出と描画の高速化</a></li>
+<li><a href="audio.html"><span>18</span>効果音と BGM の合成</a></li>
+<li><a href="localization.html"><span>19</span>日本語・英語と設定の保存</a></li>
+<li><a href="tests.html"><span>20</span>ゲームロジックのテスト</a></li>
+<li><a href="modding.html"><span>21</span>改造するときの着眼点</a></li>
+<li><a href="glossary.html"><span>22</span>用語集と読み返し先</a></li>
+</ol>
+</nav></details>
+<main id="main" class="doc-main">
+<nav class="breadcrumb" aria-label="現在の位置"><a href="../index.html">ソースコード解説</a> / 15 大型戦艦のボス戦</nav>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 15 · 全23項目</p><h1>大型戦艦のボス戦</h1><p class="lead">部位ごとの耐久値、コアの保護、予告位置を固定する攻撃を実装します。</p><p class="source-ref">主な参照先：makeBoss / coreExposed / damageBossPart / updateBoss</p></header>
+<h2 id="section-1">ボスを3つの部位に分ける</h2>
+<figure class="code-block"><figcaption><span>index.html · L934–944</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L934-L944">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L934–944"><code>function makeBoss() {
+  const level = wave / 5;
+  boss = {
+    x: W / 2, y: 112, t: 0, attackT: 2, warning: 0, laserT: 0, targetX: W / 2,
+    parts: [
+      { kind: &quot;gun&quot;, offset: -54, hp: 14 + level * 4, max: 14 + level * 4, flash: 0 },
+      { kind: &quot;gun&quot;, offset: 54, hp: 14 + level * 4, max: 14 + level * 4, flash: 0 },
+      { kind: &quot;core&quot;, offset: 0, hp: 40 + level * 16, max: 40 + level * 16, flash: 0 },
+    ],
+  };
+}</code></pre></figure>
+<p>5ウェーブごとに大型戦艦を作ります。左右の砲台と中央コアを <code>parts</code> に入れ、各部位に現在HPと最大HPを持たせます。5ウェーブ目なら砲台は各18、コアは56です。部位の画面座標はボス本体の座標に <code>offset</code> を足して求めます。</p>
+<h2 id="section-2">左右の砲台を壊すまでコアを保護する</h2>
+<figure class="code-block"><figcaption><span>index.html · L950–950</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L950-L950">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L950–950"><code>function coreExposed() { return boss &amp;&amp; boss.parts.slice(0, 2).every(p =&gt; p.hp &lt;= 0); }</code></pre></figure>
+<figure class="code-block"><figcaption><span>index.html · L952–959</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L952-L959">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L952–959"><code>function damageBossPart(part, amount, source = &quot;shot&quot;) {
+  if (!boss || part.hp &lt;= 0 || amount &lt;= 0) return;
+  if (part.kind === &quot;core&quot; &amp;&amp; !coreExposed()) return;
+  const r = bossPartRect(part), damage = Math.min(part.hp, amount);
+  part.hp = Math.max(0, part.hp - amount); part.flash = 0.08;
+  if (source === &quot;shot&quot;) gainCharge(damage * 1.5);
+  if (part.hp &gt; 0) return;
+  spawnBurst(r.x + 14, r.y + 15, &quot;#ff9a5c&quot;, 28, 180);</code></pre></figure>
+<p>コアへの攻撃を受けた時点で、両方の砲台のHPが0以下かを調べます。通常弾だけでなくレーザーやボムも同じ関数を通すため、このルールを共用できます。通常射撃のダメージだけがゲージ充電につながります。</p>
+<h2 id="section-3">予告、発射、待機の3段階</h2>
+<ol class="flow"><li><strong>予告</strong><small>1.1秒。狙うx座標を固定</small></li><li><strong>発射</strong><small>0.6秒。幅36 pxの危険範囲</small></li><li><strong>待機</strong><small>横移動し、次の攻撃を待つ</small></li></ol>
+<p>攻撃を始める瞬間の <code>player.x</code> を <code>boss.targetX</code> に保存します。予告が終わっても位置を追い直さないため、プレイヤーは予告を見て逃げられます。レーザー発射の開始時には、生きている砲台から拡散弾も出します。</p>
+<figure class="shot"><img src="../img/bosslaser.png" alt="ボスのレーザー攻撃。予告時に確定した列を攻撃する。" width="960" height="1280" loading="lazy"><figcaption>ボスのレーザー攻撃。予告時に確定した列を攻撃する。</figcaption></figure>
+<h2 id="section-4">撃破と攻撃中断</h2>
+<p>コアを破壊するとボスと敵弾を消し、得点を加え、ボムを1個補充します。ボムを使う場合は <code>warning</code> と <code>laserT</code> を0にし、次の攻撃までの待ち時間を設定するため、予告中も発射中も中断できます。</p>
+<aside class="exercise"><strong>確かめてみよう</strong><p><code>boss.targetX</code> への代入を探してください。毎フレーム自機を追う処理との違いを考えると、避けられる攻撃の作り方が見えてきます。</p>
+</aside>
+</article>
+<nav class="page-nav" aria-label="前後の項目">
+<a href="upgrades.html"><span>← 前の項目</span>14 ウェーブクリアと強化3択</a>
+<a href="flights.html"><span>次の項目 →</span>16 編隊から突入する敵</a>
+</nav></main></div>
+<footer class="site-footer"><div class="container footer-inner">
+  <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
+  <p><a href="../index.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+</div></footer>
+</body>
+</html>

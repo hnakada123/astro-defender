@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>敵の編隊とウェーブ生成 | ASTRO DEFENDER ソースコード解説</title>
+  <meta name="description" content="50体の相対位置、折り返し、残り数に応じた速度、射撃する敵の選び方を追います。">
+  <link rel="stylesheet" href="../guide.css">
+  <script src="../guide.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">本文へ移動</a>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true">A</span>ASTRO DEFENDER</a>
+    <nav class="header-links" aria-label="サイトメニュー">
+      <a href="../index.html#chapters">解説一覧</a>
+      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
+      <a href="../index.en.html" lang="en" hreflang="en">English</a>
+    </nav>
+  </div>
+</header>
+<div class="doc-layout">
+<details class="sidebar" open><summary>ソースコード解説・目次</summary><nav aria-label="解説の各項目">
+<p class="nav-group">ゲームの土台を知る</p><ol>
+<li><a href="getting-started.html"><span>00</span>この解説の読み方</a></li>
+<li><a href="architecture.html"><span>01</span>1ファイルの全体構成</a></li>
+<li><a href="game-loop.html"><span>02</span>ゲームループと時間</a></li>
+<li><a href="state-machine.html"><span>03</span>画面と状態遷移</a></li>
+<li><a href="canvas.html"><span>04</span>Canvas の座標と描画</a></li>
+<li><a href="sprites.html"><span>05</span>文字列からドット絵を作る</a></li>
+<li><a href="collision.html"><span>06</span>四角形の当たり判定</a></li>
+</ol>
+<p class="nav-group">戦闘の仕組みを追う</p><ol>
+<li><a href="formation.html" aria-current="page"><span>07</span>敵の編隊とウェーブ生成</a></li>
+<li><a href="input.html"><span>08</span>自機の移動と入力</a></li>
+<li><a href="bullets.html"><span>09</span>弾の移動と衝突の順序</a></li>
+<li><a href="barriers.html"><span>10</span>崩れるバリアの実装</a></li>
+<li><a href="score.html"><span>11</span>スコア・コンボ・残機</a></li>
+<li><a href="powerups.html"><span>12</span>カプセルと連結ビーム砲</a></li>
+</ol>
+<p class="nav-group">戦闘と成長を広げる</p><ol>
+<li><a href="specials.html"><span>13</span>合体レーザーとボム</a></li>
+<li><a href="upgrades.html"><span>14</span>ウェーブクリアと強化3択</a></li>
+<li><a href="boss.html"><span>15</span>大型戦艦のボス戦</a></li>
+<li><a href="flights.html"><span>16</span>編隊から突入する敵</a></li>
+</ol>
+<p class="nav-group">演出・品質・改造を学ぶ</p><ol>
+<li><a href="effects.html"><span>17</span>演出と描画の高速化</a></li>
+<li><a href="audio.html"><span>18</span>効果音と BGM の合成</a></li>
+<li><a href="localization.html"><span>19</span>日本語・英語と設定の保存</a></li>
+<li><a href="tests.html"><span>20</span>ゲームロジックのテスト</a></li>
+<li><a href="modding.html"><span>21</span>改造するときの着眼点</a></li>
+<li><a href="glossary.html"><span>22</span>用語集と読み返し先</a></li>
+</ol>
+</nav></details>
+<main id="main" class="doc-main">
+<nav class="breadcrumb" aria-label="現在の位置"><a href="../index.html">ソースコード解説</a> / 07 敵の編隊とウェーブ生成</nav>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 07 · 全23項目</p><h1>敵の編隊とウェーブ生成</h1><p class="lead">50体の相対位置、折り返し、残り数に応じた速度、射撃する敵の選び方を追います。</p><p class="source-ref">主な参照先：makeWave / form / formBounds / formSpeed</p></header>
+<h2 id="section-1">行と列に共通の原点を足す</h2>
+<figure class="code-block"><figcaption><span>index.html · L620–622</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L620-L622">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L620–622"><code>const ROWS = 5, COLS = 10, CELL_W = 36, CELL_H = 30, DROP = 14;
+const ROW_TYPE = [&quot;a&quot;, &quot;b&quot;, &quot;b&quot;, &quot;c&quot;, &quot;c&quot;];
+const TOTAL = ROWS * COLS;</code></pre></figure>
+<p>通常ウェーブの編隊は5行 × 10列です。敵は行 <code>r</code> と列 <code>c</code> を持ち、共通の原点 <code>form.ox</code>・<code>form.oy</code> を動かすと全体が移動します。敵1体ごとに速度を持たせる必要はありません。5の倍数のウェーブでは編隊の代わりにボスを生成します。</p>
+<figure class="code-block"><figcaption><span>index.html · L744–756</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L744-L756">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L744–756"><code>function makeWave() {
+  aliens = [];
+  boss = null;
+  if (wave % 5 === 0) makeBoss();
+  else {
+    for (let r = 0; r &lt; ROWS; r++)
+      for (let c = 0; c &lt; COLS; c++)
+        aliens.push({ r, c, type: ROW_TYPE[r], alive: true });
+  }
+  aliveN = aliens.length;
+  form.ox = 60;
+  form.oy = 96 + Math.min(wave - 1, 5) * 10;
+  form.dir = 1; form.anim = 0; form.animT = 0;</code></pre></figure>
+<h2 id="section-2">生きている敵の端で折り返す</h2>
+<p><code>formBounds()</code> は生存中で編隊に残っている敵だけの左右端を調べます。画面の端から8 pxの境界を越えたら超過分を戻し、向きを反転して <code>DROP</code> だけ下へ進めます。空になった列を除いて幅を測るため、敵が減ると移動できる範囲が広がります。</p>
+<h2 id="section-3">残り数で難しさを変える</h2>
+<figure class="code-block"><figcaption><span>index.html · L1235–1241</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L1235-L1241">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L1235–1241"><code>function formSpeed() {
+  const r = aliveN / TOTAL;
+  let s = 16 + (wave - 1) * 7 + 130 * Math.pow(1 - r, 1.7);
+  if (aliveN &lt;= 3) s += 55;
+  if (aliveN === 1) s += 75;
+  return Math.min(s, 240);
+}</code></pre></figure>
+<p><code>r</code> は生存数の割合です。<code>1 - r</code> が大きいほど加速し、残り3体以下と最後の1体ではさらに加算します。最終的な速度は240で頭打ちです。アニメーションの切り替え周期も残り数に応じて短くなります。</p>
+<h2 id="section-4">射撃と地上への侵入</h2>
+<p>各列で最も下にいる敵を候補にし、そこからランダムに射撃役を選びます。突入中の敵はこの候補に入りません。編隊内の敵が自機の高さまで到達したり自機と重なると、残機とは別に侵入によるゲームオーバーになります。</p>
+<aside class="exercise"><strong>確かめてみよう</strong><p><code>formBounds()</code> の <code>a.flight</code> を除外する条件を探してください。飛び出した敵が編隊全体の折り返し位置を変えないようにしています。</p>
+</aside>
+</article>
+<nav class="page-nav" aria-label="前後の項目">
+<a href="collision.html"><span>← 前の項目</span>06 四角形の当たり判定</a>
+<a href="input.html"><span>次の項目 →</span>08 自機の移動と入力</a>
+</nav></main></div>
+<footer class="site-footer"><div class="container footer-inner">
+  <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
+  <p><a href="../index.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+</div></footer>
+</body>
+</html>

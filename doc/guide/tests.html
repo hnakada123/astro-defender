@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>ゲームロジックのテスト | ASTRO DEFENDER ソースコード解説</title>
+  <meta name="description" content="ブラウザ部分を置き換え、本番のJavaScriptに対してルールを検証します。">
+  <link rel="stylesheet" href="../guide.css">
+  <script src="../guide.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">本文へ移動</a>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true">A</span>ASTRO DEFENDER</a>
+    <nav class="header-links" aria-label="サイトメニュー">
+      <a href="../index.html#chapters">解説一覧</a>
+      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
+      <a href="../index.en.html" lang="en" hreflang="en">English</a>
+    </nav>
+  </div>
+</header>
+<div class="doc-layout">
+<details class="sidebar" open><summary>ソースコード解説・目次</summary><nav aria-label="解説の各項目">
+<p class="nav-group">ゲームの土台を知る</p><ol>
+<li><a href="getting-started.html"><span>00</span>この解説の読み方</a></li>
+<li><a href="architecture.html"><span>01</span>1ファイルの全体構成</a></li>
+<li><a href="game-loop.html"><span>02</span>ゲームループと時間</a></li>
+<li><a href="state-machine.html"><span>03</span>画面と状態遷移</a></li>
+<li><a href="canvas.html"><span>04</span>Canvas の座標と描画</a></li>
+<li><a href="sprites.html"><span>05</span>文字列からドット絵を作る</a></li>
+<li><a href="collision.html"><span>06</span>四角形の当たり判定</a></li>
+</ol>
+<p class="nav-group">戦闘の仕組みを追う</p><ol>
+<li><a href="formation.html"><span>07</span>敵の編隊とウェーブ生成</a></li>
+<li><a href="input.html"><span>08</span>自機の移動と入力</a></li>
+<li><a href="bullets.html"><span>09</span>弾の移動と衝突の順序</a></li>
+<li><a href="barriers.html"><span>10</span>崩れるバリアの実装</a></li>
+<li><a href="score.html"><span>11</span>スコア・コンボ・残機</a></li>
+<li><a href="powerups.html"><span>12</span>カプセルと連結ビーム砲</a></li>
+</ol>
+<p class="nav-group">戦闘と成長を広げる</p><ol>
+<li><a href="specials.html"><span>13</span>合体レーザーとボム</a></li>
+<li><a href="upgrades.html"><span>14</span>ウェーブクリアと強化3択</a></li>
+<li><a href="boss.html"><span>15</span>大型戦艦のボス戦</a></li>
+<li><a href="flights.html"><span>16</span>編隊から突入する敵</a></li>
+</ol>
+<p class="nav-group">演出・品質・改造を学ぶ</p><ol>
+<li><a href="effects.html"><span>17</span>演出と描画の高速化</a></li>
+<li><a href="audio.html"><span>18</span>効果音と BGM の合成</a></li>
+<li><a href="localization.html"><span>19</span>日本語・英語と設定の保存</a></li>
+<li><a href="tests.html" aria-current="page"><span>20</span>ゲームロジックのテスト</a></li>
+<li><a href="modding.html"><span>21</span>改造するときの着眼点</a></li>
+<li><a href="glossary.html"><span>22</span>用語集と読み返し先</a></li>
+</ol>
+</nav></details>
+<main id="main" class="doc-main">
+<nav class="breadcrumb" aria-label="現在の位置"><a href="../index.html">ソースコード解説</a> / 20 ゲームロジックのテスト</nav>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 20 · 全23項目</p><h1>ゲームロジックのテスト</h1><p class="lead">ブラウザ部分を置き換え、本番のJavaScriptに対してルールを検証します。</p><p class="source-ref">主な参照先：tests/helpers/game.cjs / node:test / vm</p></header>
+<h2 id="section-1">本体からスクリプトを取り出して実行する</h2>
+<figure class="code-block"><figcaption><span>tests/helpers/game.cjs · L5–6</span><a href="https://github.com/hnakada123/astro-defender/blob/main/tests/helpers/game.cjs#L5-L6">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="tests/helpers/game.cjs · L5–6"><code>const html = readFileSync(join(__dirname, &quot;..&quot;, &quot;..&quot;, &quot;index.html&quot;), &quot;utf8&quot;);
+const source = html.match(/&lt;script&gt;([\s\S]*?)&lt;\/script&gt;/)[1];</code></pre></figure>
+<p>テスト用にゲームを別実装するのではなく、<code>index.html</code> の script 内を読み込んで Node.js の <code>vm</code> で実行します。Canvas、DOM、音声、時刻、フレームの予約などは簡単な代用品へ置き換えます。ゲームのルールを担う関数は本番のものです。</p>
+<h2 id="section-2">状態を用意し、操作して、結果を調べる</h2>
+<figure class="code-block"><figcaption><span>tests/arcade-features.test.cjs · L50–65</span><a href="https://github.com/hnakada123/astro-defender/blob/main/tests/arcade-features.test.cjs#L50-L65">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="tests/arcade-features.test.cjs · L50–65"><code>test(&quot;a bomb clears bullets, destroys nearby enemies, preserves distant enemies and cover, and grants invulnerability&quot;, () =&gt; {
+  const run = game();
+  run(`
+    aliens[0].flight = { x: player.x, y: PLAYER_Y - 80 };
+    const cover = JSON.stringify(barriers);
+    eBullets = [{ x: player.x, y: PLAYER_Y, w: 3, h: 9, vy: 0 }];
+  `);
+  assert.equal(run(&quot;activateBomb()&quot;), true);
+  assert.equal(run(&quot;special.bombs&quot;), 1);
+  assert.equal(run(&quot;eBullets.length&quot;), 0);
+  assert.equal(run(&quot;aliens[0].alive&quot;), false);
+  assert.equal(run(&quot;aliens[1].alive&quot;), true);
+  assert.equal(run(&quot;JSON.stringify(barriers) === cover&quot;), true);
+  assert.ok(run(&quot;player.inv &gt; 1&quot;));
+  assert.equal(run(&quot;activateBomb()&quot;), false);
+});</code></pre></figure>
+<p>このテストは近い敵・遠い敵・敵弾・バリアを用意し、ボムを使った結果を調べています。近い敵だけが消え、敵弾が空になり、バリアが保持され、無敵時間が付くことを検証します。直後の再使用が拒否されることまで含めて仕様を表しています。</p>
+<h2 id="section-3">実行する</h2>
+<figure class="code-block"><figcaption>リポジトリのルートで実行</figcaption><pre tabindex="0"><code>node --test tests/*.test.cjs</code></pre></figure>
+<div class="table-wrap" tabindex="0" role="region" aria-label="ファイル・主な対象"><table><thead><tr><th scope="col">ファイル</th><th scope="col">主な対象</th></tr></thead><tbody><tr><th scope="row"><code>tests/beam-link.test.cjs</code></th><td>連結砲の取得・射撃・併用・持ち越し・画面端・ミス</td></tr><tr><th scope="row"><code>tests/arcade-features.test.cjs</code></th><td>レーザー・ボム・ボス・強化選択・突入・入力・連続ウェーブ</td></tr></tbody></table></div>
+<h2 id="section-4">このテストでは分からないこと</h2>
+<p>Canvasの描画命令と音声出力を置き換えているため、実際の絵の崩れ、文字の見切れ、音の聴こえ方、描画速度は確認できません。ロジックのテストに加え、ブラウザで通常プレイ・強化選択・ボス戦・ポーズを確認します。</p>
+<aside class="exercise"><strong>確かめてみよう</strong><p>強化の上限や無敵時間を変更するときは、正常に使える場合に加え、上限到達時・資源不足・ポーズ中の結果も確認してください。</p>
+</aside>
+</article>
+<nav class="page-nav" aria-label="前後の項目">
+<a href="localization.html"><span>← 前の項目</span>19 日本語・英語と設定の保存</a>
+<a href="modding.html"><span>次の項目 →</span>21 改造するときの着眼点</a>
+</nav></main></div>
+<footer class="site-footer"><div class="container footer-inner">
+  <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
+  <p><a href="../index.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+</div></footer>
+</body>
+</html>

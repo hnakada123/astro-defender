@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>編隊から突入する敵 | ASTRO DEFENDER ソースコード解説</title>
+  <meta name="description" content="敵に一時的な飛行状態を追加し、急降下・ジグザグ・横方向の突入を切り替えます。">
+  <link rel="stylesheet" href="../guide.css">
+  <script src="../guide.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">本文へ移動</a>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true">A</span>ASTRO DEFENDER</a>
+    <nav class="header-links" aria-label="サイトメニュー">
+      <a href="../index.html#chapters">解説一覧</a>
+      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
+      <a href="../index.en.html" lang="en" hreflang="en">English</a>
+    </nav>
+  </div>
+</header>
+<div class="doc-layout">
+<details class="sidebar" open><summary>ソースコード解説・目次</summary><nav aria-label="解説の各項目">
+<p class="nav-group">ゲームの土台を知る</p><ol>
+<li><a href="getting-started.html"><span>00</span>この解説の読み方</a></li>
+<li><a href="architecture.html"><span>01</span>1ファイルの全体構成</a></li>
+<li><a href="game-loop.html"><span>02</span>ゲームループと時間</a></li>
+<li><a href="state-machine.html"><span>03</span>画面と状態遷移</a></li>
+<li><a href="canvas.html"><span>04</span>Canvas の座標と描画</a></li>
+<li><a href="sprites.html"><span>05</span>文字列からドット絵を作る</a></li>
+<li><a href="collision.html"><span>06</span>四角形の当たり判定</a></li>
+</ol>
+<p class="nav-group">戦闘の仕組みを追う</p><ol>
+<li><a href="formation.html"><span>07</span>敵の編隊とウェーブ生成</a></li>
+<li><a href="input.html"><span>08</span>自機の移動と入力</a></li>
+<li><a href="bullets.html"><span>09</span>弾の移動と衝突の順序</a></li>
+<li><a href="barriers.html"><span>10</span>崩れるバリアの実装</a></li>
+<li><a href="score.html"><span>11</span>スコア・コンボ・残機</a></li>
+<li><a href="powerups.html"><span>12</span>カプセルと連結ビーム砲</a></li>
+</ol>
+<p class="nav-group">戦闘と成長を広げる</p><ol>
+<li><a href="specials.html"><span>13</span>合体レーザーとボム</a></li>
+<li><a href="upgrades.html"><span>14</span>ウェーブクリアと強化3択</a></li>
+<li><a href="boss.html"><span>15</span>大型戦艦のボス戦</a></li>
+<li><a href="flights.html" aria-current="page"><span>16</span>編隊から突入する敵</a></li>
+</ol>
+<p class="nav-group">演出・品質・改造を学ぶ</p><ol>
+<li><a href="effects.html"><span>17</span>演出と描画の高速化</a></li>
+<li><a href="audio.html"><span>18</span>効果音と BGM の合成</a></li>
+<li><a href="localization.html"><span>19</span>日本語・英語と設定の保存</a></li>
+<li><a href="tests.html"><span>20</span>ゲームロジックのテスト</a></li>
+<li><a href="modding.html"><span>21</span>改造するときの着眼点</a></li>
+<li><a href="glossary.html"><span>22</span>用語集と読み返し先</a></li>
+</ol>
+</nav></details>
+<main id="main" class="doc-main">
+<nav class="breadcrumb" aria-label="現在の位置"><a href="../index.html">ソースコード解説</a> / 16 編隊から突入する敵</nav>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 16 · 全23項目</p><h1>編隊から突入する敵</h1><p class="lead">敵に一時的な飛行状態を追加し、急降下・ジグザグ・横方向の突入を切り替えます。</p><p class="source-ref">主な参照先：launchFlight / updateFlights / alienRectInto / flightT</p></header>
+<h2 id="section-1">同じ敵に飛行データを付け足す</h2>
+<figure class="code-block"><figcaption><span>index.html · L1011–1015</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L1011-L1015">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L1011–1015"><code>function launchFlight(a, mode) {
+  const r = alienRect(a);
+  a.flight = { x: r.x, y: r.y, startX: r.x, t: 0, warning: 0.65, mode, phase: &quot;exit&quot;,
+    vx: clamp((player.x - r.x) * 0.5, -90, 90), side: r.x &lt; W / 2 ? -1 : 1 };
+}</code></pre></figure>
+<p>突入用の別の敵を作るのではなく、元の敵へ <code>flight</code> を付けます。編隊の行と列は残したまま、現在座標、経過時間、0.65秒の予告、飛び方、左右の向きなどを保存します。予告中も編隊の共通移動から外れます。</p>
+<h2 id="section-2">3種類の軌道</h2>
+<div class="table-wrap" tabindex="0" role="region" aria-label="モード・位置の更新"><table><thead><tr><th scope="col">モード</th><th scope="col">位置の更新</th></tr></thead><tbody><tr><th scope="row"><code>dive</code></th><td>下へ進みながら、開始時に決めた横速度を加える</td></tr><tr><th scope="row"><code>zigzag</code></th><td><code>Math.sin(f.t * 5) * 54</code> で左右に揺れながら降下</td></tr><tr><th scope="row"><code>flank</code></th><td>一度横へ退場し、自機の少し上の高さから横切る</td></tr></tbody></table></div>
+<p>突入はウェーブ2以降で、ボス戦と開始バナー中には発生しません。候補は生きていてまだ飛行していない敵です。同時に飛べる数と発生間隔はウェーブに応じて変化します。モードは3種類を順番に使います。</p>
+<figure class="code-block"><figcaption><span>index.html · L1032–1046</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L1032-L1046">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L1032–1046"><code>    const speed = Math.min(260, 155 + wave * 7);
+    if (f.mode === &quot;flank&quot; &amp;&amp; f.phase === &quot;exit&quot;) {
+      f.x += f.side * speed * dt;
+      if (f.x &lt; -30 || f.x &gt; W + 30) {
+        f.phase = &quot;attack&quot;; f.y = PLAYER_Y - 160;
+        f.x = f.side &lt; 0 ? -28 : W + 4;
+      }
+    } else {
+      f.y += speed * dt;
+      if (f.mode === &quot;zigzag&quot;) f.x = clamp(f.startX + Math.sin(f.t * 5) * 54, 5, W - 29);
+      else f.x += (f.mode === &quot;flank&quot; ? -f.side * speed * 1.5 : f.vx) * dt;
+      if (player.alive &amp;&amp; player.inv &lt;= 0 &amp;&amp; hit(alienRect(a), playerRect())) damagePlayer();
+      if (f.y &gt; GROUND_Y + 24 || f.x &lt; -60 || f.x &gt; W + 60) a.flight = null;
+    }
+    if (state !== &quot;play&quot;) return;</code></pre></figure>
+<h2 id="section-3">画面外へ出たら編隊へ戻す</h2>
+<p>飛行範囲から出た敵は <code>a.flight = null</code> に戻します。次の当たり判定・描画では、元の行と列に現在の編隊原点を足した位置を使います。敵は生存したままなので、撃破するまでウェーブが続きます。</p>
+<aside class="note"><strong>読み解くポイント</strong><p>編隊の地上侵入は即ゲームオーバーですが、突入中の敵との接触は <code>damagePlayer()</code> による通常のダメージです。同じ見た目の敵でも、状態に応じてルールが変わります。</p>
+</aside>
+<aside class="exercise"><strong>確かめてみよう</strong><p><code>alienRectInto()</code>、<code>formBounds()</code>、<code>refreshFormLayer()</code> の <code>flight</code> 判定を追い、移動・衝突・描画の切り替えが一致していることを確認してください。</p>
+</aside>
+</article>
+<nav class="page-nav" aria-label="前後の項目">
+<a href="boss.html"><span>← 前の項目</span>15 大型戦艦のボス戦</a>
+<a href="effects.html"><span>次の項目 →</span>17 演出と描画の高速化</a>
+</nav></main></div>
+<footer class="site-footer"><div class="container footer-inner">
+  <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
+  <p><a href="../index.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+</div></footer>
+</body>
+</html>

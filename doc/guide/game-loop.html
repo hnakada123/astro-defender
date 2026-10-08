@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>ゲームループと時間 | ASTRO DEFENDER ソースコード解説</title>
+  <meta name="description" content="経過時間 dt、フレームの予約、ポーズ中の停止処理を読み解きます。">
+  <link rel="stylesheet" href="../guide.css">
+  <script src="../guide.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">本文へ移動</a>
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true">A</span>ASTRO DEFENDER</a>
+    <nav class="header-links" aria-label="サイトメニュー">
+      <a href="../index.html#chapters">解説一覧</a>
+      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
+      <a href="../index.en.html" lang="en" hreflang="en">English</a>
+    </nav>
+  </div>
+</header>
+<div class="doc-layout">
+<details class="sidebar" open><summary>ソースコード解説・目次</summary><nav aria-label="解説の各項目">
+<p class="nav-group">ゲームの土台を知る</p><ol>
+<li><a href="getting-started.html"><span>00</span>この解説の読み方</a></li>
+<li><a href="architecture.html"><span>01</span>1ファイルの全体構成</a></li>
+<li><a href="game-loop.html" aria-current="page"><span>02</span>ゲームループと時間</a></li>
+<li><a href="state-machine.html"><span>03</span>画面と状態遷移</a></li>
+<li><a href="canvas.html"><span>04</span>Canvas の座標と描画</a></li>
+<li><a href="sprites.html"><span>05</span>文字列からドット絵を作る</a></li>
+<li><a href="collision.html"><span>06</span>四角形の当たり判定</a></li>
+</ol>
+<p class="nav-group">戦闘の仕組みを追う</p><ol>
+<li><a href="formation.html"><span>07</span>敵の編隊とウェーブ生成</a></li>
+<li><a href="input.html"><span>08</span>自機の移動と入力</a></li>
+<li><a href="bullets.html"><span>09</span>弾の移動と衝突の順序</a></li>
+<li><a href="barriers.html"><span>10</span>崩れるバリアの実装</a></li>
+<li><a href="score.html"><span>11</span>スコア・コンボ・残機</a></li>
+<li><a href="powerups.html"><span>12</span>カプセルと連結ビーム砲</a></li>
+</ol>
+<p class="nav-group">戦闘と成長を広げる</p><ol>
+<li><a href="specials.html"><span>13</span>合体レーザーとボム</a></li>
+<li><a href="upgrades.html"><span>14</span>ウェーブクリアと強化3択</a></li>
+<li><a href="boss.html"><span>15</span>大型戦艦のボス戦</a></li>
+<li><a href="flights.html"><span>16</span>編隊から突入する敵</a></li>
+</ol>
+<p class="nav-group">演出・品質・改造を学ぶ</p><ol>
+<li><a href="effects.html"><span>17</span>演出と描画の高速化</a></li>
+<li><a href="audio.html"><span>18</span>効果音と BGM の合成</a></li>
+<li><a href="localization.html"><span>19</span>日本語・英語と設定の保存</a></li>
+<li><a href="tests.html"><span>20</span>ゲームロジックのテスト</a></li>
+<li><a href="modding.html"><span>21</span>改造するときの着眼点</a></li>
+<li><a href="glossary.html"><span>22</span>用語集と読み返し先</a></li>
+</ol>
+</nav></details>
+<main id="main" class="doc-main">
+<nav class="breadcrumb" aria-label="現在の位置"><a href="../index.html">ソースコード解説</a> / 02 ゲームループと時間</nav>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 02 · 全23項目</p><h1>ゲームループと時間</h1><p class="lead">経過時間 dt、フレームの予約、ポーズ中の停止処理を読み解きます。</p><p class="source-ref">主な参照先：frame / ensureLoop / update / redrawIfPaused</p></header>
+<h2 id="section-1">次のフレームを自分で予約する</h2>
+<figure class="code-block"><figcaption><span>index.html · L2079–2091</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L2079-L2091">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L2079–2091"><code>function frame(now) {
+  rafId = 0;
+  if ((state === &quot;title&quot; || state === &quot;gameover&quot;) &amp;&amp; now - last &lt; IDLE_FRAME_MS - 1) {
+    rafId = requestAnimationFrame(frame);
+    return;
+  }
+  const dt = Math.min((now - last) / 1000, 0.05);
+  last = now;
+  if (!paused) update(dt);
+  draw(now / 1000);
+  // ポーズ中は静止画のままにしてループを止める。再開は setPaused(false) → ensureLoop()。
+  if (!paused) rafId = requestAnimationFrame(frame);
+}</code></pre></figure>
+<p><code>requestAnimationFrame(frame)</code> は、次の描画タイミングで <code>frame</code> を呼ぶ予約です。1回の呼び出しで更新と描画を行い、必要なら次回を予約します。更新回数を常に60回と決め打ちしているわけではありません。タイトルとゲームオーバーでは約30 fpsに抑えています。</p>
+<h2 id="section-2">速度に経過秒数を掛ける</h2>
+<p><code>now</code> はミリ秒単位なので、前回との差を1000で割って秒に直します。速度が毎秒120 pxなら移動量は <code>120 * dt</code>。30 fpsでも60 fpsでも、同じ1秒ならほぼ同じ距離を進みます。ただし本体は <code>dt</code> を最大0.05秒に制限し、長い停止後に大きく飛ばないようにしています。</p>
+<section class="lab" data-lab="speed"><h3>計算してみる：フレーム数と移動量</h3><p>毎秒120 pxで進む場合の、1回あたりの移動量を比較します。</p><label for="fps">1秒あたりのフレーム数</label><input id="fps" type="range" min="20" max="144" value="60"><output for="fps" aria-live="polite"></output><noscript>60 fpsなら1回で2 px、30 fpsなら1回で4 px進みます。操作にはJavaScriptが必要です。</noscript></section><h2 id="section-3">ポーズではループの予約も止める</h2>
+<figure class="code-block"><figcaption><span>index.html · L2093–2097</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L2093-L2097">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L2093–2097"><code>function ensureLoop() {
+  if (rafId || paused) return;
+  last = performance.now();
+  rafId = requestAnimationFrame(frame);
+}</code></pre></figure>
+<p>ポーズ中は <code>update()</code> を呼ばず、次のフレームも予約しません。再開時の <code>ensureLoop()</code> は時刻を取り直すため、止めていた時間が一度に加算されません。言語やミュートをポーズ中に変えた場合は、<code>redrawIfPaused()</code> が1回だけ描き直します。</p>
+<aside class="exercise"><strong>確かめてみよう</strong><p><code>IDLE_FRAME_MS</code> と <code>dt</code> の上限は別の役割です。前者は描画頻度、後者は1回の計算で進める時間を制限することを、<code>frame()</code> の条件分岐で確認してください。</p>
+</aside>
+</article>
+<nav class="page-nav" aria-label="前後の項目">
+<a href="architecture.html"><span>← 前の項目</span>01 1ファイルの全体構成</a>
+<a href="state-machine.html"><span>次の項目 →</span>03 画面と状態遷移</a>
+</nav></main></div>
+<footer class="site-footer"><div class="container footer-inner">
+  <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
+  <p><a href="../index.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+</div></footer>
+</body>
+</html>
