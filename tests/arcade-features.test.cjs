@@ -23,10 +23,10 @@ test("kills fill a capped laser gauge; laser kills pierce a column without recha
   assert.equal(run("special.laserT"), 0);
 });
 
-test("linked cannons and beam upgrades strengthen the laser without being consumed", () => {
+test("linked cannons strengthen the laser without being consumed", () => {
   const run = game();
   run("special.charge = 100; activateLaser(); const baseWidth = special.laserW, basePower = special.laserDps; special.laserT = 0");
-  run("collectBeam(); collectBeam(); upgrades.beam = 2; special.charge = 100; activateLaser()");
+  run("collectBeam(4); special.charge = 100; activateLaser()");
   assert.ok(run("special.laserW > baseWidth && special.laserDps > basePower"));
   assert.equal(run("active.beam"), 4);
   assert.equal(run("activateLaser()"), false);
@@ -37,7 +37,7 @@ test("specials reject empty gauges, empty stocks, non-play states, and pause", (
   assert.equal(run("activateLaser()"), false);
   run("special.charge = 100; special.bombs = 0");
   assert.equal(run("activateBomb()"), false);
-  for (const state of ["title", "clear", "upgrade", "dying", "gameover"]) {
+  for (const state of ["title", "clear", "dying", "gameover"]) {
     run(`setState('${state}'); special.bombs = 2`);
     assert.equal(run("activateLaser() || activateBomb()"), false);
     assert.equal(run("special.charge"), 100);
@@ -102,9 +102,41 @@ test("boss attacks lock a visible warning position before firing, and bombs canc
   assert.equal(run("lives"), 3);
   run("activateBomb()");
   assert.equal(run("boss.laserT + boss.warning"), 0);
-  assert.equal(run("boss.parts[0].hp"), 8);
-  assert.equal(run("boss.parts[2].hp"), 56);
+  assert.equal(run("boss.parts[0].hp"), 4);
+  assert.equal(run("boss.parts[2].hp"), 28);
   assert.ok(run("boss.attackT >= 2"));
+});
+
+test("the boss pauses in place while attacking and resumes smoothly without jumping", () => {
+  const run = game();
+  run(`
+    wave = 5; makeWave(); bannerT = 0; player.inv = 1e9;
+    let prev = boss.x, maxStep = 0, stoppedMoves = 0;
+    for (let i = 0; i < 60 * 30; i++) {
+      const attacking = boss.warning > 0 || boss.laserT > 0;
+      updateBoss(1 / 60);
+      const step = Math.abs(boss.x - prev);
+      if (attacking && boss.warning + boss.laserT > 0 && step > 0) stoppedMoves++;
+      maxStep = Math.max(maxStep, step); prev = boss.x;
+    }
+  `);
+  assert.equal(run("stoppedMoves"), 0);
+  assert.ok(run("maxStep < 2"), `boss moved ${run("maxStep")}px in one frame`);
+});
+
+test("boss fights allow five main shots on screen instead of three", () => {
+  const run = game();
+  run(`
+    // 発射間隔を毎フレーム 0 に戻し、画面内の弾数上限だけで発射が止まるようにする。
+    function volley() {
+      pBullets = []; keys.fire = true;
+      for (let i = 0; i < 30; i++) { player.cool = 0; updatePlay(0.01); }
+      return pBullets.length;
+    }
+  `);
+  assert.equal(run("volley()"), 3);
+  run("wave = 5; makeWave(); bannerT = 0");
+  assert.equal(run("volley()"), 5);
 });
 
 test("boss laser damages a player in the warned lane and respects shield invulnerability", () => {
@@ -119,60 +151,39 @@ test("boss laser damages a player in the warned lane and respects shield invulne
   assert.equal(run("lives"), 2);
 });
 
-test("wave clear waits for one of three upgrades; number-key selection advances exactly once", () => {
+test("wave clear advances to the next wave on its own and keeps held controls", () => {
   const run = game();
-  run("aliens.forEach(a => a.alive = false); aliveN = 0; keys.fire = true; updatePlay(0); update(1.7)");
-  assert.equal(run("state"), "upgrade");
-  assert.equal(run("new Set(upgradeChoices).size"), 3);
-  run("update(30)");
+  run("aliens.forEach(a => a.alive = false); aliveN = 0; keys.fire = true; shooting = true; keys.right = true; updatePlay(0)");
+  assert.equal(run("state"), "clear");
+  run("update(1.5)");
+  assert.equal(run("state"), "clear");
   assert.equal(run("wave"), 1);
-  run("upgradeChoices = ['beam', 'speed', 'magnet']");
-  run.event("keydown", { key: "2" });
-  assert.equal(run("upgrades.speed"), 1);
+  run("update(0.2)");
+  assert.equal(run("state"), "play");
   assert.equal(run("wave"), 2);
-  assert.equal(run("keys.fire"), false);
-  assert.equal(run("chooseUpgrade(0)"), false);
+  assert.equal(run("aliveN"), 50);
+  assert.equal(run("keys.fire && shooting && keys.right"), true);
+  run("update(0.01)");
+  assert.equal(run("wave"), 2);
 });
 
-test("upgrade cards support pointer selection and capped builds still offer three useful choices", () => {
+test("a click during the wave-clear banner starts firing in the next wave", () => {
   const run = game();
-  run("upgrades.beam = upgrades.speed = upgrades.magnet = 5; openUpgrades()");
-  assert.equal(run("upgradeChoices.every(k => !UPGRADE_DEFS[k].max)"), true);
-  assert.equal(run("new Set(upgradeChoices).size"), 3);
-  run("upgradeChoices = ['beam', 'supply', 'charge']; special.bombs = 0");
-  run.event("pointerdown", { clientX: 80, clientY: 355 });
-  assert.equal(run("wave"), 2);
-  assert.equal(run("special.bombs"), 1);
-  assert.equal(run("active.shield"), 1);
-});
-
-test("beam upgrades pierce enemies; speed upgrades affect both inputs; magnet upgrades attract capsules", () => {
-  const run = game();
-  run(`
-    collectBeam(); upgrades.beam = 1; shooting = true; updatePlay(0); shooting = false;
-    const p = pBullets.find(b => b.beam); p.x = alienRect(aliens[0]).x; p.y = alienRect(aliens[0]).y;
-    pBullets = [p]; updatePlay(0);
-  `);
+  run("aliens.forEach(a => a.alive = false); aliveN = 0; shooting = false; updatePlay(0)");
+  run.event("pointerdown", { clientX: 240, clientY: 580 });
+  assert.equal(run("state"), "clear");
+  assert.equal(run("shooting"), true);
+  run("update(1.7); bannerT = 0; player.cool = 0; updatePlay(0)");
   assert.equal(run("pBullets.length"), 1);
-  run("freezeT = 0; p.y = alienRect(aliens[10]).y; updatePlay(0)");
-  assert.equal(run("pBullets.length"), 0);
-  run("freezeT = 0; inputMode = 'keys'; keys.right = true; player.x = 200; updatePlay(0.05); const baseDistance = player.x - 200; player.x = 200; upgrades.speed = 1; updatePlay(0.05)");
-  assert.ok(run("player.x - 200 > baseDistance"));
-  run("inputMode = 'mouse'; player.x = 200; mouseX = 400; upgrades.speed = 0; updatePlay(0.05); const mouseDistance = player.x - 200; player.x = 200; upgrades.speed = 1; updatePlay(0.05)");
-  assert.ok(run("player.x - 200 > mouseDistance"));
-  run("player.x = mouseX = 240; upgrades.magnet = 1; powerups = [{x: 290, y: PLAYER_Y - 20, type: 'shield', ph: 0}]; updatePlay(0.05)");
-  assert.ok(run("powerups[0].x < 290"));
-  run("for (let i = 0; i < 20; i++) updatePlay(0.01)");
-  assert.equal(run("active.shield"), 1);
 });
 
-test("permanent upgrades survive death, while restarting resets upgrades and special resources", () => {
+test("a miss keeps bombs and laser charge, while restarting resets special resources", () => {
   const run = game();
-  run("upgrades.beam = 2; upgrades.speed = 1; upgrades.magnet = 3; special.bombs = 1; special.charge = 80; hitPlayer(); update(1.2)");
-  assert.equal(run("upgrades.beam + upgrades.speed + upgrades.magnet"), 6);
+  run("special.bombs = 1; special.charge = 80; hitPlayer(); update(1.2)");
+  assert.equal(run("special.charge"), 80);
   assert.equal(run("special.bombs"), 1);
   run("startGame()");
-  assert.equal(run("upgrades.beam + upgrades.speed + upgrades.magnet + special.charge"), 0);
+  assert.equal(run("special.charge"), 0);
   assert.equal(run("special.bombs"), 2);
 });
 
@@ -218,6 +229,7 @@ test("keyboard and right-click trigger specials; pausing freezes boss and weapon
 
 test("ten consecutive clears cross both boss encounters and return to formation combat without losing the build", () => {
   const run = game();
+  run("collectBeam()");
   for (let wave = 1; wave <= 10; wave++) {
     assert.equal(run("wave"), wave);
     assert.equal(run("!!boss"), wave % 5 === 0);
@@ -227,14 +239,11 @@ test("ten consecutive clears cross both boss encounters and return to formation 
       else { for (const a of aliens) killAlien(a, alienRect(a)); }
       freezeT = 0; updatePlay(0); update(1.7);
     `);
-    assert.equal(run("state"), "upgrade");
-    assert.equal(run("upgradeChoices.length"), 3);
-    run(`upgradeChoices = ['beam', 'speed', 'magnet']; chooseUpgrade(${(wave - 1) % 3})`);
     assert.equal(run("state"), "play");
   }
   assert.equal(run("wave"), 11);
   assert.equal(run("aliens.length"), 50);
-  assert.equal(run("upgrades.beam + upgrades.speed + upgrades.magnet"), 10);
+  assert.equal(run("active.beam"), 1);
   assert.equal(run("special.bombs"), 3);
 });
 
@@ -259,4 +268,65 @@ test("right-clicking during pause does not restart music or consume the laser ga
   assert.equal(run("musicStarts"), 0);
   assert.equal(run("special.charge"), 100);
   assert.equal(run("paused"), true);
+});
+
+test("extra lives arrive at 10,000 points and then every 20,000 points, up to five", () => {
+  const run = game();
+  run("addScore(9999)");
+  assert.equal(run("lives"), 3);
+  run("addScore(1)");
+  assert.equal(run("lives"), 4);
+  run("addScore(19999)");
+  assert.equal(run("lives"), 4);
+  run("addScore(1)");
+  assert.equal(run("lives"), 5);
+  run("addScore(20000)");
+  assert.equal(run("lives"), 5);
+  assert.equal(run("nextLife"), 70000);
+  run("startGame()");
+  assert.equal(run("nextLife"), 10000);
+});
+
+test("a fast main shot cannot skip past an alien even at the lowest frame rate", () => {
+  const run = game();
+  // dt の上限 0.05 秒で 1 フレームに進む距離ずつ、弾と敵の位置関係をずらして確かめる。
+  for (let i = 0; i < 10; i++) {
+    const offset = 1 + i * 3;
+    run(`
+      freezeT = 0;
+      const r${i} = alienRect(aliens[${40 + i}]);
+      pBullets = [{ x: r${i}.x + r${i}.w / 2 - 1, y: r${i}.y + r${i}.h + ${offset}, w: 2, h: SHOT_H, vx: 0 }];
+      updatePlay(0.05);
+    `);
+    assert.equal(run(`aliens[${40 + i}].alive`), false, `offset ${offset}px`);
+  }
+});
+
+test("the 1UP popup stays clear of the centered wave-clear text", () => {
+  const run = game();
+  // パーフェクトボーナス 600 点で 10,000 点を越え、WAVE CLEAR! と同時に 1UP する。
+  run("score = 9900; aliens.forEach(a => a.alive = false); aliveN = 0; updatePlay(0)");
+  assert.equal(run("state"), "clear");
+  assert.equal(run("lives"), 4);
+  // 寿命いっぱい上昇したときの文字の上端が、中央の文字の最下行 NEXT: WAVE (y=356) より下にある。
+  assert.ok(run(`(() => {
+    const p = popups.find(p => p.txt === "1UP!");
+    return p.y - 22 * (p.life / 0.9) - p.size > 360;
+  })()`));
+});
+
+test("holding the mouse button through a miss keeps firing after respawn, like the keyboard", () => {
+  const run = game();
+  run.event("pointerdown", { clientX: 240, clientY: 580 });
+  run("hitPlayer()");
+  assert.equal(run("state"), "dying");
+  assert.equal(run("shooting"), true);
+  run("update(1.2); bannerT = 0; player.cool = 0; pBullets = []; updatePlay(0)");
+  assert.equal(run("state"), "play");
+  assert.equal(run("pBullets.length"), 1);
+  run("shooting = false; hitPlayer()");
+  run.event("pointerdown", { clientX: 240, clientY: 580 });
+  assert.equal(run("shooting"), true, "a press during the respawn wait counts too");
+  run.event("pointerup");
+  assert.equal(run("shooting"), false);
 });

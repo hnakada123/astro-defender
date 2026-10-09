@@ -37,8 +37,8 @@ function game() {
   };
   run(`
     startGame(); player.inv = 0; bannerT = 0; fireT = saucerT = flightT = Infinity;
-    function collectBeam() {
-      powerups.push({ x: player.x, y: PLAYER_Y, type: "beam", ph: 0 }); updatePlay(0);
+    function collectBeam(times = 1) {
+      for (let i = 0; i < times; i++) { powerups.push({ x: player.x, y: PLAYER_Y, type: "beam", ph: 0 }); updatePlay(0); }
     }
   `);
   return run;

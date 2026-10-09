@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 const { test } = require("node:test");
 const { game } = require("./helpers/game.cjs");
 
-test("B capsules can drop, fall, and be collected; repeated pickups stop at four cannons", () => {
+test("B capsules can drop, fall, and be collected; each pickup adds one cannon up to four", () => {
   const run = game();
   run(`
     const originalRandom = Math.random;
@@ -14,8 +14,11 @@ test("B capsules can drop, fall, and be collected; repeated pickups stop at four
   assert.equal(run("powerups[0].type"), "beam");
   run("for (let i = 0; i < 5; i++) updatePlay(0.05)");
   assert.equal(run("powerups.length"), 0);
-  assert.equal(run("active.beam"), 2);
+  assert.equal(run("active.beam"), 1);
   run("collectBeam()");
+  assert.equal(run("active.beam"), 2);
+  assert.equal(run("BEAM_OFFSETS.slice(0, active.beam).reduce((a, b) => a + b, 0)"), 0, "two cannons sit symmetrically");
+  run("collectBeam(2)");
   assert.equal(run("active.beam"), 4);
   run("collectBeam()");
   assert.equal(run("active.beam"), 4);
@@ -24,7 +27,7 @@ test("B capsules can drop, fall, and be collected; repeated pickups stop at four
 
 test("linked cannons fire with the main gun without consuming its bullet allowance", () => {
   const run = game();
-  run("barriers = []; collectBeam(); shooting = true; updatePlay(0)");
+  run("collectBeam(2); shooting = true; updatePlay(0)");
   assert.equal(run("pBullets.filter(p => p.beam).length"), 2);
   assert.equal(run("pBullets.filter(p => !p.beam).length"), 1);
   assert.equal(run("pBullets.filter(p => p.beam).every(p => Math.abs(p.x + p.w / 2 - player.x) === 24)"), true);
@@ -36,8 +39,7 @@ test("linked cannons fire with the main gun without consuming its bullet allowan
 test("four cannons work alongside wide shots, rapid fire, and a shield", () => {
   const run = game();
   run(`
-    barriers = [];
-    collectBeam(); collectBeam();
+    collectBeam(4);
     applyPU("wide"); applyPU("rapid"); applyPU("shield");
     keys.fire = true;
     updatePlay(0);
@@ -53,7 +55,7 @@ test("four cannons work alongside wide shots, rapid fire, and a shield", () => {
 test("a fired beam destroys an alien and awards points only once", () => {
   const run = game();
   run(`
-    barriers = []; collectBeam(); shooting = true; updatePlay(0); shooting = false;
+    collectBeam(); shooting = true; updatePlay(0); shooting = false;
     const beam = pBullets.find(p => p.beam);
     const target = alienRect(aliens[0]);
     beam.x = target.x + 2; beam.y = target.y;
@@ -71,7 +73,7 @@ test("a fired beam destroys an alien and awards points only once", () => {
 test("a fired beam destroys a bonus saucer", () => {
   const run = game();
   run(`
-    barriers = []; collectBeam(); shooting = true; updatePlay(0); shooting = false;
+    collectBeam(); shooting = true; updatePlay(0); shooting = false;
     const beam = pBullets.find(p => p.beam);
     saucer = { x: beam.x - 8, y: 62, w: 32, h: 14, vx: 0 };
     beam.y = saucer.y;
@@ -83,18 +85,30 @@ test("a fired beam destroys a bonus saucer", () => {
   assert.equal(run("pBullets.length"), 0);
 });
 
-test("beams interact with barriers and enemy bullets", () => {
+test("every player shot passes through friendly barriers, while enemy bullets still erode them", () => {
   const run = game();
   run(`
-    collectBeam(); shooting = true; updatePlay(0); shooting = false;
-    const beam = pBullets.find(p => p.beam);
-    const barrier = barriers[0];
-    beam.x = barrier.x + 6 * barrier.cell; beam.y = barrier.y;
-    pBullets = [beam];
-    updatePlay(0);
+    collectBeam(4); applyPU("wide");
+    const cover = JSON.stringify(barriers);
+    let passed = 0;
+    // 4 つのバリアそれぞれの真下から、通常弾・3方向弾・連結ビームを同時に撃ち上げる。
+    for (const b of barriers) {
+      player.x = mouseX = clampPlayerX(b.x + b.w / 2); player.cool = 0;
+      shooting = true; updatePlay(0); shooting = false;
+      for (let i = 0; i < 20; i++) updatePlay(0.01);
+      passed += pBullets.filter(p => p.y + p.h < b.y).length;
+      pBullets = [];
+    }
   `);
-  assert.equal(run("pBullets.length"), 0);
-  assert.equal(run("barriers[0].g[0][6]"), 0);
+  assert.equal(run("passed"), 28);
+  assert.equal(run("JSON.stringify(barriers) === cover"), true);
+  run(`
+    const target = barriers[1];
+    eBullets = [{ x: target.x + target.w / 2, y: target.y - 10, w: 3, h: 9, vy: 200 }];
+    for (let i = 0; i < 10; i++) updatePlay(0.01);
+  `);
+  assert.equal(run("eBullets.length"), 0);
+  assert.equal(run("JSON.stringify(barriers) === cover"), false);
   run(`
     barriers = []; player.cool = 0; shooting = true; updatePlay(0); shooting = false;
     const nextBeam = pBullets.find(p => p.beam);
@@ -107,10 +121,10 @@ test("beams interact with barriers and enemy bullets", () => {
   assert.equal(run("lives"), 3);
 });
 
-test("a shield preserves the links; an unshielded hit and restart remove them", () => {
+test("a shield preserves the links; an unshielded hit costs two cannons, and a restart clears them", () => {
   const run = game();
   run(`
-    collectBeam(); collectBeam(); applyPU("shield");
+    collectBeam(4); applyPU("shield");
     function enemyHit() {
       player.inv = 0;
       eBullets = [{ x: player.x, y: PLAYER_Y, w: 3, h: 9, vy: 0 }];
@@ -122,30 +136,34 @@ test("a shield preserves the links; an unshielded hit and restart remove them", 
   assert.equal(run("active.beam"), 4);
   assert.equal(run("lives"), 3);
   run("enemyHit()");
-  assert.equal(run("active.beam"), 0);
+  assert.equal(run("active.beam"), 2);
   assert.equal(run("state"), "dying");
   assert.equal(run("lives"), 2);
-  run("update(1.2); collectBeam(); startGame()");
+  run("update(1.2); collectBeam(); enemyHit()");
+  assert.equal(run("active.beam"), 1);
+  run("update(1.2); enemyHit()");
+  assert.equal(run("active.beam"), 0);
+  run("startGame()");
   assert.equal(run("active.beam"), 0);
   assert.equal(run("pBullets.length"), 0);
 });
 
-test("links last beyond timed upgrades and survive the next wave", () => {
+test("links last beyond timed power-ups and survive the next wave", () => {
   const run = game();
   run(`
     collectBeam(); applyPU("wide");
     for (let i = 0; i < 180; i++) updatePlay(0.05);
   `);
   assert.equal(run("active.wide"), 0);
-  assert.equal(run("active.beam"), 2);
-  run("aliens.forEach(a => a.alive = false); aliveN = 0; updatePlay(0); update(1.7); chooseUpgrade(0)");
+  assert.equal(run("active.beam"), 1);
+  run("aliens.forEach(a => a.alive = false); aliveN = 0; updatePlay(0); update(1.7)");
   assert.equal(run("wave"), 2);
-  assert.equal(run("active.beam"), 2);
+  assert.equal(run("active.beam"), 1);
 });
 
 test("linked cannons stay on screen when acquired at the edge and with either control mode", () => {
   const run = game();
-  run("player.x = mouseX = 0; collectBeam(); collectBeam()");
+  run("player.x = mouseX = 0; collectBeam(4)");
   assert.equal(run("BEAM_OFFSETS.every(offset => player.x + offset - CANNON_IMG.width / 2 >= 0)"), true);
   run("mouseX = W; updatePlay(0.05)");
   assert.equal(run("BEAM_OFFSETS.every(offset => player.x + offset + CANNON_IMG.width / 2 <= W)"), true);

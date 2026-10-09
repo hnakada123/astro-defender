@@ -51,19 +51,18 @@ python3 -m http.server 8000
 | Click (hold to auto-fire) | Shoot |
 | Z / right-click / the laser button below the screen | Link laser (when the gauge is full) |
 | X / the bomb button below the screen | Emergency bomb |
-| 1 / 2 / 3, or click a card | Pick an upgrade after a wave (↑↓ + Enter also work) |
 | P / Esc | Pause |
 | M | Sound on / off |
 | ← → + Space | Full keyboard control |
 
 ## Rules
 
-- Wipe out the enemy formation, pick one upgrade, and move on to the next wave
+- Wipe out the enemy formation to move straight on to the next wave
 - Every 5th wave brings a battleship. Destroy the turrets on both sides, then the central core
 - Enemy bullets and diving enemies cost you a life. It is game over at 0 lives, or if the formation reaches the ground
 - Shoot the bonus saucer that crosses the top of the screen for 50–300 points
-- The green barriers block bullets, but they erode with every hit
-- You gain an extra life every 5000 points (up to 5)
+- The green barriers block enemy bullets and erode with every hit. Your own shots pass straight through them
+- You gain an extra life at 10,000 points and every 20,000 points after that (up to 5)
 - The high score is saved in the browser's localStorage
 
 ## Modern arcade features
@@ -72,16 +71,16 @@ python3 -m http.server 8000
   Taking a hit or running out of time resets it
 - **Power-ups** — enemies occasionally drop a capsule; pick it up to activate it
   - `W` 3-way shot (8s) / `R` rapid fire (8s) / `S` shield (absorbs one hit)
-  - `B` beam link — each pickup adds one cannon to each side of your ship (up to 4).
+  - `B` beam link — each pickup adds one cannon, alternating between the sides of your ship (up to 4).
     They fire alongside your main gun and stack with `W`, `R` and `S`.
-    There is no timer and they carry over into the next wave, but a miss removes them
+    There is no timer and they carry over into the next wave, but a miss costs you two of them
     (a shield-blocked hit keeps them). The link count is shown at the bottom of the screen
 - **Perfect bonus** — clear a wave without taking damage for bonus points
 - **Presentation** — neon glow, bullet trails, particle explosions, shockwave rings,
   hit-stop, screen shake, and a parallax starfield with nebulae
 - **Music** — a synthwave loop generated live with Web Audio
 
-## Combat and upgrade systems
+## Combat systems
 
 - **Link laser** — killing enemies and hitting the boss with normal shots charges the gauge;
   at full charge you fire a 1.2 second piercing laser. It clears every enemy and enemy bullet
@@ -90,17 +89,9 @@ python3 -m http.server 8000
   and kills made by the laser do not recharge the gauge
 - **Battleship boss fights** — turrets on either side protect the central core.
   Alongside their spread shots, the boss fires a laser that telegraphs its impact point
-  1.1 seconds ahead with a red zone. The marked spot is fixed, so you can step out of it to dodge.
-  Beating the boss restocks one bomb
-- **Three-card upgrades** — every wave offers three random picks from the list below. Combat is
-  paused until you choose. Beam, engine and magnet upgrades cap at Lv.5, survive a miss,
-  and reset when you start a new game
-  - Beam upgrade: more pierce and anti-boss damage on the linked beams; a wider, stronger link laser
-  - Engine upgrade: move speed +15% (mouse and keyboard alike)
-  - Magnet field: widens the range that pulls nearby capsules toward you
-  - Emergency repair: life +1 (max 5, or 1000 points if you are already full)
-  - Defense supply: bomb +1 (max 3), a shield, and 300 points
-  - Energy charge: fills the laser gauge, and 300 points
+  1.1 seconds ahead with a red zone. The marked spot is fixed, so you can step out of it to dodge,
+  and the boss holds still while it telegraphs and fires. During boss fights you can have five
+  main shots on screen instead of three. Beating the boss restocks one bomb
 - **Diving enemies** — from wave 2 on, enemies telegraph and then dive, zigzag, or sweep in
   from the side. Any that get past you rejoin the formation, and the wave continues until they are destroyed
 - **Emergency bomb** — you start with 2, up to a maximum of 3. It erases every enemy bullet on
@@ -120,7 +111,7 @@ excerpts from the real source and interactive labs that run in the browser.
 ## Tests
 
 Node.js's built-in test runner covers the linked cannons, the special attacks, the boss,
-the upgrade picker, the diving enemies, input handling, and what happens on a miss or a
+the diving enemies, input handling, and what happens on a miss or a
 wave transition (no extra packages required).
 
 ```sh

@@ -83,33 +83,21 @@ const STRINGS = {
     hint: [
       "マウス移動: 自機を操作 ／ クリック（長押しで連射）: ショット ／ 落ちてくるカプセルでパワーアップ",
       "W: 3方向ショット　R: 連射強化　S: シールド　B: ビーム砲連結（最大4門）",
-      "Z / 右クリック: 合体レーザー　X: ボム　強化選択: 1・2・3 / クリック",
+      "Z / 右クリック: 合体レーザー　X: ボム",
       "P: ポーズ ／ M: サウンド切替 ／ ← → ＋ スペースでも操作可",
     ],
     laserBtn: gauge => `Z 合体レーザー ${gauge}`,
     bombBtn: n => `X ボム ×${n}`,
-    upgrades: {
-      beam: { name: "ビーム強化", detail: "連結ビームの貫通数・威力と合体レーザーを強化" },
-      speed: { name: "エンジン強化", detail: "移動速度 +15% / マウス・キーボード両対応" },
-      magnet: { name: "回収フィールド", detail: "カプセルを引き寄せる範囲を拡大" },
-      repair: { name: "緊急整備", detail: "残機 +1（最大5）/ 満タンなら +1000点" },
-      supply: { name: "防衛補給", detail: "ボム +1（最大3）とシールド / +300点" },
-      charge: { name: "エネルギー補給", detail: "合体レーザーを満充電 / +300点" },
-    },
     bossCore: "中央コアを狙え！",
     bossGuns: "BOSS / 左右の砲台を破壊せよ",
-    upgradePick: "1つ選んで出撃 / 強化はミスしても継続",
-    upgradeKeys: "クリック / 1・2・3 / ↑↓ + Enter",
-    upgradeLevels: (beam, speed, magnet) => `強化Lv.  ビーム ${beam}  速度 ${speed}  回収 ${magnet}`,
     titleCombo: "連続撃破でコンボ倍率 ×8 まで上昇!",
     titlePowerups: "W: 3方向  R: 連射  S: シールド",
-    titleBeam: "B: ビーム砲を左右に連結・最大4門 / ミスで解除",
+    titleBeam: "B: ビーム砲を1門ずつ連結・最大4門 / ミスで2門減",
     titleStart: "クリック で スタート",
     titleMove: "マウス移動で自機を操作 / 長押しで連射",
     titleSpecial: "Z / 右クリック: 合体レーザー   X: ボム",
-    titleWave: "毎ウェーブ強化3択 / 5ウェーブごとにボス",
+    titleWave: "5ウェーブごとにボス戦",
     titleSystem: "P: ポーズ   M: サウンド切替",
-    clearNext: "次は強化を1つ選択",
     retry: "クリックでもう一度",
     resume: "P で再開",
   },
@@ -117,33 +105,21 @@ const STRINGS = {
     hint: [
       "Move the mouse to fly / Click (hold to auto-fire) to shoot / Grab falling capsules to power up",
       "W: 3-way shot / R: rapid fire / S: shield / B: beam link (up to 4 cannons)",
-      "Z or right-click: link laser / X: bomb / Upgrade select: 1, 2, 3 or click",
+      "Z or right-click: link laser / X: bomb",
       "P: pause / M: toggle sound / Arrow keys + Space also work",
     ],
     laserBtn: gauge => `Z LINK LASER ${gauge}`,
     bombBtn: n => `X BOMB ×${n}`,
-    upgrades: {
-      beam: { name: "BEAM UPGRADE", detail: "More link-beam pierce and power / stronger link laser" },
-      speed: { name: "ENGINE UPGRADE", detail: "Move speed +15% / works with mouse and keyboard" },
-      magnet: { name: "MAGNET FIELD", detail: "Widens the range that pulls capsules in" },
-      repair: { name: "EMERGENCY REPAIR", detail: "Life +1 (max 5) / +1000 pts when already full" },
-      supply: { name: "DEFENSE SUPPLY", detail: "Bomb +1 (max 3) and a shield / +300 pts" },
-      charge: { name: "ENERGY CHARGE", detail: "Fills the link laser gauge / +300 pts" },
-    },
     bossCore: "AIM FOR THE CORE!",
     bossGuns: "BOSS / DESTROY BOTH TURRETS",
-    upgradePick: "PICK ONE AND LAUNCH / UPGRADES SURVIVE A MISS",
-    upgradeKeys: "CLICK / 1 2 3 / ↑↓ + ENTER",
-    upgradeLevels: (beam, speed, magnet) => `UPGRADE Lv.  BEAM ${beam}  SPEED ${speed}  MAGNET ${magnet}`,
     titleCombo: "CHAIN YOUR KILLS FOR A COMBO UP TO ×8!",
     titlePowerups: "W: 3-WAY  R: RAPID  S: SHIELD",
-    titleBeam: "B: LINK UP TO 4 BEAM CANNONS / LOST ON A MISS",
+    titleBeam: "B: LINK BEAM CANNONS ONE BY ONE (MAX 4) / A MISS COSTS 2",
     titleStart: "CLICK TO START",
     titleMove: "MOVE THE MOUSE TO FLY / HOLD TO AUTO-FIRE",
     titleSpecial: "Z / RIGHT-CLICK: LINK LASER   X: BOMB",
-    titleWave: "1 OF 3 UPGRADES PER WAVE / BOSS EVERY 5 WAVES",
+    titleWave: "BOSS BATTLE EVERY 5 WAVES",
     titleSystem: "P: PAUSE   M: TOGGLE SOUND",
-    clearNext: "CHOOSE AN UPGRADE NEXT",
     retry: "CLICK TO PLAY AGAIN",
     resume: "PRESS P TO RESUME",
   },
@@ -165,8 +141,6 @@ function T(key, ...args) {
   const v = STRINGS[lang][key];
   return typeof v === "function" ? v(...args) : v;
 }
-
-function upgradeText(key) { return STRINGS[lang].upgrades[key]; }
 
 function drawTextOn(g, s, x, y, o = {}) {
   g.font = `${o.weight || 700} ${o.size || 13}px 'Courier New', ui-monospace, monospace`;
@@ -624,19 +598,17 @@ const GROUND_Y = H - 26;
 const PLAYER_Y = H - 60;
 const STAR_COLORS = ["#39456e", "#6f83c9", "#bcd0ff"];
 const DASH_WARNING = [8, 6], DASH_NONE = [];
-const LIFE_STEP = 5000;
+const FIRST_LIFE = 10000, LIFE_STEP = 20000; // 1UP は 10000 点で 1 回、以降 20000 点ごと
 const COMBO_WINDOW = 2.2;
 const MULT_COLORS = ["#cfd8ff", "#7df9ff", "#7dff7a", "#ffe066", "#ff9a5c", "#ff6ad5", "#ff4d6d", "#ff2e88"];
-const BEAM_OFFSETS = [-24, 24, -42, 42];
+const BEAM_OFFSETS = [-24, 24, -42, 42]; // 連結砲の位置。カプセル 1 個で 1 門ずつ、この順に左右交互に増える
+const BEAM_LOSS = 2;                       // ミス 1 回で失う連結砲の数
+// 自機の弾の速さ(px/秒)。終盤の素早い敵にも当てやすいよう速めにしている。
+// 通常弾の長さ 14px は、dt の上限 0.05 秒で 1 フレームに進む 30px が敵の高さ 16px + 弾の長さを超えず、すり抜けないようにするため。
+const SHOT_SPEED = 600, SHOT_H = 14;
 const LASER_MAX = 100, BOMB_MAX = 3, BOMB_RADIUS = 240;
-const UPGRADE_DEFS = {
-  beam: { color: BEAM_COLOR, max: 5 },
-  speed: { color: "#61e8ff", max: 5 },
-  magnet: { color: "#7dff7a", max: 5 },
-  repair: { color: "#ff9a5c" },
-  supply: { color: "#ffe066" },
-  charge: { color: "#ff6ad5" },
-};
+const BOSS_SWAY = 0.45;      // ボスが左右に揺れる速さ(角速度)。振れ幅は ±130px
+const BOSS_BOMB_DAMAGE = 5;  // ボムがボスの各部位に与えるダメージ
 
 const PU_DEFS = {
   wide: { label: "W", color: "#61e8ff", dur: 8, name: "3-WAY!" },
@@ -646,11 +618,11 @@ const PU_DEFS = {
 };
 for (const k in PU_DEFS) PU_DEFS[k].glowImg = glowDot(PU_DEFS[k].color, 14);
 
-let state = "title";       // title | play | dying | clear | upgrade | gameover
+let state = "title";       // title | play | dying | clear | gameover
 let stateT = 0;
 let paused = false;
 
-let score = 0, scoreShown = 0, wave = 1, lives = 3, nextLife = LIFE_STEP;
+let score = 0, scoreShown = 0, wave = 1, lives = 3, nextLife = FIRST_LIFE;
 let newRecord = false, maxMult = 1, waveNoDamage = true, perfectBonus = 0;
 let hi = 0;
 try { hi = +(localStorage.getItem(HI_KEY) || 0) || 0; } catch (e) {}
@@ -667,10 +639,8 @@ let saucer = null, saucerT = 15;
 let barriers = [], particles = [], popups = [], rings = [], powerups = [];
 const combo = { n: 0, t: 0, mult: 1 };
 const active = { wide: 0, rapid: 0, shield: 0, beam: 0 };
-const upgrades = { beam: 0, speed: 0, magnet: 0 };
 const special = { charge: 0, laserT: 0, laserW: 0, laserDps: 0, bombs: 2, bombT: 0 };
 let boss = null, flightT = 6, flightCount = 0;
-let upgradeChoices = [], upgradeIndex = 0;
 let shake = 0;
 
 const starLayers = [0, 1, 2].map(l => Array.from({ length: [36, 26, 14][l] }, () => ({
@@ -760,15 +730,14 @@ function makeWave() {
   waveNoDamage = true; perfectBonus = 0;
   player.alive = true; player.inv = 1.5; player.cool = 0;
   special.laserT = 0; special.bombT = 0;
-  flightT = 6; flightCount = 0; upgradeChoices = [];
+  flightT = 6; flightCount = 0;
   makeBarriers();
 }
 
 function startGame() {
-  score = 0; scoreShown = 0; wave = 1; lives = 3; nextLife = LIFE_STEP;
+  score = 0; scoreShown = 0; wave = 1; lives = 3; nextLife = FIRST_LIFE;
   newRecord = false; maxMult = 1;
   active.wide = 0; active.rapid = 0; active.shield = 0; active.beam = 0;
-  upgrades.beam = 0; upgrades.speed = 0; upgrades.magnet = 0;
   special.charge = 0; special.bombs = 2;
   paused = false; releaseControls();
   resetCombo();
@@ -785,7 +754,8 @@ function addScore(n) {
     nextLife += LIFE_STEP;
     if (lives < 5) {
       lives++;
-      popup(W / 2, H / 2 - 40, "1UP!", "#ffe066", 20);
+      // 画面中央の WAVE 表示・WAVE CLEAR!・PERFECT! (y=244〜356) と重ならない高さに出す。
+      popup(W / 2, 430, "1UP!", "#ffe066", 20);
       sfx.oneUp();
     }
   }
@@ -827,7 +797,7 @@ function applyPU(type) {
   if (type === "shield") active.shield = 1;
   else if (type === "beam") {
     const wasMax = active.beam === d.max;
-    active.beam = Math.min(d.max, active.beam + 2);
+    active.beam = Math.min(d.max, active.beam + 1);
     player.x = clampPlayerX(player.x);
     name = wasMax ? "BEAM LINK MAX!" : `${d.name} ×${active.beam}!`;
     spawnRing(player.x, PLAYER_Y + 8, d.color, 180, 0.35);
@@ -837,7 +807,7 @@ function applyPU(type) {
   sfx.pickup();
 }
 
-/* ================= 必殺技・ウェーブ強化 ================= */
+/* ================= 必殺技 ================= */
 
 function gainCharge(n) {
   if (special.laserT > 0) return; // レーザー自身の撃破では再充電しない。
@@ -855,8 +825,8 @@ function activateLaser() {
   if (!canUseSpecial() || special.charge < LASER_MAX || special.laserT > 0) return false;
   special.charge = 0;
   special.laserT = 1.2;
-  special.laserW = 14 + active.beam * 10 + upgrades.beam * 3;
-  special.laserDps = 20 + active.beam * 8 + upgrades.beam * 4;
+  special.laserW = 14 + active.beam * 10;
+  special.laserDps = 20 + active.beam * 8;
   shake = 0.18;
   beep({ f0: 180, f1: 1800, dur: 0.7, type: "sawtooth", vol: 0.1 });
   return true;
@@ -876,7 +846,7 @@ function activateBomb() {
   }
   if (boss) {
     boss.warning = 0; boss.laserT = 0; boss.attackT = 2.5;
-    for (const part of boss.parts) damageBossPart(part, 10, "bomb");
+    for (const part of boss.parts) damageBossPart(part, BOSS_BOMB_DAMAGE, "bomb");
   }
   return true;
 }
@@ -900,35 +870,6 @@ function updateLaser(dt) {
   special.laserT = Math.max(0, special.laserT - dt);
 }
 
-function openUpgrades() {
-  const pool = Object.keys(UPGRADE_DEFS).filter(k => !UPGRADE_DEFS[k].max || upgrades[k] < UPGRADE_DEFS[k].max);
-  upgradeChoices = [];
-  while (upgradeChoices.length < 3) upgradeChoices.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
-  upgradeIndex = 0;
-  releaseControls();
-  setState("upgrade");
-}
-
-function chooseUpgrade(index) {
-  if (state !== "upgrade" || paused || !upgradeChoices[index]) return false;
-  const key = upgradeChoices[index];
-  if (key in upgrades) upgrades[key]++;
-  else if (key === "repair") {
-    if (lives < 5) lives++; else addScore(1000);
-  } else if (key === "supply") {
-    special.bombs = Math.min(BOMB_MAX, special.bombs + 1); active.shield = 1; addScore(300);
-  } else if (key === "charge") {
-    special.charge = LASER_MAX; addScore(300);
-  }
-  releaseControls();
-  wave++; makeWave(); setState("play");
-  popup(W / 2, 350, upgradeText(key).name, UPGRADE_DEFS[key].color, 16);
-  sfx.pickup();
-  return true;
-}
-
-function upgradeCardRect(index) { return { x: 34, y: 242 + index * 88, w: W - 68, h: 76 }; }
-
 /* ================= 大型戦艦 ================= */
 
 function makeBoss() {
@@ -936,9 +877,9 @@ function makeBoss() {
   boss = {
     x: W / 2, y: 112, t: 0, attackT: 2, warning: 0, laserT: 0, targetX: W / 2,
     parts: [
-      { kind: "gun", offset: -54, hp: 14 + level * 4, max: 14 + level * 4, flash: 0 },
-      { kind: "gun", offset: 54, hp: 14 + level * 4, max: 14 + level * 4, flash: 0 },
-      { kind: "core", offset: 0, hp: 40 + level * 16, max: 40 + level * 16, flash: 0 },
+      { kind: "gun", offset: -54, hp: 7 + level * 2, max: 7 + level * 2, flash: 0 },
+      { kind: "gun", offset: 54, hp: 7 + level * 2, max: 7 + level * 2, flash: 0 },
+      { kind: "core", offset: 0, hp: 20 + level * 8, max: 20 + level * 8, flash: 0 },
     ],
   };
 }
@@ -978,7 +919,6 @@ function hitBoss(rect, damage) {
 
 function updateBoss(dt) {
   if (!boss || bannerT > 0) return;
-  boss.t += dt;
   boss.parts.forEach(p => p.flash = Math.max(0, p.flash - dt));
   if (boss.warning > 0) {
     boss.warning = Math.max(0, boss.warning - dt);
@@ -995,7 +935,9 @@ function updateBoss(dt) {
     const danger = { x: boss.targetX - 18, y: boss.y + 40, w: 36, h: GROUND_Y - boss.y - 40 };
     if (boss.laserT > 0 && player.inv <= 0 && hit(danger, playerRect())) damagePlayer();
   } else {
-    boss.x = W / 2 + Math.sin(boss.t * 0.65) * 130;
+    // 予告・照射中は止まるので、移動中だけ時間を進める(止まっている間も進めると攻撃後に瞬間移動する)。
+    boss.t += dt;
+    boss.x = W / 2 + Math.sin(boss.t * BOSS_SWAY) * 130;
     boss.attackT -= dt;
     if (boss.attackT <= 0) {
       boss.targetX = clamp(player.x, 22, W - 22);
@@ -1078,12 +1020,6 @@ function releaseControls() {
   shooting = false; keys.left = false; keys.right = false; keys.fire = false;
 }
 
-function upgradeAtPointer(e) {
-  const r = cvs.getBoundingClientRect();
-  const point = { x: canvasX(e), y: (e.clientY - r.top) * H / r.height, w: 1, h: 1 };
-  return upgradeChoices.findIndex((_, i) => hit(point, upgradeCardRect(i)));
-}
-
 function handlePress() {
   if (paused) { setPaused(false); return; }
   if (state === "title") startGame();
@@ -1092,20 +1028,19 @@ function handlePress() {
 
 window.addEventListener("pointermove", e => {
   if (e.target !== cvs) return;
-  if (state === "upgrade") { const i = upgradeAtPointer(e); if (i >= 0) upgradeIndex = i; return; }
   mouseX = clamp(canvasX(e), 0, W);
   inputMode = "mouse";
 });
 cvs.addEventListener("pointerdown", e => {
   e.preventDefault();
   ac(); if (!paused) musicStart();
-  if (state === "upgrade") { if (e.button === 0) chooseUpgrade(upgradeAtPointer(e)); return; }
   if (e.button === 2) { activateLaser(); return; }
   if (e.button !== 0) return;
   mouseX = clamp(canvasX(e), 0, W);
   inputMode = "mouse";
   handlePress();
-  if (state === "play" && !paused) shooting = true;
+  // ミスからの復帰中やウェーブクリア表示中に押し始めても、そのまま連射が続くようにする(キーボードと同じ)。
+  if ((state === "play" || state === "dying" || state === "clear") && !paused) shooting = true;
 });
 window.addEventListener("pointerup", () => { shooting = false; });
 window.addEventListener("pointercancel", releaseControls);
@@ -1146,14 +1081,6 @@ window.addEventListener("keydown", e => {
   const k = e.key.toLowerCase();
   if ([" ", "enter", "arrowleft", "arrowright", "arrowup", "arrowdown"].includes(k)) e.preventDefault();
   if (e.repeat) return;
-  if (state === "upgrade") {
-    if (["1", "2", "3"].includes(k)) chooseUpgrade(Number(k) - 1);
-    else if (k === "arrowup") upgradeIndex = (upgradeIndex + 2) % 3;
-    else if (k === "arrowdown") upgradeIndex = (upgradeIndex + 1) % 3;
-    else if (k === "enter" || k === " ") chooseUpgrade(upgradeIndex);
-    else if (k === "m") toggleMute();
-    return;
-  }
   if (k === "p" || k === "escape") {
     if (state === "play" || state === "dying") setPaused(!paused);
   } else if (k === "m") {
@@ -1287,11 +1214,10 @@ function hitPlayer() {
   sfx.player();
   shake = 0.5;
   player.alive = false;
-  active.beam = 0;
+  active.beam = Math.max(0, active.beam - BEAM_LOSS);
   special.laserT = 0;
   eBullets = [];
-  shooting = false;
-  setState("dying");
+  setState("dying"); // 射撃ボタンは離すまで押したまま扱い、復帰後もそのまま撃てる
 }
 
 function damagePlayer() {
@@ -1351,7 +1277,7 @@ function updatePlay(dt) {
   bannerT = Math.max(0, bannerT - dt);
 
   // --- 自機 ---
-  const speed = 340 * (1 + upgrades.speed * 0.15);
+  const speed = 340;
   if (inputMode === "mouse") {
     const target = clampPlayerX(mouseX);
     player.x = clampPlayerX(player.x + clamp(target - player.x, -speed * dt * 2, speed * dt * 2));
@@ -1363,16 +1289,17 @@ function updatePlay(dt) {
   special.bombT = Math.max(0, special.bombT - dt);
 
   const cd = active.rapid > 0 ? 0.12 : 0.27;
-  const maxB = (active.rapid > 0 || active.wide > 0) ? 12 : 3;
+  // ボスは遠く弾の到達に時間がかかるので、ボス戦では画面内の通常弾の上限を緩める。
+  const maxB = (active.rapid > 0 || active.wide > 0) ? 12 : boss ? 5 : 3;
   // ビームは通常弾の上限に数えず、共通のクールダウンで同時発射する。
   const normalBulletCount = pBullets.reduce((n, p) => n + (p.beam ? 0 : 1), 0);
   if ((shooting || keys.fire) && player.cool <= 0 && normalBulletCount < maxB) {
-    const mk = vx => pBullets.push({ x: player.x - 1, y: PLAYER_Y - 10, w: 2, h: 10, vx });
+    const mk = vx => pBullets.push({ x: player.x - 1, y: PLAYER_Y - SHOT_H, w: 2, h: SHOT_H, vx });
     mk(0);
     if (active.wide > 0) { mk(-70); mk(70); }
     for (let i = 0; i < active.beam; i++) {
       const x = player.x + BEAM_OFFSETS[i];
-      pBullets.push({ x: x - 2, y: PLAYER_Y - 32, w: 4, h: 28, vx: 0, beam: true, pierce: 1 + upgrades.beam, damage: 1 + upgrades.beam * 0.5 });
+      pBullets.push({ x: x - 2, y: PLAYER_Y - 32, w: 4, h: 28, vx: 0, beam: true });
       spawnBurst(x, PLAYER_Y - 4, BEAM_COLOR, 3, 55);
     }
     player.cool = cd;
@@ -1470,13 +1397,6 @@ function updatePlay(dt) {
   for (let i = powerups.length - 1; i >= 0; i--) {
     const u = powerups[i];
     u.y += 62 * dt;
-    if (upgrades.magnet > 0) {
-      const dx = player.x - u.x, dy = PLAYER_Y - u.y, distance = Math.hypot(dx, dy);
-      if (distance > 0 && distance < 40 + upgrades.magnet * 35) {
-        const pull = Math.min(distance, 190 * dt);
-        u.x += dx / distance * pull; u.y += dy / distance * pull;
-      }
-    }
     if (u.y > GROUND_Y) { powerups.splice(i, 1); continue; }
     if (player.alive && hit({ x: u.x - 8, y: u.y - 8, w: 16, h: 16 }, prInf)) {
       applyPU(u.type);
@@ -1489,10 +1409,10 @@ function updatePlay(dt) {
   // --- 自弾 ---
   for (let i = pBullets.length - 1; i >= 0; i--) {
     const p = pBullets[i];
-    p.y -= 470 * dt;
+    p.y -= SHOT_SPEED * dt;
     p.x += (p.vx || 0) * dt;
+    // 自機の弾は自陣のバリアを素通りする(バリアは敵弾から身を守るためのもの)。
     let dead = p.y + p.h < 0 || p.x < -20 || p.x > W + 20;
-    if (!dead && barrierHit(p, 1)) dead = true;
     if (!dead) {
       for (let j = eBullets.length - 1; j >= 0; j--) {
         if (hit(p, eBullets[j])) {
@@ -1508,16 +1428,12 @@ function updatePlay(dt) {
       killSaucer();
       dead = true;
     }
-    if (!dead && hitBoss(p, p.damage || 1)) dead = true;
+    if (!dead && hitBoss(p, 1)) dead = true;
     if (!dead) {
       for (const a of aliens) {
         if (!a.alive) continue;
         const r = alienRectInto(a, SCRATCH);
-        if (hit(p, r)) {
-          killAlien(a, r);
-          p.pierce = (p.pierce || 1) - 1;
-          if (p.pierce <= 0) { dead = true; break; }
-        }
+        if (hit(p, r)) { killAlien(a, r); dead = true; break; }
       }
     }
     if (dead) pBullets.splice(i, 1);
@@ -1542,7 +1458,7 @@ function updatePlay(dt) {
   if (aliveN === 0 && !boss) {
     saucerSoundStop();
     pBullets = []; eBullets = []; powerups = [];
-    special.laserT = 0; releaseControls();
+    special.laserT = 0;
     if (waveNoDamage) {
       perfectBonus = 500 + wave * 100;
       addScore(perfectBonus);
@@ -1566,7 +1482,8 @@ function update(dt) {
       else gameOver();
     }
   } else if (state === "clear") {
-    if (stateT > 1.6) openUpgrades();
+    // 操作を止めずに次のウェーブへ。押しっぱなしの射撃・移動キーもそのまま引き継ぐ。
+    if (stateT > 1.6) { wave++; makeWave(); setState("play"); }
   }
 }
 
@@ -1872,26 +1789,6 @@ function drawSpecials(t) {
   ctx.restore();
 }
 
-function drawUpgrades() {
-  ctx.fillStyle = "rgba(2,3,10,0.94)"; ctx.fillRect(0, 58, W, GROUND_Y - 58);
-  drawText("CHOOSE YOUR UPGRADE", W / 2, 166, { size: 23, color: "#ffe066" });
-  drawText(`WAVE ${wave} CLEAR → ${wave + 1}${(wave + 1) % 5 === 0 ? " / BOSS" : ""}`, W / 2, 192, { size: 12, color: "#9fb4ff" });
-  drawText(T("upgradePick"), W / 2, 219, { size: 12, color: "#cfd8ff" });
-  upgradeChoices.forEach((key, i) => {
-    const d = UPGRADE_DEFS[key], txt = upgradeText(key), r = upgradeCardRect(i), selected = i === upgradeIndex;
-    ctx.fillStyle = selected ? "#272039" : "#111527"; ctx.fillRect(r.x, r.y, r.w, r.h);
-    ctx.strokeStyle = selected ? d.color : "#334068"; ctx.lineWidth = selected ? 2 : 1;
-    ctx.strokeRect(r.x, r.y, r.w, r.h);
-    ctx.fillStyle = d.color; ctx.fillRect(r.x + 14, r.y + 16, 24, 24);
-    drawText(String(i + 1), r.x + 26, r.y + 33, { size: 16, color: "#080b16" });
-    drawText(txt.name, r.x + 52, r.y + 31, { align: "left", size: 17, color: d.color });
-    if (d.max) drawText(`Lv.${upgrades[key]} → ${upgrades[key] + 1}`, r.x + r.w - 14, r.y + 31, { align: "right", size: 11, color: "#cfd8ff" });
-    drawText(txt.detail, r.x + 14, r.y + 58, { align: "left", size: 10, color: "#cfd8ff" });
-  });
-  drawText(T("upgradeKeys"), W / 2, 533, { size: 12, color: "#ffe066" });
-  drawText(T("upgradeLevels", upgrades.beam, upgrades.speed, upgrades.magnet), W / 2, 561, { size: 11, color: "#9fb4ff" });
-}
-
 function drawGame(t) {
   drawBarriers();
   drawGlowPass(t);
@@ -2001,14 +1898,12 @@ function drawTitle(t) {
 }
 
 function drawOverlay(t) {
-  if (state === "upgrade") drawUpgrades();
-  else if (state === "clear") {
+  if (state === "clear") {
     drawText("WAVE CLEAR!", W / 2, 290, { size: 30, color: "#7dff7a", weight: 900 });
     if (perfectBonus > 0) {
       drawText(`PERFECT! +${perfectBonus}`, W / 2, 326, { size: 17, color: "#ffe066" });
     }
-    drawText(`NEXT: WAVE ${wave + 1}`, W / 2, 356, { size: 14, color: "#cfd8ff" });
-    drawText(T("clearNext"), W / 2, 385, { size: 12, color: "#ffe066" });
+    drawText(`NEXT: WAVE ${wave + 1}${(wave + 1) % 5 === 0 ? " / BOSS" : ""}`, W / 2, 356, { size: 14, color: "#cfd8ff" });
   } else if (state === "gameover") {
     ctx.fillStyle = "rgba(2,3,10,0.65)";
     ctx.fillRect(0, 0, W, H);
