@@ -5,6 +5,14 @@
 This project follows [Semantic Versioning](https://semver.org/).
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Changed
+
+- Letters, digits and symbols on the game screen are now a 5 × 7 pixel font drawn for this game (they used to be Courier New, which looked rough on some systems). Lines that contain Japanese are drawn entirely in the system font so their characters match in size, preferring a clean monospace font for the Latin letters
+- The buttons and control hints below the screen also switched from Courier New to a clean monospace font
+- The source code guide (Japanese and English) now explains how the pixel font is built and drawn, with every code excerpt’s line numbers updated. Every screenshot that shows text was retaken
+
 ## [3.0.0] - 2026-10-09
 
 The link laser, combos and linked cannons were strong enough to flatten the late game. This release reins them in and adds new attacks as the waves and bosses advance. Weapons and enemy attacks change how the game plays, so the major version goes up.

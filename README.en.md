@@ -28,7 +28,7 @@ settings on the first visit, and the buttons under the play field switch it at a
 ## Built with
 
 - **HTML / CSS / JavaScript** (vanilla JS — no framework, no library, no build step)
-- Rendering: **Canvas 2D API** (the pixel-art sprites are generated from code at runtime)
+- Rendering: **Canvas 2D API** (the pixel-art sprites and the pixel font for letters and digits are generated from code at runtime)
 - Sound: **Web Audio API** (sound effects and music synthesized live — no audio files)
 - High score: **localStorage**
 
@@ -148,7 +148,7 @@ This is an original work built on the conventions of the fixed-screen formation-
 It uses no copyrighted material from any existing commercial game.
 
 - The name and logo are original to this project
-- Every sprite, enemies included, was newly designed for this project
+- Every sprite, enemies included, and the pixel font used for on-screen letters and digits were newly designed for this project
 - All sound effects and music are synthesized live with the Web Audio API (no sampled material)
 
 ## License

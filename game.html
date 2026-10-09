@@ -6,11 +6,13 @@
 <title>ASTRO DEFENDER</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  /* ボタンと操作説明の英字。Courier New より字形の整った等幅フォントを OS ごとに選ぶ(ゲーム画面の文字はドット文字) */
+  :root { --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Cascadia Mono", "JetBrains Mono", "DejaVu Sans Mono", monospace; }
   html, body { height: 100%; }
   body {
     background: radial-gradient(1200px 800px at 50% -200px, #131a3d, #05060f);
     display: flex; flex-direction: column; align-items: center;
-    gap: 10px; font-family: ui-monospace, 'Courier New', monospace; color: #9fb4ff;
+    gap: 10px; font-family: var(--mono); color: #9fb4ff;
   }
   .frame {
     position: relative; line-height: 0; border: 2px solid #33408a; border-radius: 12px;
@@ -32,12 +34,12 @@
   }
   .hint { font-size: 12px; letter-spacing: .08em; opacity: .75; line-height: 1.7; text-align: center; }
   .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 0 12px; }
-  .actions > button { border: 1px solid #c5a3ff; border-radius: 7px; padding: 9px 14px; background: #15152f; color: #e4d8ff; font: bold 12px ui-monospace, monospace; cursor: pointer; touch-action: manipulation; }
+  .actions > button { border: 1px solid #c5a3ff; border-radius: 7px; padding: 9px 14px; background: #15152f; color: #e4d8ff; font: bold 12px var(--mono); cursor: pointer; touch-action: manipulation; }
   .actions > button:disabled { opacity: .45; cursor: default; }
   .actions button:focus-visible { outline: 2px solid #ffe066; outline-offset: 3px; }
   .hint { max-width: 760px; padding: 0 10px 10px; }
   .lang { display: flex; gap: 6px; }
-  .lang button { border: 1px solid #33408a; border-radius: 6px; padding: 5px 12px; background: #0d1024; color: #8fa0d8; font: bold 11px ui-monospace, monospace; letter-spacing: .06em; cursor: pointer; touch-action: manipulation; }
+  .lang button { border: 1px solid #33408a; border-radius: 6px; padding: 5px 12px; background: #0d1024; color: #8fa0d8; font: bold 11px var(--mono); letter-spacing: .06em; cursor: pointer; touch-action: manipulation; }
   .lang button[aria-pressed="true"] { border-color: #7df9ff; background: #16213f; color: #eaffff; }
 </style>
 <link rel="icon" type="image/x-icon" href="favicon.ico?v=20261009-2" sizes="16x16 32x32 48x48"><link rel="icon" type="image/png" href="assets/icons/favicon-16.png?v=20261009-2" sizes="16x16"><link rel="icon" type="image/png" href="assets/icons/favicon-32.png?v=20261009-2" sizes="32x32"><link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=20261009-2" sizes="180x180"></head>
@@ -154,12 +156,136 @@ function T(key, ...args) {
   return typeof v === "function" ? v(...args) : v;
 }
 
+/* ================= ドット文字（英数字と記号は本作で描いた 5×7 の文字） ================= */
+
+// 文字表: 各行に、同じ高さの点の並びを文字の順に横へ書き並べる。1 文字は 5 列で、文字どうしは空白 1 列で区切る。
+// 上から 7 行目の下がベースライン。g・j・p・q・y の下に伸びる部分だけ 8・9 行目を使う。
+const FONT_SHEETS = [
+  ["ABCDEFGHIJKLM", [
+    ".XXX. XXXX. .XXX. XXXX. XXXXX XXXXX .XXX. X...X .XXX. ..XXX X...X X.... X...X",
+    "X...X X...X X...X X...X X.... X.... X...X X...X ..X.. ...X. X..X. X.... XX.XX",
+    "X...X X...X X.... X...X X.... X.... X.... X...X ..X.. ...X. X.X.. X.... X.X.X",
+    "XXXXX XXXX. X.... X...X XXXX. XXXX. X.XXX XXXXX ..X.. ...X. XX... X.... X.X.X",
+    "X...X X...X X.... X...X X.... X.... X...X X...X ..X.. ...X. X.X.. X.... X...X",
+    "X...X X...X X...X X...X X.... X.... X...X X...X ..X.. X..X. X..X. X.... X...X",
+    "X...X XXXX. .XXX. XXXX. XXXXX X.... .XXXX X...X .XXX. .XX.. X...X XXXXX X...X",
+  ]],
+  ["NOPQRSTUVWXYZ", [
+    "X...X .XXX. XXXX. .XXX. XXXX. .XXXX XXXXX X...X X...X X...X X...X X...X XXXXX",
+    "X...X X...X X...X X...X X...X X.... ..X.. X...X X...X X...X X...X X...X ....X",
+    "XX..X X...X X...X X...X X...X X.... ..X.. X...X X...X X...X .X.X. .X.X. ...X.",
+    "X.X.X X...X XXXX. X...X XXXX. .XXX. ..X.. X...X X...X X.X.X ..X.. ..X.. ..X..",
+    "X..XX X...X X.... X.X.X X.X.. ....X ..X.. X...X X...X X.X.X .X.X. ..X.. .X...",
+    "X...X X...X X.... X..X. X..X. ....X ..X.. X...X .X.X. X.X.X X...X ..X.. X....",
+    "X...X .XXX. X.... .XX.X X...X XXXX. ..X.. .XXX. ..X.. .X.X. X...X ..X.. XXXXX",
+  ]],
+  ["abcdefghijklm", [
+    "..... X.... ..... ....X ..... ..XX. ..... X.... ..X.. ...X. X.... .XX.. .....",
+    "..... X.... ..... ....X ..... .X..X ..... X.... ..... ..... X.... ..X.. .....",
+    ".XXX. XXXX. .XXX. .XXXX .XXX. .X... .XXXX XXXX. .XX.. ..XX. X..X. ..X.. XX.X.",
+    "....X X...X X.... X...X X...X XXX.. X...X X...X ..X.. ...X. X.X.. ..X.. X.X.X",
+    ".XXXX X...X X.... X...X XXXXX .X... X...X X...X ..X.. ...X. XX... ..X.. X.X.X",
+    "X...X X...X X...X X...X X.... .X... X...X X...X ..X.. ...X. X.X.. ..X.. X.X.X",
+    ".XXXX XXXX. .XXX. .XXXX .XXX. .X... .XXXX X...X .XXX. ...X. X..X. .XXX. X.X.X",
+    "..... ..... ..... ..... ..... ..... ....X ..... ..... X..X. ..... ..... .....",
+    "..... ..... ..... ..... ..... ..... .XXX. ..... ..... .XX.. ..... ..... .....",
+  ]],
+  ["nopqrstuvwxyz", [
+    "..... ..... ..... ..... ..... ..... .X... ..... ..... ..... ..... ..... .....",
+    "..... ..... ..... ..... ..... ..... .X... ..... ..... ..... ..... ..... .....",
+    "XXXX. .XXX. XXXX. .XXXX X.XX. .XXXX XXX.. X...X X...X X...X X...X X...X XXXXX",
+    "X...X X...X X...X X...X XX..X X.... .X... X...X X...X X...X .X.X. X...X ...X.",
+    "X...X X...X X...X X...X X.... .XXX. .X... X...X X...X X.X.X ..X.. X...X ..X..",
+    "X...X X...X X...X X...X X.... ....X .X..X X..XX .X.X. X.X.X .X.X. X...X .X...",
+    "X...X .XXX. XXXX. .XXXX X.... XXXX. ..XX. .XX.X ..X.. .X.X. X...X .XXXX XXXXX",
+    "..... ..... X.... ....X ..... ..... ..... ..... ..... ..... ..... ....X .....",
+    "..... ..... X.... ....X ..... ..... ..... ..... ..... ..... ..... .XXX. .....",
+  ]],
+  ["0123456789×♪", [
+    ".XXX. ..X.. .XXX. XXXXX ...X. XXXXX ..XX. XXXXX .XXX. .XXX. ..... ..X..",
+    "X...X .XX.. X...X ...X. ..XX. X.... .X... ....X X...X X...X X...X ..XX.",
+    "X..XX ..X.. ....X ..X.. .X.X. XXXX. X.... ...X. X...X X...X .X.X. ..X.X",
+    "X.X.X ..X.. ...X. ...X. X..X. ....X XXXX. ..X.. .XXX. .XXXX ..X.. ..X..",
+    "XX..X ..X.. ..X.. ....X XXXXX ....X X...X .X... X...X ....X .X.X. XXX..",
+    "X...X ..X.. .X... X...X ...X. X...X X...X .X... X...X ...X. X...X XXX..",
+    ".XXX. .XXX. XXXXX .XXX. ...X. .XXX. .XXX. .X... .XXX. .XX.. ..... .....",
+  ]],
+  ["!\"#$%&'()*+,-./", [
+    "..X.. .X.X. .X.X. ..X.. XX... .XX.. ..X.. ...X. .X... ..... ..... ..... ..... ..... .....",
+    "..X.. .X.X. .X.X. .XXXX XX..X X..X. ..X.. ..X.. ..X.. ..X.. ..X.. ..... ..... ..... ....X",
+    "..X.. ..... XXXXX X.X.. ...X. X.X.. ..... .X... ...X. X.X.X ..X.. ..... ..... ..... ...X.",
+    "..X.. ..... .X.X. .XXX. ..X.. .X... ..... .X... ...X. .XXX. XXXXX ..... XXXXX ..... ..X..",
+    "..X.. ..... XXXXX ..X.X .X... X.X.X ..... .X... ...X. X.X.X ..X.. .XX.. ..... ..... .X...",
+    "..... ..... .X.X. XXXX. X..XX X..X. ..... ..X.. ..X.. ..X.. ..X.. ..X.. ..... .XX.. X....",
+    "..X.. ..... .X.X. ..X.. ...XX .XX.X ..... ...X. .X... ..... ..... .X... ..... .XX.. .....",
+  ]],
+  [":;<=>?@[\\]^_`{|}~", [
+    "..... ..... ...X. ..... .X... .XXX. .XXX. .XXX. ..... .XXX. ..X.. ..... .X... ...X. ..X.. .X... .....",
+    ".XX.. .XX.. ..X.. ..... ..X.. X...X X...X .X... X.... ...X. .X.X. ..... ..X.. ..X.. ..X.. ..X.. .....",
+    ".XX.. .XX.. .X... XXXXX ...X. ....X ....X .X... .X... ...X. X...X ..... ..... ..X.. ..X.. ..X.. .X...",
+    "..... ..... X.... ..... ....X ...X. .XX.X .X... ..X.. ...X. ..... ..... ..... .X... ..X.. ...X. X.X.X",
+    ".XX.. .XX.. .X... XXXXX ...X. ..X.. X.X.X .X... ...X. ...X. ..... ..... ..... ..X.. ..X.. ..X.. ...X.",
+    ".XX.. ..X.. ..X.. ..... ..X.. ..... X.X.X .X... ....X ...X. ..... ..... ..... ..X.. ..X.. ..X.. .....",
+    "..... .X... ...X. ..... .X... ..X.. .XXX. .XXX. ..... .XXX. ..... XXXXX ..... ...X. ..X.. .X... .....",
+  ]],
+];
+const GLYPH_W = 5, GLYPH_H = 7, GLYPH_ADVANCE = 6; // 1 文字の幅・ベースラインより上の高さ・次の文字までの間隔(ドット数)
+
+// 文字 → 横に続く点をまとめた長方形 [x, y, 幅] の一覧。描くときは長方形 1 つにつき 1 回で済む。
+const GLYPHS = new Map([[" ", []]]);
+for (const [chars, rows] of FONT_SHEETS) {
+  [...chars].forEach((ch, i) => {
+    const runs = [];
+    rows.forEach((row, y) => {
+      const bits = row.slice(i * (GLYPH_W + 1), i * (GLYPH_W + 1) + GLYPH_W);
+      for (let x = 0; x < GLYPH_W; x++) {
+        if (bits[x] !== "X") continue;
+        let w = 1;
+        while (bits[x + w] === "X") w++;
+        runs.push([x, y, w]);
+        x += w - 1;
+      }
+    });
+    GLYPHS.set(ch, runs);
+  });
+}
+
+// ドット 1 個を何 px で描くか。size 14 以上で 2 倍、24 以上で 3 倍…と整数倍にして、点の大きさをそろえる。
+function dotScale(size) { return Math.max(1, Math.floor((size + 6) / 10)); }
+
+// ドット文字にない文字(日本語など)を含む文は、行の中で大きさがそろうよう全体をシステムのフォントで描く。
+// 英字の字形が整った等幅フォントを OS ごとに選ぶ(CSS の --mono と同じ並び)。
+const SYSTEM_FONT = 'ui-monospace, "SF Mono", Menlo, Consolas, "Cascadia Mono", "JetBrains Mono", "DejaVu Sans Mono", monospace';
+
+// 文字を描く。英数字と記号だけの文はドット文字で描く。o.spacing は文字の間に足す間隔(px)。
 function drawTextOn(g, s, x, y, o = {}) {
-  g.font = `${o.weight || 700} ${o.size || 13}px 'Courier New', ui-monospace, monospace`;
+  s = String(s);
+  const size = o.size || 13, align = o.align || "center";
   g.fillStyle = o.color || "#cfd8ff";
-  g.textAlign = o.align || "center";
-  g.textBaseline = "alphabetic";
-  g.fillText(s, x, y);
+  let n = 0;
+  for (const ch of s) {
+    if (!GLYPHS.has(ch)) {
+      g.font = `${o.weight || 700} ${size}px ${SYSTEM_FONT}`;
+      g.textAlign = align;
+      g.textBaseline = "alphabetic";
+      g.fillText(s, x, y);
+      return;
+    }
+    n++;
+  }
+  // 揃え方から左端を決める。最後の文字の右の空き 1 列は幅に含めない。
+  // 座標は整数にそろえ、点がにじまないようにする。
+  const k = dotScale(size), gap = o.spacing || 0, step = GLYPH_ADVANCE * k + gap;
+  const width = n * step - k - gap;
+  let cx = Math.round(align === "left" ? x : align === "right" ? x - width : x - width / 2);
+  const by = Math.round(y);
+  // 長方形を 1 本のパスにまとめて一度に塗る(光彩も文全体に 1 回だけかかる)。
+  g.beginPath();
+  for (const ch of s) {
+    for (const [gx, gy, gw] of GLYPHS.get(ch)) g.rect(cx + gx * k, by + (gy - GLYPH_H) * k, gw * k, k);
+    cx += step;
+  }
+  g.fill();
 }
 
 function drawText(s, x, y, o) { drawTextOn(ctx, s, x, y, o); }
@@ -540,19 +666,17 @@ const A_TRAIL = makeTrail(AIM_COLOR, 4, 20, false);
 const TITLE_LOGO_Y = 80; // ロゴ画像を置くキャンバス上の y
 function paintTitleLogo(g, glow) {
   const y = -TITLE_LOGO_Y;
-  try { g.letterSpacing = "8px"; } catch (e) {}
   if (glow) { g.shadowColor = "#7df9ff"; g.shadowBlur = 20; }
-  drawTextOn(g, "ASTRO", W / 2 + 3, 149 + y, { size: 54, color: "#ff2e88", weight: 900 });
-  drawTextOn(g, "ASTRO", W / 2, 146 + y, { size: 54, color: "#7df9ff", weight: 900 });
+  drawTextOn(g, "ASTRO", W / 2 + 3, 149 + y, { size: 54, color: "#ff2e88", weight: 900, spacing: 8 });
+  drawTextOn(g, "ASTRO", W / 2, 146 + y, { size: 54, color: "#7df9ff", weight: 900, spacing: 8 });
   if (glow) g.shadowColor = "#ff2e88";
-  drawTextOn(g, "DEFENDER", W / 2 + 2, 194 + y, { size: 31, color: "#7df9ff", weight: 900 });
-  drawTextOn(g, "DEFENDER", W / 2, 192 + y, { size: 31, color: "#ffffff", weight: 900 });
+  drawTextOn(g, "DEFENDER", W / 2 + 2, 194 + y, { size: 31, color: "#7df9ff", weight: 900, spacing: 8 });
+  drawTextOn(g, "DEFENDER", W / 2, 192 + y, { size: 31, color: "#ffffff", weight: 900, spacing: 8 });
 }
 const TITLE_GLOW = prerender(W, 160, g => paintTitleLogo(g, true));
 const TITLE_TEXT = prerender(W, 160, g => {
   paintTitleLogo(g, false);
-  try { g.letterSpacing = "3px"; } catch (e) {}
-  drawTextOn(g, "- NEON ARCADE EDITION -", W / 2, 222 - TITLE_LOGO_Y, { size: 11, color: "#ff6ad5" });
+  drawTextOn(g, "- NEON ARCADE EDITION -", W / 2, 222 - TITLE_LOGO_Y, { size: 11, color: "#ff6ad5", spacing: 3 });
 });
 
 const GAMEOVER_Y = 194;

@@ -468,3 +468,23 @@ test("a shield capsule picked up while shielded becomes points", () => {
   assert.equal(run("score"), 500);
   assert.equal(run("popups.at(-1).txt"), "SHIELD +500");
 });
+
+test("on-screen English text uses the dot font, while lines with Japanese fall back to the system font", () => {
+  const run = game();
+  // 英語の文言(関数の文言は値を入れた結果)はすべてドット文字にある文字だけでできている。
+  assert.equal(run(`Object.values(STRINGS.en).filter(v => !Array.isArray(v))
+    .map(v => typeof v === "function" ? v("64%") : v)
+    .every(s => [...s].every(ch => GLYPHS.has(ch)))`), true);
+  run(`
+    var calls = [];
+    var rec = new Proxy({}, { get: (t, key) => (...args) => calls.push([key, ...args]), set: () => true });
+  `);
+  run(`drawTextOn(rec, "WAVE 1", 240.4, 300.6, { size: 30 })`);
+  assert.equal(run("calls.some(c => c[0] === 'fillText')"), false);
+  assert.equal(run("calls.filter(c => c[0] === 'fill').length"), 1, "one fill per string");
+  assert.equal(run("calls.filter(c => c[0] === 'rect').every(c => c.slice(1).every(Number.isInteger))"), true, "dots land on whole pixels");
+  assert.equal(run("calls.filter(c => c[0] === 'rect').every(c => c[4] === dotScale(30))"), true);
+  run(`calls = []; drawTextOn(rec, "P で再開", 240, 300, { size: 14 })`);
+  assert.equal(run("calls.some(c => c[0] === 'rect')"), false);
+  assert.equal(run("calls.filter(c => c[0] === 'fillText').length"), 1);
+});
