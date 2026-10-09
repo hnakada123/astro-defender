@@ -3,8 +3,8 @@
 *[English version / 英語版はこちら](README.en.md)*
 
 **▶ 今すぐプレイ: <https://hnakada123.github.io/astro-defender/game.html>**
-**🎮 ゲーム紹介・遊び方（日本語）: <https://hnakada123.github.io/astro-defender/doc/index.html>**
-**🌐 Game guide (English): <https://hnakada123.github.io/astro-defender/>**
+**🎮 ゲーム紹介・遊び方（日本語）: <https://hnakada123.github.io/astro-defender/>**
+**🌐 Game guide (English): <https://hnakada123.github.io/astro-defender/doc/index.en.html>**
 **📖 ソースコード解説: <https://hnakada123.github.io/astro-defender/doc/source.html>**（初学者向け・全23章）
 
 現在のバージョン: **v1.0.1**（[更新履歴](CHANGELOG.md)）

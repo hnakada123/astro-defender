@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
-  <title>ASTRO DEFENDER — Game guide &amp; controls</title>
-  <meta name="description" content="Play ASTRO DEFENDER, a free browser arcade shooter. Explore screenshots, learn the controls, collect power-ups, and take on bosses with linked lasers and bombs.">
+  <title>ASTRO DEFENDER — ゲーム紹介・遊び方・操作方法</title>
+  <meta name="description" content="ASTRO DEFENDERはブラウザで遊べる無料のシューティングゲーム。ゲーム画面、遊び方、操作方法、パワーアップ、合体レーザーとボムを紹介します。">
   <link rel="stylesheet" href="doc/guide.css">
   <link rel="stylesheet" href="doc/home.css">
-  <link rel="alternate" hreflang="ja" href="doc/index.html">
-  <link rel="alternate" hreflang="en" href="index.html">
+  <link rel="alternate" hreflang="ja" href="index.html">
+  <link rel="alternate" hreflang="en" href="doc/index.en.html">
   <link rel="icon" href="favicon.ico?v=20261009-2" sizes="16x16 32x32 48x48">
   <link rel="icon" type="image/png" href="assets/icons/favicon-16.png?v=20261009-2" sizes="16x16">
   <link rel="icon" type="image/png" href="assets/icons/favicon-32.png?v=20261009-2" sizes="32x32">
@@ -17,107 +17,107 @@
   <script src="doc/home.js" defer></script>
 </head>
 <body class="game-home">
-<a class="skip-link" href="#main">Skip to content</a>
+<a class="skip-link" href="#main">本文へ移動</a>
 <header class="site-header"><div class="header-inner">
   <a class="brand" href="index.html"><img class="brand-mark" src="assets/icons/icon-192.png" width="36" height="36" alt="">ASTRO DEFENDER</a>
-  <nav class="header-links" aria-label="Main navigation">
-    <a href="#screenshots">Screenshots</a>
-    <a href="#how-to">How to play</a>
-    <a href="#controls">Controls</a>
-    <a href="doc/source.en.html">Source code guide</a>
-    <a href="doc/index.html" lang="ja" hreflang="ja">日本語</a>
+  <nav class="header-links" aria-label="サイトメニュー">
+    <a href="#screenshots">ゲーム画面</a>
+    <a href="#how-to">遊び方</a>
+    <a href="#controls">操作方法</a>
+    <a href="doc/source.html">ソースコード解説</a>
+    <a href="doc/index.en.html" lang="en" hreflang="en">English</a>
   </nav>
 </div></header>
 <main id="main">
 <header class="game-hero"><div class="container hero-inner">
   <div>
-    <p class="eyebrow">NEON ARCADE SHOOTER FOR YOUR BROWSER</p>
+    <p class="eyebrow">ブラウザで遊べるネオンアーケード</p>
     <h1 class="game-title">ASTRO<br>DEFENDER</h1>
-    <p class="game-tagline">Chain your hits. Build your firepower.</p>
-    <p class="lead">Shoot down incoming formations and collect capsules to power up your ship. Link extra cannons, unleash your laser, and challenge a battleship every five waves.</p>
-    <div class="actions"><a class="button" href="game.html">Play the game →</a><a class="button secondary" href="#how-to">Learn how to play</a></div>
-    <p class="hero-note">Free · No installation · Mouse or keyboard controls</p>
+    <p class="game-tagline">撃って、つなげて、強くなる。</p>
+    <p class="lead">迫る編隊を撃ち落とし、カプセルで自機を強化。<br>連結ビーム砲と合体レーザーを武器に、<br>5ウェーブごとに現れる大型戦艦へ挑もう。</p>
+    <div class="actions"><a class="button" href="game.html">ゲームをプレイ →</a><a class="button secondary" href="#how-to">遊び方を見る</a></div>
+    <p class="hero-note">無料・インストール不要 / マウス・キーボード操作</p>
   </div>
-  <figure class="hero-figure"><a href="game.html" aria-label="Play the game"><img src="doc/img/play.png" alt="Gameplay showing the neon alien formation, player ship, green barriers, laser gauge and score." width="960" height="1280"></a><figcaption>Move the mouse to fly. Hold the left button to fire.</figcaption></figure>
+  <figure class="hero-figure"><a href="game.html" aria-label="ゲームをプレイ"><img src="doc/img/play.png" alt="ネオンの敵編隊に向けて自機が射撃するプレイ画面。緑のバリアとレーザーゲージ、スコアが表示されている。" width="960" height="1280"></a><figcaption>マウスを動かして移動、クリック長押しで連射。</figcaption></figure>
 </div></header>
-<div class="container"><ul class="meta" aria-label="Game facts"><li>Play directly in your browser</li><li>Japanese / English</li><li>Boss battle every 5 waves</li><li>v1.0.1 · CC0</li></ul></div>
+<div class="container"><ul class="meta" aria-label="ゲームの概要"><li>ブラウザでそのままプレイ</li><li>日本語・英語に対応</li><li>5ウェーブごとにボス戦</li><li>v1.0.1 · CC0</li></ul></div>
 
 <section class="container section" id="screenshots" aria-labelledby="screenshots-title">
-  <div class="section-heading"><h2 id="screenshots-title">A closer look at the action</h2><p>Select an image to view it full size</p></div>
-  <p class="lead">From clearing formations to choosing upgrades and facing bosses, each wave adds to the challenge.</p>
+  <div class="section-heading"><h2 id="screenshots-title">ゲーム画面で見る、3つの見どころ</h2><p>画像を選ぶと拡大できます</p></div>
+  <p class="lead">編隊との撃ち合いから、強化の選択、ボスとの攻防まで。ウェーブを進めるほど戦い方が広がります。</p>
   <div class="gallery">
-<figure class="screen-card"><a href="doc/img/laser.png"><img src="doc/img/laser.png" alt="A wide link laser extends upward from the player ship." width="960" height="1280" loading="lazy"></a><figcaption><h3>Linked cannons and a powerful laser</h3><p>Build up your linked cannons, then unleash a charged laser to sweep away enemies and bullets in its path.</p></figcaption></figure>
-<figure class="screen-card"><a href="doc/img/en/bosslaser.png"><img src="doc/img/en/bosslaser.png" alt="A battleship and its red laser attack lane." width="960" height="1280" loading="lazy"></a><figcaption><h3>A battleship every five waves</h3><p>Destroy both turrets to expose the core. Move out of the red laser warning lane and find your chance to strike.</p></figcaption></figure>
-<figure class="screen-card"><a href="doc/img/en/upgrade.png"><img src="doc/img/en/upgrade.png" alt="Three upgrade cards offered after clearing a wave." width="960" height="1280" loading="lazy"></a><figcaption><h3>Choose an upgrade after each wave</h3><p>Improve your beams, speed or pickup range, or replenish lives and bombs. Prepare your ship for the next wave.</p></figcaption></figure>
+<figure class="screen-card"><a href="doc/img/laser.png"><img src="doc/img/laser.png" alt="自機から画面上方へ太い合体レーザーが伸びている。" width="960" height="1280" loading="lazy"></a><figcaption><h3>連結砲と合体レーザー</h3><p>連結ビーム砲で火力を増やし、ゲージが満タンになったらレーザーを発射。射線上の敵と敵弾をまとめて消し去ります。</p></figcaption></figure>
+<figure class="screen-card"><a href="doc/img/bosslaser.png"><img src="doc/img/bosslaser.png" alt="大型戦艦と、赤く表示されたレーザーの攻撃範囲。" width="960" height="1280" loading="lazy"></a><figcaption><h3>5ウェーブごとの大型戦艦</h3><p>左右の砲台を壊して中央コアを攻撃。赤く示されたレーザーの予告位置から離れ、反撃の機会を狙います。</p></figcaption></figure>
+<figure class="screen-card"><a href="doc/img/upgrade.png"><img src="doc/img/upgrade.png" alt="ウェーブクリア後に3枚の強化カードが表示されている。" width="960" height="1280" loading="lazy"></a><figcaption><h3>毎ウェーブ、強化を1つ選択</h3><p>ビーム・移動速度・回収範囲を伸ばすか、残機やボムを補給するか。次のウェーブに向けて自機を育てます。</p></figcaption></figure>
 </div></section>
 
 <section class="container section" id="how-to" aria-labelledby="how-to-title">
-  <h2 id="how-to-title">Start by clearing your first wave</h2>
-  <p class="lead">Move left and right, shoot, and dodge. Once you feel comfortable, try chaining kills and catching power-up capsules.</p>
+  <h2 id="how-to-title">まずは、1ウェーブをクリアしよう</h2>
+  <p class="lead">基本は「左右へ動く」「撃つ」「避ける」の3つ。操作に慣れたら、連続撃破やカプセルの回収も狙ってみましょう。</p>
   <ol class="play-steps">
-<li><span class="step-number">01</span><h3>Open the game and start</h3><p>Select “Play the game”, then click the title screen. You can also press Space or Enter to start.</p></li>
-<li><span class="step-number">02</span><h3>Move, shoot and dodge</h3><p>Move the mouse horizontally and hold the left button to shoot. Dodge enemy fire and diving aliens while thinning out the formation.</p></li>
-<li><span class="step-number">03</span><h3>Clear the wave and pick an upgrade</h3><p>Defeat every enemy to clear the wave. Choose one of three upgrades to continue to the next wave.</p></li>
+<li><span class="step-number">01</span><h3>ゲームを開いてスタート</h3><p>「ゲームをプレイ」から画面を開き、タイトル画面をクリック。スペースキーまたはEnterキーでも始められます。</p></li>
+<li><span class="step-number">02</span><h3>左右に動いて、撃って、避ける</h3><p>マウスを左右に動かして自機を操作し、クリックを押し続けて射撃。敵弾や突入してくる敵を避けながら、編隊を減らします。</p></li>
+<li><span class="step-number">03</span><h3>全滅させたら、次の強化へ</h3><p>敵をすべて倒すとウェーブクリア。3つの候補から強化を1つ選ぶと、次のウェーブが始まります。</p></li>
 </ol><div class="rule-grid">
-  <section class="rules"><h3>The essential rules</h3><ul>
-<li>Start with three lives. Enemy bullets and diving aliens can cost you a life; losing them all ends the game.</li>
-<li>If the formation reaches the ground, the game ends even if you still have lives.</li>
-<li>Green barriers block both enemy fire and your shots. They crumble when hit and are restored each wave.</li>
-<li>Every fifth wave brings a battleship. Destroy both turrets before attacking the central core.</li>
-</ul></section><section class="rules"><h3>Build a higher score</h3><ul>
-<li>Keep kills within 2.2 seconds of each other to maintain your combo. The multiplier can reach ×8.</li>
-<li>Clear a wave without taking damage to earn a perfect bonus.</li>
-<li>Earn an extra life every 5,000 points, up to a maximum of five lives.</li>
-<li>The saucer crossing the top of the screen is another source of points. Take the shot when it is safe.</li>
+  <section class="rules"><h3>覚えておきたいルール</h3><ul>
+<li>残機は3からスタート。敵弾や突入する敵に当たるとミスになり、残機がなくなるとゲームオーバーです。</li>
+<li>編隊が地上まで侵入すると、残機があってもゲームオーバーになります。</li>
+<li>緑のバリアは弾を防ぎますが、自分の弾も通しません。撃たれると崩れ、次のウェーブで復元します。</li>
+<li>5ウェーブごとに大型戦艦が出現。左右の砲台を破壊してから、中央コアを撃破します。</li>
+</ul></section><section class="rules"><h3>スコアを伸ばすコツ</h3><ul>
+<li>2.2秒以内に撃破をつなぐとコンボが継続。倍率は最大×8まで上がります。</li>
+<li>ノーダメージでウェーブをクリアすると、パーフェクトボーナスがもらえます。</li>
+<li>5000点ごとに残機が1つ増えます。残機の上限は5です。</li>
+<li>ときどき画面上部を横切る円盤も得点源。無理に追わず、敵弾の少ないタイミングを狙いましょう。</li>
 </ul></section></div></section>
 
 <section class="container section" id="controls" aria-labelledby="controls-title">
-  <h2 id="controls-title">Controls</h2>
-  <p class="lead">Play with the mouse or keyboard. Dedicated laser and bomb buttons are also available beneath the game screen.</p>
-  <div class="table-wrap controls-table" tabindex="0" role="region" aria-label="Game controls"><table>
-  <thead><tr><th scope="col">Action</th><th scope="col">Mouse / on-screen controls</th><th scope="col">Keyboard</th></tr></thead><tbody>
-<tr><th scope="row">Start / retry</th><td>Click the title or game-over screen</td><td><kbd>Space</kbd> / <kbd>Enter</kbd></td></tr>
-<tr><th scope="row">Move left / right</th><td>Move the mouse horizontally over the game</td><td><kbd>←</kbd> <kbd>→</kbd> / <kbd>A</kbd> <kbd>D</kbd></td></tr>
-<tr><th scope="row">Shoot</th><td>Hold the left mouse button</td><td>Hold <kbd>Space</kbd> / <kbd>Enter</kbd></td></tr>
-<tr><th scope="row">Link laser</th><td>Right-click / “LINK LASER” button<small>Requires a full gauge</small></td><td><kbd>Z</kbd></td></tr>
-<tr><th scope="row">Emergency bomb</th><td>“BOMB” button<small>Requires a bomb in stock</small></td><td><kbd>X</kbd></td></tr>
-<tr><th scope="row">Choose an upgrade</th><td>Click an upgrade card</td><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd><small>Or select with <kbd>↑</kbd> <kbd>↓</kbd> and confirm with <kbd>Enter</kbd></small></td></tr>
-<tr><th scope="row">Pause / resume</th><td>Click the game screen while paused to resume</td><td><kbd>P</kbd> / <kbd>Esc</kbd></td></tr>
-<tr><th scope="row">Toggle sound</th><td>—</td><td><kbd>M</kbd></td></tr>
-<tr><th scope="row">Language</th><td>“日本語” / “ENGLISH” beneath the game</td><td>—</td></tr>
+  <h2 id="controls-title">操作方法</h2>
+  <p class="lead">マウス中心でも、キーボード中心でも遊べます。レーザーとボムには、ゲーム画面の下に専用ボタンもあります。</p>
+  <div class="table-wrap controls-table" tabindex="0" role="region" aria-label="ゲームの操作一覧"><table>
+  <thead><tr><th scope="col">操作</th><th scope="col">マウス・画面のボタン</th><th scope="col">キーボード</th></tr></thead><tbody>
+<tr><th scope="row">スタート・再挑戦</th><td>タイトル・ゲームオーバー画面をクリック</td><td><kbd>Space</kbd> / <kbd>Enter</kbd></td></tr>
+<tr><th scope="row">左右へ移動</th><td>ゲーム画面の上でマウスを左右へ移動</td><td><kbd>←</kbd> <kbd>→</kbd> / <kbd>A</kbd> <kbd>D</kbd></td></tr>
+<tr><th scope="row">ショット</th><td>左クリックを長押し</td><td><kbd>Space</kbd> / <kbd>Enter</kbd> を長押し</td></tr>
+<tr><th scope="row">合体レーザー</th><td>右クリック / 「合体レーザー」ボタン<small>ゲージが満タンのときに使用できます</small></td><td><kbd>Z</kbd></td></tr>
+<tr><th scope="row">緊急回避ボム</th><td>「ボム」ボタン<small>残数があるときに使用できます</small></td><td><kbd>X</kbd></td></tr>
+<tr><th scope="row">強化を選ぶ</th><td>強化カードをクリック</td><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd><small>または <kbd>↑</kbd> <kbd>↓</kbd> で選び、<kbd>Enter</kbd> で決定</small></td></tr>
+<tr><th scope="row">一時停止・再開</th><td>一時停止中にゲーム画面をクリックすると再開</td><td><kbd>P</kbd> / <kbd>Esc</kbd></td></tr>
+<tr><th scope="row">サウンド切替</th><td>—</td><td><kbd>M</kbd></td></tr>
+<tr><th scope="row">表示言語</th><td>ゲーム画面下の「日本語」「ENGLISH」</td><td>—</td></tr>
 </tbody></table></div>
-  <p class="section-note">Special weapons are available during active combat. They do not activate during the wave-start banner, upgrade selection or pause.</p>
+  <p class="section-note">レーザーとボムは戦闘中のみ使用できます。ウェーブ開始の表示中、強化選択中、一時停止中には発動しません。</p>
 </section>
 
 <section class="container section" id="powerups" aria-labelledby="powerups-title">
-  <h2 id="powerups-title">Power up and turn the battle around</h2>
-  <p class="lead">Collect capsules dropped by defeated enemies to power up your ship. All four types can work together.</p>
+  <h2 id="powerups-title">カプセルを拾って、ピンチを切り抜ける</h2>
+  <p class="lead">倒した敵が落とすカプセルを拾うと、自機がパワーアップ。4種類の効果は組み合わせて使えます。</p>
   <div class="powerup-grid">
-<section class="powerup"><span class="powerup-symbol wide" aria-hidden="true">W</span><h3>W · 3-way shot</h3><p>Fire forward and diagonally for eight seconds, covering a wider area.</p></section>
-<section class="powerup"><span class="powerup-symbol rapid" aria-hidden="true">R</span><h3>R · Rapid fire</h3><p>Shoot at shorter intervals for eight seconds.</p></section>
-<section class="powerup"><span class="powerup-symbol shield" aria-hidden="true">S</span><h3>S · Shield</h3><p>Absorb one hit. Your linked cannons are preserved when the shield protects you.</p></section>
-<section class="powerup"><span class="powerup-symbol beam" aria-hidden="true">B</span><h3>B · Beam link</h3><p>Add one cannon on each side per pickup, up to four. They have no time limit but are lost on an unshielded hit.</p></section>
+<section class="powerup"><span class="powerup-symbol wide" aria-hidden="true">W</span><h3>W · 3方向ショット</h3><p>8秒間、正面と左右へ同時に発射。広い範囲の敵を狙えます。</p></section>
+<section class="powerup"><span class="powerup-symbol rapid" aria-hidden="true">R</span><h3>R · 連射強化</h3><p>8秒間、ショットの発射間隔が短くなります。</p></section>
+<section class="powerup"><span class="powerup-symbol shield" aria-hidden="true">S</span><h3>S · シールド</h3><p>ダメージを1回防ぎます。防いだ場合は連結砲も残ります。</p></section>
+<section class="powerup"><span class="powerup-symbol beam" aria-hidden="true">B</span><h3>B · ビーム砲連結</h3><p>1回の取得で左右に1門ずつ追加し、最大4門に。時間制限はありませんが、ミスで解除されます。</p></section>
 </div><div class="special-grid">
-  <section class="special"><h3><kbd>Z</kbd> Link laser</h3><p>Charge the gauge by defeating enemies and shooting the boss. At full charge, fire a 1.2-second laser through enemies and bullets in its path. More linked cannons make it wider and stronger, and firing does not consume them.</p></section>
-  <section class="special"><h3><kbd>X</kbd> Emergency bomb</h3><p>Clear all enemy bullets and destroy enemies within 240 pixels of your ship. Bombs also interrupt the boss laser and grant 1.6 seconds of invulnerability. Start with two and carry up to three.</p></section>
-</div><p class="section-note">Beam, speed and pickup-range upgrades chosen between waves survive a lost life. They reset when you start a new game.</p></section>
+  <section class="special"><h3><kbd>Z</kbd> 合体レーザー</h3><p>敵の撃破やボスへの射撃でゲージをため、満タンになったら発射。1.2秒間、射線上の敵と敵弾を貫きます。連結砲が多いほど太く強力になり、発射しても連結砲は失われません。</p></section>
+  <section class="special"><h3><kbd>X</kbd> 緊急回避ボム</h3><p>画面全体の敵弾を消し、自機から半径240px以内の敵を撃破。ボスのレーザーも中断し、使用後は1.6秒間無敵になります。初期2個、最大3個。危険が迫ったら早めに使いましょう。</p></section>
+</div><p class="section-note">ウェーブ間に選ぶビーム・速度・回収の強化は、ミスしても維持されます。新しいゲームを始めるとリセットされます。</p></section>
 
 <section class="container section" id="faq" aria-labelledby="faq-title">
-  <h2 id="faq-title">FAQ</h2><div class="faq-list">
-<details><summary>Do I need to install anything or sign up?</summary><p>No. Select “Play the game” to open it in your browser. The game is free and no account is required.</p></details>
-<details><summary>Why is there no sound?</summary><p>Click the game screen or press Space to begin. Press M if the game is muted, and check the volume settings for your browser tab and device.</p></details>
-<details><summary>Are my high score and settings saved?</summary><p>Your high score, language and sound setting are stored in the current browser. They do not sync to other devices and are removed if you clear the browser’s stored site data.</p></details>
-<details><summary>Can I play offline?</summary><p><a href="game.html" download="astro-defender.html">Save the game HTML file</a> and open it in your browser. The in-game graphics and audio are generated by that file.</p></details>
+  <h2 id="faq-title">よくある質問</h2><div class="faq-list">
+<details><summary>インストールや登録は必要ですか？</summary><p>必要ありません。「ゲームをプレイ」からブラウザで開くだけで始められます。ゲームは無料です。</p></details>
+<details><summary>音が鳴らないときは？</summary><p>ゲーム画面をクリックするか、スペースキーで開始してください。ミュートになっている場合はMキーで切り替えられます。ブラウザのタブや端末の音量設定も確認してください。</p></details>
+<details><summary>ハイスコアや設定は保存されますか？</summary><p>ハイスコア、表示言語、サウンドの設定は、利用中のブラウザに保存されます。別の端末へ自動同期はされません。ブラウザの保存データを消すと記録も消えます。</p></details>
+<details><summary>オフラインでも遊べますか？</summary><p><a href="game.html" download="astro-defender.html">ゲーム本体のHTMLを保存</a>し、ブラウザで開くと遊べます。ゲーム内の画像や音は、そのファイルから生成されます。</p></details>
 </div></section>
 
 <section class="container section" id="source-code" aria-labelledby="source-title">
-  <div class="source-callout"><div><p class="eyebrow">SOURCE CODE GUIDE</p><h2 id="source-title">Explore how the game works</h2><p>Explore the game loop, collisions, enemy movement and sound synthesis in a dedicated 23-chapter source code guide.</p></div><a class="button secondary" href="doc/source.en.html">Source code guide →</a></div>
-  <div class="play-again"><p>Ready to take on the first wave?</p><a class="button" href="game.html">Play the game →</a></div>
+  <div class="source-callout"><div><p class="eyebrow">SOURCE CODE GUIDE</p><h2 id="source-title">ゲームの仕組みも、読んでみよう</h2><p>ゲームループ、当たり判定、敵の動き、音の合成まで。<br>全23項目のソースコード解説を、専用ページにまとめています。</p></div><a class="button secondary" href="doc/source.html">ソースコード解説 →</a></div>
+  <div class="play-again"><p>操作が分かったら、最初のウェーブへ。</p><a class="button" href="game.html">ゲームをプレイ →</a></div>
 </section>
 </main>
 <footer class="site-footer"><div class="container footer-inner">
-  <p>ASTRO DEFENDER · NEON ARCADE EDITION<br>Game guide · CC0 1.0</p>
-  <p><a href="game.html">Play the game</a> · <a href="doc/source.en.html">Source code guide</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+  <p>ASTRO DEFENDER · NEON ARCADE EDITION<br>ゲーム紹介・遊び方 · CC0 1.0</p>
+  <p><a href="game.html">ゲームをプレイ</a> · <a href="doc/source.html">ソースコード解説</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
 </div></footer>
 </body>
 </html>
