@@ -76,7 +76,7 @@ const cvs = document.getElementById(&quot;game&quot;);
 const ctx = cvs.getContext(&quot;2d&quot;, { alpha: false }); // 毎フレーム全面を塗るので不透明にし、ページとの合成コストを下げる</code></pre></figure>
 <p>Canvas の内部座標は左上が <code>(0, 0)</code>、右へ進むと x、下へ進むと y が増えます。CSS で画面を縮めても内部の480 × 640という寸法は変わりません。ゲーム中の速度や当たり判定は、この内部座標で計算します。</p>
 <h2 id="section-2">ポインターの座標を変換する</h2>
-<figure class="code-block"><figcaption><span>game.html · L1251–1254</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1251-L1254">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1251–1254"><code>function canvasX(e) {
+<figure class="code-block"><figcaption><span>game.html · L1252–1255</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1252-L1255">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1252–1255"><code>function canvasX(e) {
   const r = cvs.getBoundingClientRect();
   return ((e.clientX - r.left) * W) / r.width;
 }</code></pre></figure>

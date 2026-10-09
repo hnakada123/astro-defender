@@ -156,7 +156,7 @@ function fireBossVolley() {
 <h2 id="section-5">撃破と攻撃中断</h2>
 <p>コアを破壊するとボスと敵弾を消し、得点を加え、ボムを1個補充します。ボムを使う場合は <code>warning</code> と <code>laserT</code> を0にし、次の攻撃までの待ち時間を設定するため、予告中も発射中も中断できます。</p>
 <h2 id="section-6">ボス戦では通常弾を5発まで撃てる</h2>
-<figure class="code-block"><figcaption><span>game.html · L1567–1568</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1567-L1568">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1567–1568"><code>  // ボスは遠く弾の到達に時間がかかるので、ボス戦では画面内の通常弾の上限を緩める。
+<figure class="code-block"><figcaption><span>game.html · L1568–1569</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1568-L1569">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1568–1569"><code>  // ボスは遠く弾の到達に時間がかかるので、ボス戦では画面内の通常弾の上限を緩める。
   const maxB = (active.rapid &gt; 0 || active.wide &gt; 0) ? 12 : boss ? 5 : 3;</code></pre></figure>
 <p>画面内に同時に出せる通常弾の数は、ふだんは3発、WかRが有効なら12発です。ボス戦ではW・Rがなくても上限を5発に緩めています。ボスは画面上部の遠い位置にいて、弾が届くまでに時間がかかるためです。連結砲の弾はこの上限に数えず、1門につき1発までです。</p>
 <aside class="exercise"><strong>確かめてみよう</strong><p><code>boss.lanes</code> への代入を探してください。毎フレーム自機を追う処理との違いを考えると、避けられる攻撃の作り方が見えてきます。続けて、Lv.2のボスで <code>player.x = 240</code> のとき、挟み撃ちの2本が x=190 と x=290 になり、<code>inBossLane(playerRect())</code> が false になることを確かめてください。</p>

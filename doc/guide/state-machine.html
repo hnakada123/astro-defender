@@ -80,7 +80,7 @@ let paused = false;</code></pre></figure>
   state = s; stateT = 0;
   cvs.style.cursor = (s === &quot;play&quot; &amp;&amp; !paused) ? &quot;none&quot; : &quot;pointer&quot;;
 }</code></pre></figure>
-<figure class="code-block"><figcaption><span>game.html · L1749–1763</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1749-L1763">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1749–1763"><code>function update(dt) {
+<figure class="code-block"><figcaption><span>game.html · L1750–1764</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1750-L1764">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1750–1764"><code>function update(dt) {
   stateT += dt;
   updateCommon(dt);
   if (state === &quot;play&quot;) {
