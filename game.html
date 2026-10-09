@@ -162,15 +162,19 @@ const STRINGS = {
   },
 };
 
-// X への投稿リンクで共有するゲーム本体の URL と、言語ごとの文言。
-// 画面に描く文言ではない(ドット文字の字形がない文字も使う)ので STRINGS とは分けておく。
-const SHARE_URL = "https://hnakada123.github.io/astro-defender/game.html";
+// X への投稿リンクの文言と共有する URL。英語は英語のカード画像を出す入口 game.en.html を共有する
+// (開くと ?lang=en 付きの game.html へ移る)。画面に描く文言ではないので STRINGS とは分けておく。
 const SHARE = {
-  ja: { label: "でポスト", text: "ブラウザで遊べるネオンアーケードシューティング「ASTRO DEFENDER」" },
-  en: { label: "Post", text: "ASTRO DEFENDER — a neon arcade shooter you can play in your browser" },
+  ja: { label: "でポスト", text: "ブラウザで遊べるネオンアーケードシューティング「ASTRO DEFENDER」", url: "https://hnakada123.github.io/astro-defender/game.html" },
+  en: { label: "Post", text: "ASTRO DEFENDER — a neon arcade shooter you can play in your browser", url: "https://hnakada123.github.io/astro-defender/game.en.html" },
 };
 
 function detectLang() {
+  // 共有された ?lang=en などのアドレスで開いた時は、その言語を保存した設定より優先する(保存はしない)。
+  try {
+    const asked = /[?&]lang=([a-z]+)/.exec(location.search)?.[1];
+    if (Object.hasOwn(STRINGS, asked)) return asked;
+  } catch (e) {}
   try {
     const saved = localStorage.getItem(LANG_KEY);
     if (Object.hasOwn(STRINGS, saved)) return saved;
@@ -1330,7 +1334,7 @@ function applyLang(next) {
   const shareEl = document.getElementById("shareLink");
   if (shareEl) {
     const share = SHARE[lang];
-    shareEl.href = `https://x.com/intent/post?text=${encodeURIComponent(share.text)}&url=${encodeURIComponent(SHARE_URL)}`;
+    shareEl.href = `https://x.com/intent/post?text=${encodeURIComponent(share.text)}&url=${encodeURIComponent(share.url)}`;
     document.getElementById("shareLabel").textContent = share.label;
   }
   for (const code in langButtons) langButtons[code].setAttribute("aria-pressed", String(code === lang));

@@ -125,7 +125,8 @@ python3 -m http.server 8000
 
 | パス | 内容 |
 | --- | --- |
-| `game.html` | ゲーム本体（HTML・CSS・JavaScript を1ファイルにまとめたもの） |
+| `game.html` | ゲーム本体（HTML・CSS・JavaScript を1ファイルにまとめたもの）。`?lang=en` / `?lang=ja` を付けると、その言語で開く |
+| `game.en.html` | 英語で共有するための入口。英語のカード画像を出し、開くとすぐ英語表示のゲームへ移る |
 | `index.html` | ゲーム紹介・遊び方のページ（公開サイトのトップ。`doc/index.html` も同じ内容） |
 | `doc/` | 英語のゲーム紹介（`index.en.html`）、ソースコード解説（`source.html`・`guide/`・`source.en.html`）、共通の CSS・JavaScript・画像 |
 | `favicon.ico`・`assets/icons/` | ブラウザ用のアイコン |

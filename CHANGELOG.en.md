@@ -11,10 +11,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - A link to the game’s website (https://hnakada123.github.io/astro-defender/) now sits below the control hints under the game screen. The screen is drawn slightly smaller to make room, so everything still fits in one window
 - The game guide pages (Japanese and English) have a link in the header for posting on X
-- The game page has a link for posting on X next to the website link. It shares the game’s own URL (game.html), with the post text in the current display language
+- The game page has a link for posting on X next to the website link. In Japanese it shares the game itself (game.html); in English it shares game.en.html, an entry page that shows the English card image and moves straight on to the game in English
+- Opening game.html with ?lang=en or ?lang=ja shows it in that language, ahead of the saved choice (the choice is not saved)
 - Share card images (Japanese and English, 1200 × 630) in assets/social/ now appear when the game guide pages are posted on X and similar sites, with Open Graph and X card tags on those pages
 - game.html has a page description and card tags too, so posting the game’s own URL shows the Japanese card image
-- The source code guide (Japanese and English) explains the website and X post links in chapter 01 and the post link’s language switching in chapter 19, with every code excerpt’s line numbers updated. The English whole-page screenshot was retaken
+- The source code guide (Japanese and English) explains the website and X post links in chapter 01 and the post link’s language switching and choosing the language from the address in chapter 19, with every code excerpt’s line numbers and the test count updated. The English whole-page screenshot was retaken
 
 ### Changed
 

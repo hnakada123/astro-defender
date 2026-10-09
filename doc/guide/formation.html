@@ -71,11 +71,11 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 07 敵の編隊とウェーブ生成</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 07 · 全23項目</p><h1>敵の編隊とウェーブ生成</h1><p class="lead">50体の相対位置、折り返し、残り数とウェーブに応じた速度、射撃する敵の選び方と、ウェーブが進むと厳しくなる射撃を追います。</p><p class="source-ref">主な参照先：makeWave / form / formBounds / formSpeed / pickShooter / enemyFireInterval / maxEnemyBullets / aimedChance / enemyShot</p></header>
 <h2 id="section-1">行と列に共通の原点を足す</h2>
-<figure class="code-block"><figcaption><span>game.html · L792–794</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L792-L794">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L792–794"><code>const ROWS = 5, COLS = 10, CELL_W = 36, CELL_H = 30, DROP = 14;
+<figure class="code-block"><figcaption><span>game.html · L796–798</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L796-L798">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L796–798"><code>const ROWS = 5, COLS = 10, CELL_W = 36, CELL_H = 30, DROP = 14;
 const ROW_TYPE = [&quot;a&quot;, &quot;b&quot;, &quot;b&quot;, &quot;c&quot;, &quot;c&quot;];
 const TOTAL = ROWS * COLS;</code></pre></figure>
 <p>通常ウェーブの編隊は5行 × 10列です。敵は行 <code>r</code> と列 <code>c</code> を持ち、共通の原点 <code>form.ox</code>・<code>form.oy</code> を動かすと全体が移動します。敵1体ごとに速度を持たせる必要はありません。5の倍数のウェーブでは編隊の代わりにボスを生成します。</p>
-<figure class="code-block"><figcaption><span>game.html · L931–943</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L931-L943">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L931–943"><code>function makeWave() {
+<figure class="code-block"><figcaption><span>game.html · L935–947</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L935-L947">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L935–947"><code>function makeWave() {
   aliens = [];
   boss = null;
   if (wave % 5 === 0) makeBoss();
@@ -91,7 +91,7 @@ const TOTAL = ROWS * COLS;</code></pre></figure>
 <h2 id="section-2">生きている敵の端で折り返す</h2>
 <p><code>formBounds()</code> は生存中で編隊に残っている敵だけの左右端を調べます。画面の端から8 pxの境界を越えたら超過分を戻し、向きを反転して <code>DROP</code> だけ下へ進めます。空になった列を除いて幅を測るため、敵が減ると移動できる範囲が広がります。</p>
 <h2 id="section-3">残り数で難しさを変える</h2>
-<figure class="code-block"><figcaption><span>game.html · L1470–1478</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1470-L1478">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1470–1478"><code>function formSpeed() {
+<figure class="code-block"><figcaption><span>game.html · L1474–1482</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1474-L1482">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1474–1482"><code>function formSpeed() {
   const r = aliveN / TOTAL;
   // ウェーブごとの基本速度はウェーブ 13 で頭打ち。それ以上速いと端での折り返しが続いて一気に降下し、
   // 弾をかわす前に侵攻で終わってしまうため、後半は弾の攻撃で難しくする。
@@ -103,7 +103,7 @@ const TOTAL = ROWS * COLS;</code></pre></figure>
 <p><code>r</code> は生存数の割合です。<code>1 - r</code> が大きいほど加速し、残り3体以下と最後の1体ではさらに加算します。最終的な速度は240で頭打ちです。アニメーションの切り替え周期も残り数に応じて短くなります。</p>
 <p>ウェーブごとの基本速度 <code>16 + (wave - 1) * 7</code> は、<code>Math.min(wave - 1, 12)</code> によってウェーブ13の毎秒100 pxで止まります。編隊は端で折り返すたびに <code>DROP</code> の14 pxずつ降りるので、横に速く動くほど折り返しが増えて速く降下します。基本速度が上がり続けると、50体そろった編隊が0.5秒ごとに折り返して一気に地上へ迫り、弾をかわす前に侵入で終わってしまいます。そのため後半は、次の節の射撃で難しくしています。</p>
 <h2 id="section-4">射撃と地上への侵入</h2>
-<figure class="code-block"><figcaption><span>game.html · L1459–1468</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1459-L1468">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1459–1468"><code>// 各列のいちばん下にいる(編隊にいる)敵から 1 体を選び、その矩形を返す。
+<figure class="code-block"><figcaption><span>game.html · L1463–1472</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1463-L1472">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1463–1472"><code>// 各列のいちばん下にいる(編隊にいる)敵から 1 体を選び、その矩形を返す。
 function pickShooter() {
   const bottoms = [];
   for (let c = 0; c &lt; COLS; c++) {
@@ -114,7 +114,7 @@ function pickShooter() {
   return bottoms.length ? alienRect(bottoms[(Math.random() * bottoms.length) | 0]) : null;
 }</code></pre></figure>
 <p><code>pickShooter()</code> は各列で最も下にいる敵を候補にし、そこからランダムに射撃役を選んで、その四角形を返します。突入中の敵はこの候補に入りません。</p>
-<figure class="code-block"><figcaption><span>game.html · L1673–1689</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1673-L1689">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1673–1689"><code>  // --- 敵の射撃 ---
+<figure class="code-block"><figcaption><span>game.html · L1677–1693</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1677-L1693">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1677–1693"><code>  // --- 敵の射撃 ---
   fireT -= dt;
   const maxEB = maxEnemyBullets();
   if (fireT &lt;= 0 &amp;&amp; bannerT &lt;= 0 &amp;&amp; aliveN &gt; 0) {
@@ -134,7 +134,7 @@ function pickShooter() {
 <p><code>fireT</code> が0になるたびに1発撃ち、次の発射までの時間を決め直します。間隔はウェーブで決まる基本値に乱数を掛け、さらに敵が減るほど短くします。画面内の敵弾が上限に達しているときは撃ちません。ウェーブ16からは別のタイマー <code>volleyT</code> で、ときどき1体が3方向に広がる弾をまとめて撃ちます。3発がすべて上限に収まるときだけ撃つので、上限を超えることはありません。</p>
 <p>編隊内の敵が自機の高さまで到達したり自機と重なると、残機とは別に侵入によるゲームオーバーになります。</p>
 <h2 id="section-5">ウェーブが進むほど射撃が厳しくなる</h2>
-<figure class="code-block"><figcaption><span>game.html · L1438–1457</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1438-L1457">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1438–1457"><code>// ---- 難易度の上がり方 ----
+<figure class="code-block"><figcaption><span>game.html · L1442–1461</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1442-L1461">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1442–1461"><code>// ---- 難易度の上がり方 ----
 // 序盤(〜13 ウェーブ)は従来どおりに上がり、その先も 30 ウェーブ前後までゆっくり厳しくなり続ける。
 function enemyFireInterval() {
   return wave &lt;= 13 ? Math.max(0.3, 1.15 - (wave - 1) * 0.07) : Math.max(0.18, 0.3 - (wave - 13) * 0.007);

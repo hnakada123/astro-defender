@@ -519,3 +519,11 @@ test("particles never exceed the cap, while bursts leave room for the ship's exh
   run("var most = 0; for (let i = 0; i < 120; i++) { updatePlay(1 / 60); spawnBurst(240, 300, '#ffffff', 16); most = Math.max(most, particles.length); }");
   assert.equal(run("most"), run("MAX_PARTICLES"));
 });
+
+test("a ?lang= address picks the display language ahead of the saved choice", () => {
+  const run = game();
+  run(`localStorage.getItem = key => key === LANG_KEY ? "ja" : null; var location = { search: "?lang=en" }`);
+  assert.equal(run("detectLang()"), "en");
+  run(`location.search = "?lang=fr"`);
+  assert.equal(run("detectLang()"), "ja", "an unknown language falls back to the saved choice");
+});

@@ -73,7 +73,7 @@
 <h2 id="section-1">音を作り、音量を通して出力する</h2>
 <ol class="flow"><li><strong>発振器</strong><small><code>OscillatorNode</code> が波形を作る</small></li><li><strong>音量</strong><small><code>GainNode</code> が減衰を付ける</small></li><li><strong>出力</strong><small><code>destination</code> へ接続</small></li></ol>
 <p><code>ac()</code> は初めて必要になったときに AudioContext を作り、中断中なら再開します。クリックやキー入力の入口で呼ぶ構成です。既存の音源ファイルを再生するのではなく、波形と音量の変化から効果音を作ります。</p>
-<figure class="code-block"><figcaption><span>game.html · L336–349</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L336-L349">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L336–349"><code>function beep({ f0 = 440, f1 = f0, dur = 0.1, type = &quot;square&quot;, vol = 0.12, delay = 0 }) {
+<figure class="code-block"><figcaption><span>game.html · L340–353</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L340-L353">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L340–353"><code>function beep({ f0 = 440, f1 = f0, dur = 0.1, type = &quot;square&quot;, vol = 0.12, delay = 0 }) {
   if (muted) return;
   try {
     const a = ac(), t = a.currentTime + delay;
@@ -92,7 +92,7 @@
 <p><code>ensureNoise()</code> は1秒分のホワイトノイズを一度作って共有します。<code>boom()</code> はそのバッファを再生し、ローパスフィルターで高い音を削り、音量を減衰させます。発射するたびにノイズ全体を作り直さないことが負荷の削減につながります。</p>
 <h2 id="section-3">同じ音を重ねすぎない</h2>
 <p>効果音は鳴らすたびに発振器やフィルターなどの音声ノードを新しく作ります。ボムやレーザーで同じ瞬間に何十体も倒すと、撃破音も何十個も同時に作られ、重なった音が割れてしまいます。そこで撃破音だけは <code>throttled()</code> で包み、前回から40ミリ秒たっていなければ鳴らさないようにしています。</p>
-<figure class="code-block"><figcaption><span>game.html · L393–403</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L393-L403">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L393–403"><code>// 前回から ms ミリ秒たっていなければ鳴らさない効果音にする。ボムやレーザーで同じ瞬間に何体も倒すと、
+<figure class="code-block"><figcaption><span>game.html · L397–407</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L397-L407">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L397–407"><code>// 前回から ms ミリ秒たっていなければ鳴らさない効果音にする。ボムやレーザーで同じ瞬間に何体も倒すと、
 // 同じ音が何十も重なって音が割れ、音声ノードも一度に大量に作られるため。
 function throttled(ms, play) {
   let at = -Infinity;
@@ -103,10 +103,10 @@ function throttled(ms, play) {
     play(...args);
   };
 }</code></pre></figure>
-<figure class="code-block"><figcaption><span>game.html · L408–408</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L408-L408">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L408–408"><code>  alien: throttled(40, () =&gt; { boom(0.14, 0.15, 1300); beep({ f0: 320, f1: 60, dur: 0.1, type: &quot;sawtooth&quot;, vol: 0.08 }); }),</code></pre></figure>
+<figure class="code-block"><figcaption><span>game.html · L412–412</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L412-L412">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L412–412"><code>  alien: throttled(40, () =&gt; { boom(0.14, 0.15, 1300); beep({ f0: 320, f1: 60, dur: 0.1, type: &quot;sawtooth&quot;, vol: 0.08 }); }),</code></pre></figure>
 <p><code>throttled()</code> は、最後に鳴らした時刻 <code>at</code> を覚えた関数を作って返します（クロージャ）。<code>sfx.alien()</code> を呼ぶ側は何も変える必要がありません。撃破音は1回0.14秒ほど続くので、40ミリ秒に1回でも途切れずに聞こえます。</p>
 <h2 id="section-4">BGMはオーディオの時計で予約する</h2>
-<figure class="code-block"><figcaption><span>game.html · L483–491</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L483-L491">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L483–491"><code>function musicTick() {
+<figure class="code-block"><figcaption><span>game.html · L487–495</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L487-L495">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L487–495"><code>function musicTick() {
   if (!actx) return;
   while (music.next &lt; actx.currentTime + 0.16) {
     if (music.next &lt; actx.currentTime) music.next = actx.currentTime + 0.05;

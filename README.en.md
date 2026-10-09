@@ -128,7 +128,8 @@ The English guide puts all 23 chapters on one page; the Japanese guide lists the
 
 | Path | Contents |
 | --- | --- |
-| `game.html` | The game itself (HTML, CSS and JavaScript in one file) |
+| `game.html` | The game itself (HTML, CSS and JavaScript in one file). Add `?lang=en` or `?lang=ja` to open it in that language |
+| `game.en.html` | An entry page for sharing in English. It shows the English card image and moves straight on to the game in English |
 | `index.html` | The Japanese game guide, the top page of the site (`doc/index.html` has the same content) |
 | `doc/` | The English game guide (`index.en.html`), the source code guides (`source.en.html`, `source.html`, `guide/`), and their shared CSS, JavaScript and images |
 | `favicon.ico`, `assets/icons/` | Browser icons |

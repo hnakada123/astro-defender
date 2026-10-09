@@ -70,8 +70,13 @@
 <main id="main" class="doc-main">
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 19 日本語・英語と設定の保存</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 19 · 全23項目</p><h1>日本語・英語と設定の保存</h1><p class="lead">文言を辞書に集め、CanvasとHTMLの表示をまとめて切り替えます。</p><p class="source-ref">主な参照先：STRINGS / detectLang / T / applyLang / localStorage</p></header>
-<h2 id="section-1">保存済みの設定を優先する</h2>
-<figure class="code-block"><figcaption><span>game.html · L173–180</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L173-L180">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L173–180"><code>function detectLang() {
+<h2 id="section-1">アドレスの指定と保存済みの設定を優先する</h2>
+<figure class="code-block"><figcaption><span>game.html · L172–184</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L172-L184">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L172–184"><code>function detectLang() {
+  // 共有された ?lang=en などのアドレスで開いた時は、その言語を保存した設定より優先する(保存はしない)。
+  try {
+    const asked = /[?&amp;]lang=([a-z]+)/.exec(location.search)?.[1];
+    if (Object.hasOwn(STRINGS, asked)) return asked;
+  } catch (e) {}
   try {
     const saved = localStorage.getItem(LANG_KEY);
     if (Object.hasOwn(STRINGS, saved)) return saved;
@@ -79,15 +84,15 @@
   const tag = typeof navigator !== &quot;undefined&quot; ? String(navigator.language || &quot;&quot;) : &quot;&quot;;
   return tag.toLowerCase().startsWith(&quot;ja&quot;) ? &quot;ja&quot; : &quot;en&quot;;
 }</code></pre></figure>
-<p>言語はブラウザに保存した値が辞書に存在すればそれを採用します。保存値がなければブラウザの言語を調べ、<code>ja</code> で始まれば日本語、それ以外は英語です。ストレージが使えなくても検出処理を続けます。</p>
+<p>アドレスに <code>?lang=en</code> などが付いていて、その言語が辞書にあれば、それを最優先にします（共有された英語のリンクから開いた場合など。保存はしません）。次に、ブラウザに保存した値が辞書に存在すればそれを採用します。保存値がなければブラウザの言語を調べ、<code>ja</code> で始まれば日本語、それ以外は英語です。ストレージが使えなくても検出処理を続けます。</p>
 <h2 id="section-2">固定文言も、値を埋め込む文言も同じ入口にする</h2>
-<figure class="code-block"><figcaption><span>game.html · L185–188</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L185-L188">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L185–188"><code>function T(key, ...args) {
+<figure class="code-block"><figcaption><span>game.html · L189–192</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L189-L192">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L189–192"><code>function T(key, ...args) {
   const v = STRINGS[lang][key];
   return typeof v === &quot;function&quot; ? v(...args) : v;
 }</code></pre></figure>
 <p><code>STRINGS</code> の値は、普通の文字列だけでなく関数にもできます。ゲージや残数、ボスのレベルを埋め込む文言は関数にし、<code>T()</code> が必要な引数を渡します。呼び出し元は文字列か関数かを意識する必要がありません。操作説明の <code>hint</code> は4行分の配列で、<code>applyLang()</code> が改行タグでつないで表示します。</p>
 <h2 id="section-3">切り替えるときに更新するもの</h2>
-<figure class="code-block"><figcaption><span>game.html · L1322–1339</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1322-L1339">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1322–1339"><code>function applyLang(next) {
+<figure class="code-block"><figcaption><span>game.html · L1326–1343</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1326-L1343">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1326–1343"><code>function applyLang(next) {
   if (next &amp;&amp; next !== lang) {
     lang = next;
     try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
@@ -98,14 +103,14 @@
   const shareEl = document.getElementById(&quot;shareLink&quot;);
   if (shareEl) {
     const share = SHARE[lang];
-    shareEl.href = `https://x.com/intent/post?text=${encodeURIComponent(share.text)}&amp;url=${encodeURIComponent(SHARE_URL)}`;
+    shareEl.href = `https://x.com/intent/post?text=${encodeURIComponent(share.text)}&amp;url=${encodeURIComponent(share.url)}`;
     document.getElementById(&quot;shareLabel&quot;).textContent = share.label;
   }
   for (const code in langButtons) langButtons[code].setAttribute(&quot;aria-pressed&quot;, String(code === lang));
   refreshActionButtons();
   redrawIfPaused();
 }</code></pre></figure>
-<p>HTMLの言語属性、操作説明、X への投稿リンク、言語ボタンの <code>aria-pressed</code>、必殺技ボタンを更新します。投稿リンクはどちらの言語でもゲーム本体の URL（<code>SHARE_URL</code>）を共有し、リンクの文字と投稿の文だけを切り替えます。これらは画面に描く文言ではないので、<code>STRINGS</code> とは別の <code>SHARE</code> にまとめています。Canvasは通常なら次のフレームで描き直されますが、ポーズ中はループが止まるため <code>redrawIfPaused()</code> で即座に更新します。</p>
+<p>HTMLの言語属性、操作説明、X への投稿リンク、言語ボタンの <code>aria-pressed</code>、必殺技ボタンを更新します。投稿リンクは、日本語ではゲーム本体の <code>game.html</code> を、英語では英語のカード画像を出す入口ページ <code>game.en.html</code> を共有します。<code>game.en.html</code> は開くとすぐ <code>?lang=en</code> 付きの <code>game.html</code> へ移ります。リンクの文言と URL は画面に描く文言ではないので、<code>STRINGS</code> とは別の <code>SHARE</code> にまとめています。Canvasは通常なら次のフレームで描き直されますが、ポーズ中はループが止まるため <code>redrawIfPaused()</code> で即座に更新します。</p>
 <div class="table-wrap" tabindex="0" role="region" aria-label="保存キー・内容"><table><thead><tr><th scope="col">保存キー</th><th scope="col">内容</th></tr></thead><tbody><tr><th scope="row"><code>astro-defender-lang</code></th><td>選択した表示言語</td></tr><tr><th scope="row"><code>astro-defender-muted</code></th><td>ミュートの有無</td></tr><tr><th scope="row"><code>astro-defender-hiscore</code></th><td>ハイスコア</td></tr></tbody></table></div>
 <aside class="note"><strong>読み解くポイント</strong><p><code>hint.innerHTML</code> に渡す文言は、ソース内で定義された辞書の内容です。もし外部から文言を受け取るよう改造するなら、HTMLとして解釈してよい文字列かを別途検討します。</p>
 </aside>

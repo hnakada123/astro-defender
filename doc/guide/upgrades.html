@@ -71,7 +71,7 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 14 ウェーブクリアと次のウェーブ</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 14 · 全23項目</p><h1>ウェーブクリアと次のウェーブ</h1><p class="lead">敵を全滅させたら短いクリア表示のあと、操作を止めずに次のウェーブへ進みます。</p><p class="source-ref">主な参照先：updatePlay / update / drawOverlay / makeWave / startGame</p></header>
 <h2 id="section-1">通常の敵もボスもいなくなったらクリア</h2>
-<figure class="code-block"><figcaption><span>game.html · L1770–1784</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1770-L1784">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1770–1784"><code>  // --- ウェーブクリア ---
+<figure class="code-block"><figcaption><span>game.html · L1774–1788</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1774-L1788">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1774–1788"><code>  // --- ウェーブクリア ---
   if (aliveN === 0 &amp;&amp; !boss) {
     saucerSoundStop();
     pBullets = []; eBullets = []; powerups = [];
@@ -89,7 +89,7 @@
 <p><code>updatePlay()</code> の最後で <code>aliveN === 0 &amp;&amp; !boss</code> を調べます。<code>aliveN</code> は生き残っている敵の数で、編隊から突入中の敵も含みます。突入した敵は画面外へ出ると編隊の元の位置へ戻るだけなので、飛び去らせてもクリアにはなりません。ボス戦では敵の配列が空で、コアを壊して <code>boss</code> が <code>null</code> になった時点でクリアです。</p>
 <p>クリアの瞬間に、残っている自弾・敵弾・カプセルを消し、UFO の音と照射中の合体レーザーを止めます。<code>waveNoDamage</code> はウェーブ開始時に true になり、被弾すると（シールドで防いだ場合も）false になります。true のまま全滅させると、PERFECT ボーナスとして <code>500 + wave * 100</code> 点を加えます。ウェーブ4なら900点です。最後に <code>setState(&quot;clear&quot;)</code> で状態を切り替えますが、<code>releaseControls()</code> は呼ばず、押しっぱなしの入力をそのまま残します。</p>
 <h2 id="section-2">1.6秒たったら入力を待たずに次のウェーブへ</h2>
-<figure class="code-block"><figcaption><span>game.html · L1797–1800</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1797-L1800">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1797–1800"><code>  } else if (state === &quot;clear&quot;) {
+<figure class="code-block"><figcaption><span>game.html · L1801–1804</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1801-L1804">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1801–1804"><code>  } else if (state === &quot;clear&quot;) {
     // 操作を止めずに次のウェーブへ。押しっぱなしの射撃・移動キーもそのまま引き継ぐ。
     if (stateT &gt; 1.6) { wave++; makeWave(); setState(&quot;play&quot;); }
   }</code></pre></figure>
@@ -97,11 +97,11 @@
 <p><code>stateT</code> が1.6秒を超えたフレームで <code>wave++</code>、<code>makeWave()</code>、<code>setState(&quot;play&quot;)</code> を続けて実行し、次のウェーブが始まります。プレイヤーの入力は待ちません。<code>setState()</code> が状態を <code>play</code> に変えるので、この分岐が2回実行されることもありません。</p>
 <h2 id="section-3">押しっぱなしの操作を引き継ぐ</h2>
 <p>クリア表示は入力を待つ画面ではないので、入力を解除する理由がありません。解除すると、ウェーブのたびに射撃ボタンを押し直すことになります。そこでクリア時も次のウェーブの開始時も <code>releaseControls()</code> を呼ばず、<code>keys</code> と <code>shooting</code> のフラグを残します。クリア表示の間は <code>updatePlay()</code> が止まっているので何も起きず、<code>play</code> に戻った最初のフレームで <code>updatePlay()</code> がフラグを読み、すぐに射撃と移動を再開します。入力を解除するのは、ゲーム開始、ゲームオーバー、ポーズ開始、<code>pointercancel</code> のときです。</p>
-<figure class="code-block"><figcaption><span>game.html · L1311–1312</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1311-L1312">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1311–1312"><code>  // ミスからの復帰中やウェーブクリア表示中に押し始めても、そのまま連射が続くようにする(キーボードと同じ)。
+<figure class="code-block"><figcaption><span>game.html · L1315–1316</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1315-L1316">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1315–1316"><code>  // ミスからの復帰中やウェーブクリア表示中に押し始めても、そのまま連射が続くようにする(キーボードと同じ)。
   if ((state === &quot;play&quot; || state === &quot;dying&quot; || state === &quot;clear&quot;) &amp;&amp; !paused) shooting = true;</code></pre></figure>
 <p>クリア表示中に押し始めた場合も同じです。<code>pointerdown</code> は、状態が <code>play</code>・<code>dying</code>・<code>clear</code> のどれかでポーズ中でなければ <code>shooting</code> を true にします。直前の <code>handlePress()</code> は <code>clear</code> では何もしないので、クリックがゲーム開始やリトライとして扱われることはありません。キーボードの Space・Enter は状態に関係なく <code>keys.fire</code> を立てるので、マウスでもキーボードでも同じ結果になります。ボタンを離すと <code>pointerup</code> で <code>shooting</code> が false に戻ります。</p>
 <h2 id="section-4">クリア表示と次のウェーブの予告</h2>
-<figure class="code-block"><figcaption><span>game.html · L2216–2225</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L2216-L2225">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L2216–2225"><code>function drawOverlay(t) {
+<figure class="code-block"><figcaption><span>game.html · L2220–2229</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L2220-L2229">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L2220–2229"><code>function drawOverlay(t) {
   if (state === &quot;clear&quot;) {
     drawText(&quot;WAVE CLEAR!&quot;, W / 2, 290, { size: 30, color: &quot;#7dff7a&quot;, weight: 900 });
     if (perfectBonus &gt; 0) {
@@ -116,7 +116,7 @@
 <p>PERFECT ボーナスで残機が増えた場合の「1UP!」は y=430 に出します。中央の WAVE CLEAR!・PERFECT!・予告の行・ウェーブ開始の表示（y=244〜380）と重ならない高さです。</p>
 <figure class="shot"><img src="../img/clear.png" alt="ウェーブ4をノーダメージでクリアした画面。WAVE CLEAR!、PERFECT! +900、NEXT: WAVE 5 / BOSS と表示されている。" width="960" height="1280" loading="lazy"><figcaption>ウェーブ4をノーダメージでクリアした画面。次のウェーブ5はボス戦なので「/ BOSS」が付く。</figcaption></figure>
 <h2 id="section-5">次のウェーブへ持ち越すもの</h2>
-<figure class="code-block"><figcaption><span>game.html · L944–953</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L944-L953">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L944–953"><code>  pBullets = []; eBullets = []; particles = []; popups = []; rings = []; powerups = [];
+<figure class="code-block"><figcaption><span>game.html · L948–957</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L948-L957">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L948–957"><code>  pBullets = []; eBullets = []; particles = []; popups = []; rings = []; powerups = [];
   saucer = null; saucerSoundStop(); saucerT = rand(10, 20);
   fireT = 1.5; bannerT = 1.3; freezeT = 0;
   waveNoDamage = true; perfectBonus = 0;
@@ -127,7 +127,7 @@
   makeBarriers();
 }</code></pre></figure>
 <p><code>makeWave()</code> の前半は敵の配列と編隊の位置を作り直します（<a href="formation.html">敵の編隊とウェーブ生成</a>）。後半では弾・エフェクト・カプセル・UFO・攻撃のタイマー（3方向弾の一斉射撃の <code>volleyT</code> も含む）を初期化し、<code>resetCombo()</code> でコンボを数え直し、自機に1.5秒の無敵時間を与え、バリアを新品に作り直します。スコアや残機、ゲージやボム、パワーアップには触れません。</p>
-<figure class="code-block"><figcaption><span>game.html · L955–964</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L955-L964">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L955–964"><code>function startGame() {
+<figure class="code-block"><figcaption><span>game.html · L959–968</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L959-L968">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L959–968"><code>function startGame() {
   score = 0; scoreShown = 0; wave = 1; lives = 3; nextLife = FIRST_LIFE;
   newRecord = false; maxMult = 1;
   active.wide = 0; active.rapid = 0; active.shield = 0; active.beam = 0;
