@@ -5,7 +5,9 @@
 This project follows [Semantic Versioning](https://semver.org/).
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [3.1.0] - 2026-10-09
+
+This release draws the on-screen letters and digits in a dot font and lowers browser load further. The game guide and source code guide now share the game’s look, and links for posting on X arrive with share card images. How the game plays is unchanged and the release adds features, so the minor version goes up.
 
 ### Added
 
@@ -128,6 +130,7 @@ First official release.
 - A beginner-friendly source code guide (Japanese / English)
 - Version number in the bottom-right corner of the title screen
 
+[3.1.0]: https://github.com/hnakada123/astro-defender/releases/tag/v3.1.0
 [3.0.0]: https://github.com/hnakada123/astro-defender/releases/tag/v3.0.0
 [2.0.0]: https://github.com/hnakada123/astro-defender/releases/tag/v2.0.0
 [1.0.1]: https://github.com/hnakada123/astro-defender/releases/tag/v1.0.1

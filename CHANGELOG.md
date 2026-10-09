@@ -5,7 +5,9 @@
 このプロジェクトは[セマンティック バージョニング](https://semver.org/lang/ja/)に従います。
 書式は [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) を参考にしています。
 
-## [Unreleased]
+## [3.1.0] - 2026-10-09
+
+ゲーム画面の英数字をドット文字にし、ブラウザの負荷をさらに下げたリリース。紹介ページとソースコード解説をゲームと同じ見た目にし、X への投稿リンクと共有したときのカード画像も加えた。遊び方は変わらず機能の追加なので、マイナーバージョンを上げた。
 
 ### 追加
 
@@ -128,6 +130,7 @@
 - 初学者向けソースコード解説ページ（日本語 / 英語）
 - タイトル画面右下のバージョン表示
 
+[3.1.0]: https://github.com/hnakada123/astro-defender/releases/tag/v3.1.0
 [3.0.0]: https://github.com/hnakada123/astro-defender/releases/tag/v3.0.0
 [2.0.0]: https://github.com/hnakada123/astro-defender/releases/tag/v2.0.0
 [1.0.1]: https://github.com/hnakada123/astro-defender/releases/tag/v1.0.1

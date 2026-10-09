@@ -10,7 +10,7 @@
 | 🌐 **ゲーム紹介・遊び方 (Japanese)** | <https://hnakada123.github.io/astro-defender/> |
 | 🌐 **ソースコード解説 (Japanese)** | <https://hnakada123.github.io/astro-defender/doc/source.html> |
 
-Current version: **v3.0.0** ([changelog](CHANGELOG.en.md))
+Current version: **v3.1.0** ([changelog](CHANGELOG.en.md))
 
 A neo-retro fixed-screen shooter you play in the browser with the mouse.
 In-game graphics and audio are generated from code, and the game runs from a single `game.html` file without external libraries.
@@ -155,7 +155,7 @@ node --test tests/*.test.cjs
 ## Versioning
 
 Releases follow [Semantic Versioning](https://semver.org/) and are recorded as `vX.Y.Z` git tags.
-The current version is **v3.0.0**. It is also shown in the bottom-right corner of the title screen, and the changes are listed in [CHANGELOG.en.md](CHANGELOG.en.md).
+The current version is **v3.1.0**. It is also shown in the bottom-right corner of the title screen, and the changes are listed in [CHANGELOG.en.md](CHANGELOG.en.md).
 
 - X (major): changes that affect how the game plays, such as new controls or rules
 - Y (minor): new features, enemies or effects
