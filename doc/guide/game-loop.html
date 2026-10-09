@@ -69,11 +69,24 @@
 </nav></details>
 <main id="main" class="doc-main">
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 02 ゲームループと時間</nav>
-<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 02 · 全23項目</p><h1>ゲームループと時間</h1><p class="lead">経過時間 dt、フレームの予約、ポーズ中の停止処理を読み解きます。</p><p class="source-ref">主な参照先：frame / ensureLoop / update / redrawIfPaused</p></header>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 02 · 全23項目</p><h1>ゲームループと時間</h1><p class="lead">経過時間 dt、フレームの予約、速い画面での描画の間引き、ポーズ中の停止処理を読み解きます。</p><p class="source-ref">主な参照先：frame / ensureLoop / update / redrawIfPaused</p></header>
 <h2 id="section-1">次のフレームを自分で予約する</h2>
-<figure class="code-block"><figcaption><span>game.html · L2216–2228</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L2216-L2228">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L2216–2228"><code>function frame(now) {
+<figure class="code-block"><figcaption><span>game.html · L2254–2279</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L2254-L2279">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L2254–2279"><code>// 描画の目標間隔。プレイ中は 60fps、動きの少ないタイトルとゲームオーバーは 30fps に抑える。
+// 120Hz・144Hz などの画面では requestAnimationFrame がもっと頻繁に呼ばれるので、間引いて更新と描画の回数を減らす
+// (動きは経過時間 dt で進めるので、間引いても速さは変わらない)。
+const PLAY_FRAME_MS = 1000 / 60, IDLE_FRAME_MS = 1000 / 30;
+let vsyncMs = 1000 / 60, lastVsync = last; // 画面の更新間隔の推定値(rAF が呼ばれる間隔の移動平均)と、直前に呼ばれた時刻
+
+function frame(now) {
   rafId = 0;
-  if ((state === &quot;title&quot; || state === &quot;gameover&quot;) &amp;&amp; now - last &lt; IDLE_FRAME_MS - 1) {
+  const gap = now - lastVsync;
+  lastVsync = now;
+  if (gap &gt; 0 &amp;&amp; gap &lt; 50) vsyncMs += (gap - vsyncMs) * 0.1; // ポーズ明けなどの長い間隔は推定に使わない
+  // 目標間隔に収まる回数(60Hz のプレイ中は 1、120Hz なら 2)ごとに描く。90Hz や 100Hz は毎回描き、60fps を下回らせない。
+  // 判定には半回分の余裕を持たせ、呼ばれる時刻の揺れで描くはずの回を飛ばさないようにする。
+  const target = state === &quot;title&quot; || state === &quot;gameover&quot; ? IDLE_FRAME_MS : PLAY_FRAME_MS;
+  const every = Math.max(1, Math.floor(target / vsyncMs + 0.15));
+  if (now - last &lt; (every - 0.5) * vsyncMs) {
     rafId = requestAnimationFrame(frame);
     return;
   }
@@ -84,17 +97,24 @@
   // ポーズ中は静止画のままにしてループを止める。再開は setPaused(false) → ensureLoop()。
   if (!paused) rafId = requestAnimationFrame(frame);
 }</code></pre></figure>
-<p><code>requestAnimationFrame(frame)</code> は、次の描画タイミングで <code>frame</code> を呼ぶ予約です。1回の呼び出しで更新と描画を行い、必要なら次回を予約します。更新回数を常に60回と決め打ちしているわけではありません。タイトルとゲームオーバーでは約30 fpsに抑えています。</p>
-<h2 id="section-2">速度に経過秒数を掛ける</h2>
-<p><code>now</code> はミリ秒単位なので、前回との差を1000で割って秒に直します。速度が毎秒120 pxなら移動量は <code>120 * dt</code>。30 fpsでも60 fpsでも、同じ1秒ならほぼ同じ距離を進みます。ただし本体は <code>dt</code> を最大0.05秒に制限し、長い停止後に大きく飛ばないようにしています。</p>
-<section class="lab" data-lab="speed"><h3>計算してみる：フレーム数と移動量</h3><p>毎秒120 pxで進む場合の、1回あたりの移動量を比較します。</p><label for="fps">1秒あたりのフレーム数</label><input id="fps" type="range" min="20" max="144" value="60"><output for="fps" aria-live="polite"></output><noscript>60 fpsなら1回で2 px、30 fpsなら1回で4 px進みます。操作にはJavaScriptが必要です。</noscript></section><h2 id="section-3">ポーズではループの予約も止める</h2>
-<figure class="code-block"><figcaption><span>game.html · L2230–2234</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L2230-L2234">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L2230–2234"><code>function ensureLoop() {
+<p><code>requestAnimationFrame(frame)</code> は、次に画面が書き換わるタイミングで <code>frame</code> を呼ぶ予約です。1回の呼び出しで更新と描画を行い、必要なら次回を予約します。呼ばれる回数は画面のリフレッシュレートしだいで、60 Hzの画面なら毎秒60回、120 Hzの画面なら毎秒120回です。更新回数を常に60回と決め打ちしているわけではありません。</p>
+<h2 id="section-2">速い画面では描画を間引く</h2>
+<p>120 Hzや144 Hzの画面で毎回更新と描画をすると、60 Hzの画面の2倍以上の処理をすることになります。このゲームの動きは60 fpsあれば十分滑らかなので、<code>frame()</code> の前半で、今回描くかどうかを決めます。</p>
+<ol class="flow"><li><strong>画面の更新間隔を推定</strong><small>呼ばれた間隔 <code>gap</code> を1割ずつ混ぜた移動平均 <code>vsyncMs</code></small></li><li><strong>何回に1回描くか</strong><small>目標の間隔に更新が何回収まるかを <code>every</code> に</small></li><li><strong>まだなら予約だけ</strong><small>前回の描画から <code>every</code> 回ぶんたつまで戻る</small></li></ol>
+<p>目標の間隔は、プレイ中が <code>PLAY_FRAME_MS</code>（1/60秒）、動きの少ないタイトルとゲームオーバーが <code>IDLE_FRAME_MS</code>（1/30秒）です。<code>every</code> は切り捨てで求めるので、90 Hzや100 Hzの画面では1になり、間引かずに毎回描きます。60 fpsを下回らせないためです。</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="画面のリフレッシュレートと描画の頻度"><table><thead><tr><th scope="col">画面</th><th scope="col">プレイ中</th><th scope="col">タイトル・ゲームオーバー</th></tr></thead><tbody><tr><th scope="row">60 Hz</th><td>毎回（60 fps）</td><td>2回に1回（30 fps）</td></tr><tr><th scope="row">90 Hz</th><td>毎回（90 fps）</td><td>3回に1回（30 fps）</td></tr><tr><th scope="row">120 Hz</th><td>2回に1回（60 fps）</td><td>4回に1回（30 fps）</td></tr><tr><th scope="row">144 Hz</th><td>2回に1回（72 fps）</td><td>4回に1回（36 fps）</td></tr></tbody></table></div>
+<aside class="note"><strong>読み解くポイント</strong><p>判定に使う時間は <code>every</code> 回ぶんから半回ぶんを引いた <code>(every - 0.5) * vsyncMs</code> です。呼ばれる時刻は毎回わずかに揺れるので、ちょうど <code>every</code> 回ぶんで比べると、描くはずの回を飛ばすことがあります。<code>+ 0.15</code> も同じ理由の余裕で、120 Hzの画面で推定値が少し長めに出ても（16.67 ÷ 8.4 ≒ 1.98）<code>every</code> が2になるようにしています。</p>
+</aside>
+<h2 id="section-3">速度に経過秒数を掛ける</h2>
+<p><code>now</code> はミリ秒単位なので、前回との差を1000で割って秒に直します。速度が毎秒120 pxなら移動量は <code>120 * dt</code>。30 fpsでも60 fpsでも、同じ1秒ならほぼ同じ距離を進みます。ただし本体は <code>dt</code> を最大0.05秒に制限し、長い停止後に大きく飛ばないようにしています。前の節の間引きで描画が毎秒60回になっても72回になっても、自機や敵の速さが変わらないのはこのためです。</p>
+<section class="lab" data-lab="speed"><h3>計算してみる：フレーム数と移動量</h3><p>毎秒120 pxで進む場合の、1回あたりの移動量を比較します。</p><label for="fps">1秒あたりのフレーム数</label><input id="fps" type="range" min="20" max="144" value="60"><output for="fps" aria-live="polite"></output><noscript>60 fpsなら1回で2 px、30 fpsなら1回で4 px進みます。操作にはJavaScriptが必要です。</noscript></section><h2 id="section-4">ポーズではループの予約も止める</h2>
+<figure class="code-block"><figcaption><span>game.html · L2281–2285</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L2281-L2285">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L2281–2285"><code>function ensureLoop() {
   if (rafId || paused) return;
   last = performance.now();
   rafId = requestAnimationFrame(frame);
 }</code></pre></figure>
 <p>ポーズ中は <code>update()</code> を呼ばず、次のフレームも予約しません。再開時の <code>ensureLoop()</code> は時刻を取り直すため、止めていた時間が一度に加算されません。言語やミュートをポーズ中に変えた場合は、<code>redrawIfPaused()</code> が1回だけ描き直します。</p>
-<aside class="exercise"><strong>確かめてみよう</strong><p><code>IDLE_FRAME_MS</code> と <code>dt</code> の上限は別の役割です。前者は描画頻度、後者は1回の計算で進める時間を制限することを、<code>frame()</code> の条件分岐で確認してください。</p>
+<aside class="exercise"><strong>確かめてみよう</strong><p><code>PLAY_FRAME_MS</code>・<code>IDLE_FRAME_MS</code> と <code>dt</code> の上限は別の役割です。前者は描画の頻度、後者は1回の計算で進める時間を制限することを、<code>frame()</code> の条件分岐で確認してください。</p>
 </aside>
 </article>
 <nav class="page-nav" aria-label="前後の項目">

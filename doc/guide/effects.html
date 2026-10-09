@@ -69,9 +69,13 @@
 </nav></details>
 <main id="main" class="doc-main">
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 17 演出と描画の高速化</nav>
-<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 17 · 全23項目</p><h1>演出と描画の高速化</h1><p class="lead">パーティクル、加算合成、ヒットストップと、画像を再利用する工夫を整理します。</p><p class="source-ref">主な参照先：spawnBurst / updateCommon / removeAt / refreshFormLayer / refreshSky</p></header>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 17 · 全23項目</p><h1>演出と描画の高速化</h1><p class="lead">パーティクル、加算合成、ヒットストップと、画像を再利用する工夫を整理します。</p><p class="source-ref">主な参照先：spawnBurst / MAX_PARTICLES / updateCommon / removeAt / refreshFormLayer / refreshSky</p></header>
 <h2 id="section-1">短い寿命のオブジェクトで演出する</h2>
-<figure class="code-block"><figcaption><span>game.html · L1195–1203</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1195-L1203">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1195–1203"><code>function spawnBurst(x, y, color, n = 12, sp = 110) {
+<figure class="code-block"><figcaption><span>game.html · L1227–1239</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1227-L1239">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1227–1239"><code>// 画面内のパーティクルの上限。ボムで編隊をまとめて倒した時などに、描画が一度に重くなりすぎないようにする。
+const MAX_PARTICLES = 400;
+
+function spawnBurst(x, y, color, n = 12, sp = 110) {
+  n = Math.min(n, MAX_PARTICLES - particles.length);
   for (let i = 0; i &lt; n; i++) {
     const a = Math.random() * Math.PI * 2, v = sp * rand(0.35, 1);
     particles.push({
@@ -81,8 +85,9 @@
   }
 }</code></pre></figure>
 <p>爆発はランダムな方向へ進む粒子の集まりです。<code>cos</code> と <code>sin</code> で角度から横・縦の速度を作り、毎フレーム座標を進め、<code>life</code> を減らします。衝撃波は半径が増える <code>rings</code>、得点表示は上へ浮く <code>popups</code> として管理します。</p>
+<p>ボムで編隊をまとめて倒すと、1体16個の粒子が一度に何百個も生まれます。そこで画面内の粒子は <code>MAX_PARTICLES</code>（400個）までとし、<code>spawnBurst()</code> は上限に届いたぶんだけ作る数を減らします。ふだんのプレイで上限に届くことはなく、描画がいちばん重くなる瞬間だけを抑える安全弁です。</p>
 <h2 id="section-2">描く順序が不要なものは素早く削除する</h2>
-<figure class="code-block"><figcaption><span>game.html · L1474–1477</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1474-L1477">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1474–1477"><code>function removeAt(arr, i) {
+<figure class="code-block"><figcaption><span>game.html · L1511–1514</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1511-L1514">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1511–1514"><code>function removeAt(arr, i) {
   const last = arr.pop();
   if (i &lt; arr.length) arr[i] = last;
 }</code></pre></figure>
@@ -90,7 +95,7 @@
 <h2 id="section-3">光彩は足し合わせ、形は上から重ねる</h2>
 <p><code>drawGlowPass()</code> では <code>globalCompositeOperation = &quot;lighter&quot;</code> を使い、光の重なりを明るくします。その後は通常の <code>source-over</code> へ戻して本体を描きます。スプライトや光彩、タイトル、ボス船体などは別のCanvasに先に描いておきます。</p>
 <h2 id="section-4">変化したときだけ画像を作り直す</h2>
-<div class="table-wrap" tabindex="0" role="region" aria-label="対象・再利用の方法"><table><thead><tr><th scope="col">対象</th><th scope="col">再利用の方法</th></tr></thead><tbody><tr><th scope="row">編隊</th><td>本体と光彩を各1枚にまとめ、生存状態・飛行状態・コマ・敵配列が変わったときに更新</td></tr><tr><th scope="row">星雲</th><td>背景画像を約15 fpsで更新し、各フレームではコピーする</td></tr><tr><th scope="row">レーザー</th><td>幅ごとの画像をキャッシュし、中間部分を引き伸ばす</td></tr><tr><th scope="row">ボタンの文言</th><td><code>shownButtons</code> と比較し、内容が変わったときだけDOMへ書く</td></tr></tbody></table></div>
+<div class="table-wrap" tabindex="0" role="region" aria-label="対象・再利用の方法"><table><thead><tr><th scope="col">対象</th><th scope="col">再利用の方法</th></tr></thead><tbody><tr><th scope="row">編隊</th><td>本体と光彩を各1枚にまとめ、生存状態・飛行状態・コマ・敵配列が変わったときに更新</td></tr><tr><th scope="row">星雲</th><td>背景画像を約15 fpsで更新し、各フレームではコピーする</td></tr><tr><th scope="row">レーザー</th><td>柱は幅ごとの画像をキャッシュし、中間部分を引き伸ばす。連結砲から伸びる光の線も連結数ごとに一度だけ描き、毎フレームの <code>shadowBlur</code> をなくす</td></tr><tr><th scope="row">バリア</th><td>1つずつ画像にしておき、削れたときだけ描き直す（「<a href="barriers.html">10 崩れるバリアの実装</a>」）</td></tr><tr><th scope="row">ボタンの文言</th><td><code>shownButtons</code> と比較し、内容が変わったときだけDOMへ書く</td></tr></tbody></table></div>
 <aside class="note"><strong>読み解くポイント</strong><p><code>formationKey()</code> は敵50体の状態を数値にまとめています。敵数を増やす改造ではJavaScriptの整数精度に収まるか見直す必要があります。元の50体用の工夫を、そのまま任意の数へ拡張しないことが大切です。</p>
 </aside>
 <h2 id="section-5">短い停止と画面の揺れ</h2>

@@ -76,8 +76,8 @@
 <section class="lab" data-lab="hit"><h3>実験：四角形を重ねる</h3><p>Aを左右に動かします。スライダーは矢印キーでも操作できます。</p><label for="hit-x">四角形Aのx座標</label><input id="hit-x" type="range" min="0" max="296" value="90"><canvas width="360" height="200" role="img" aria-label="移動できる四角形Aと固定された四角形B">Aの右端がBの左端を超えると重なります。</canvas><output for="hit-x" aria-live="polite"></output><noscript>A.x が127〜269なら重なります。操作にはJavaScriptが必要です。</noscript></section><aside class="note"><strong>読み解くポイント</strong><p>比較は <code>&lt;</code> と <code>&gt;</code> なので、辺がぴったり触れるだけなら false です。見た目の光彩は当たり判定に含めません。</p>
 </aside>
 <h2 id="section-2">当たり判定の四角形を作る</h2>
-<figure class="code-block"><figcaption><span>game.html · L827–827</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L827-L827">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L827–827"><code>function playerRect() { return { x: player.x - 13, y: PLAYER_Y, w: 26, h: 16 }; }</code></pre></figure>
-<figure class="code-block"><figcaption><span>game.html · L838–844</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L838-L844">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L838–844"><code>function alienRectInto(a, out) {
+<figure class="code-block"><figcaption><span>game.html · L854–854</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L854-L854">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L854–854"><code>function playerRect() { return { x: player.x - 13, y: PLAYER_Y, w: 26, h: 16 }; }</code></pre></figure>
+<figure class="code-block"><figcaption><span>game.html · L865–871</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L865-L871">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L865–871"><code>function alienRectInto(a, out) {
   const t = TYPES[a.type];
   if (a.flight) { out.x = a.flight.x; out.y = a.flight.y; }
   else { out.x = form.ox + a.c * CELL_W + (CELL_W - t.w) / 2; out.y = form.oy + a.r * CELL_H; }

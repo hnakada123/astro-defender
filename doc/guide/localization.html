@@ -87,7 +87,7 @@
 }</code></pre></figure>
 <p><code>STRINGS</code> の値は、普通の文字列だけでなく関数にもできます。ゲージや残数、ボスのレベルを埋め込む文言は関数にし、<code>T()</code> が必要な引数を渡します。呼び出し元は文字列か関数かを意識する必要がありません。操作説明の <code>hint</code> は4行分の配列で、<code>applyLang()</code> が改行タグでつないで表示します。</p>
 <h2 id="section-3">切り替えるときに更新するもの</h2>
-<figure class="code-block"><figcaption><span>game.html · L1254–1265</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1254-L1265">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1254–1265"><code>function applyLang(next) {
+<figure class="code-block"><figcaption><span>game.html · L1290–1301</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1290-L1301">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1290–1301"><code>function applyLang(next) {
   if (next &amp;&amp; next !== lang) {
     lang = next;
     try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}

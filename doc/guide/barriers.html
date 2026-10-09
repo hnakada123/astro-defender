@@ -72,8 +72,8 @@
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 10 · 全23項目</p><h1>崩れるバリアの実装</h1><p class="lead">小さなマスの配列で盾を表し、敵弾が触れた場所と周囲を削ります。</p><p class="source-ref">主な参照先：makeBarriers / barrierHit / erodeBarriers / drawBarriers</p></header>
 <h2 id="section-1">1枚の画像ではなく、マスの集まり</h2>
 <figure class="shot wide"><img src="../img/barriers.png" alt="4つのバリア。小さなマスが消えることで穴が開く。" width="960" height="140" loading="lazy"><figcaption>4つのバリア。小さなマスが消えることで穴が開く。</figcaption></figure>
-<p>バリアは14列 × 10行、1マス4 pxの格子です。<code>g[r][c]</code> が1なら存在し、0なら穴です。生成時に上の角と下中央を切り抜き、描画時は値が残っているマスだけを塗ります。</p>
-<figure class="code-block"><figcaption><span>game.html · L847–863</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L847-L863">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L847–863"><code>function makeBarriers() {
+<p>バリアは14列 × 10行、1マス4 pxの格子です。<code>g[r][c]</code> が1なら存在し、0なら穴です。生成時に上の角と下中央を切り抜き、描画時は値が残っているマスだけを塗ります（塗った結果は画像として取っておきます。最後の節を参照）。</p>
+<figure class="code-block"><figcaption><span>game.html · L878–894</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L878-L894">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L878–894"><code>function makeBarriers() {
   barriers = [];
   const cols = 14, rows = 10, cell = 4, bw = cols * cell;
   for (let i = 0; i &lt; 4; i++) {
@@ -91,7 +91,7 @@
       g.push(line);
     }</code></pre></figure>
 <h2 id="section-2">画面座標をマスの番号に変える</h2>
-<figure class="code-block"><figcaption><span>game.html · L1320–1329</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1320-L1329">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1320–1329"><code>function barrierHit(rect, blast) {
+<figure class="code-block"><figcaption><span>game.html · L1356–1365</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1356-L1365">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1356–1365"><code>function barrierHit(rect, blast) {
   for (const b of barriers) {
     if (!hit(rect, b)) continue;
     const c0 = Math.max(0, Math.floor((rect.x - b.x) / b.cell));
@@ -106,7 +106,31 @@
 <p>実体のあるマスを見つけたら、<code>blast</code> の範囲を調べます。命中点と上下左右は確実に削り、周辺の一部は乱数で削るため、毎回少し違う穴になります。最初の命中を処理したら true を返し、敵弾の処理がその弾を消します。</p>
 <p><code>barrierHit()</code> を呼ぶのは敵弾の処理だけです。自機の弾は通常弾・3方向ショット・連結ビームのどれもバリアを素通りするので、自分の射撃でバリアが削れることはありません。バリアは敵弾から自機を守るための盾です。</p>
 <p>敵弾のほかに、編隊がバリアへ下りてきた場合は <code>erodeBarriers()</code> が敵と重なったマスを削ります。合体レーザーとボムは <code>barrierHit()</code> を通らないため、バリアを壊しません。次のウェーブでは <code>makeBarriers()</code> で作り直します。</p>
-<aside class="exercise"><strong>確かめてみよう</strong><p><code>cell</code> を変えると、バリアの見た目だけでなく全体の幅も変わります。マス数・マスの大きさ・全体の寸法の関係を確認してください。</p>
+<h2 id="section-4">削れたときだけ描き直す</h2>
+<p>バリア4つのマスを毎フレーム1つずつ塗ると、400回ほどの <code>fillRect()</code> になります。けれどもバリアの形が変わるのは弾が当たったときだけです。そこで各バリアに専用の画像 <code>img</code> を持たせ、形が変わったことを示す印 <code>dirty</code> を付けます。</p>
+<figure class="code-block"><figcaption><span>game.html · L895–896</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L895-L896">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L895–896"><code>    const img = barrierImgs[i] ??= prerender(bw, rows * cell, () =&gt; {});
+    barriers.push({ x, y, w: bw, h: rows * cell, cell, cols, rows, g, img, dirty: true });</code></pre></figure>
+<p>画像はウェーブをまたいで使い回すので、<code>barrierImgs</code> に4枚だけ作っておきます。<code>??=</code> は「まだ無ければ作って入れる」という書き方です。新しいバリアは <code>dirty: true</code> で始まるので、最初の描画で一度だけ塗られます。</p>
+<figure class="code-block"><figcaption><span>game.html · L1802–1819</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1802-L1819">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1802–1819"><code>function drawBarriers() {
+  for (const b of barriers) {
+    if (b.dirty) {
+      const g = b.img.getContext(&quot;2d&quot;);
+      g.clearRect(0, 0, b.w, b.h);
+      for (let r = 0; r &lt; b.rows; r++) {
+        for (let c = 0; c &lt; b.cols; c++) {
+          if (!b.g[r][c]) continue;
+          g.fillStyle = (r + c) % 2 ? &quot;#2fd47e&quot; : &quot;#3ef08c&quot;;
+          g.fillRect(c * b.cell, r * b.cell, b.cell, b.cell);
+        }
+      }
+      b.dirty = false;
+    }
+    ctx.drawImage(b.img, b.x, b.y);
+  }
+}
+</code></pre></figure>
+<p><code>drawBarriers()</code> は <code>dirty</code> のバリアだけを画像に塗り直し、印を下ろします。あとは毎フレーム、画像を <code>drawImage()</code> で4回貼るだけです。印を立てるのはマスを消す2か所で、<code>barrierHit()</code> は削ったあとに、<code>erodeBarriers()</code> は実際に残っていたマスを消したときだけ <code>b.dirty = true</code> にします。編隊がバリアに重なっている間は毎フレーム呼ばれるので、もう消えたマスで描き直しを起こさないためです。</p>
+<aside class="exercise"><strong>確かめてみよう</strong><p><code>cell</code> を変えると、バリアの見た目だけでなく全体の幅も変わります。マス数・マスの大きさ・全体の寸法の関係を確認してください。また、<code>barrierHit()</code> の <code>b.dirty = true</code> を消すと、弾が当たっても見た目の穴が開かなくなります。印が描き直しの合図になっていることを確かめてください。</p>
 </aside>
 </article>
 <nav class="page-nav" aria-label="前後の項目">

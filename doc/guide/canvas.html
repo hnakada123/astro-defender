@@ -76,7 +76,7 @@ const cvs = document.getElementById(&quot;game&quot;);
 const ctx = cvs.getContext(&quot;2d&quot;, { alpha: false }); // 毎フレーム全面を塗るので不透明にし、ページとの合成コストを下げる</code></pre></figure>
 <p>Canvas の内部座標は左上が <code>(0, 0)</code>、右へ進むと x、下へ進むと y が増えます。CSS で画面を縮めても内部の480 × 640という寸法は変わりません。ゲーム中の速度や当たり判定は、この内部座標で計算します。</p>
 <h2 id="section-2">ポインターの座標を変換する</h2>
-<figure class="code-block"><figcaption><span>game.html · L1215–1218</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1215-L1218">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1215–1218"><code>function canvasX(e) {
+<figure class="code-block"><figcaption><span>game.html · L1251–1254</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1251-L1254">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1251–1254"><code>function canvasX(e) {
   const r = cvs.getBoundingClientRect();
   return ((e.clientX - r.left) * W) / r.width;
 }</code></pre></figure>
@@ -122,7 +122,7 @@ function drawTextOn(g, s, x, y, o = {}) {
 <p>Canvas に描いた文字は DOM の文章とは別です。このゲームでは英数字と記号を、文字表から作ったドット文字（「<a href="sprites.html">05 文字列からドット絵を作る</a>」）の長方形として描きます。文字の大きさ <code>size</code> から <code>dotScale()</code> でドット1個の大きさを整数倍で決め、1文字6ドットぶんずつ右へ進めます。中央揃えや右揃えのために先に文全体の幅を計算し、左端と基準線の座標を整数にそろえるので、点がにじみません。長方形はすべて1本のパスに加えてから <code>fill()</code> で一度に塗ります。タイトルロゴのように光彩 (<code>shadowBlur</code>) を付けるときも、光彩が文全体に1回だけかかります。</p>
 <p>ドット文字にない文字、つまり日本語を含む文は、全体をシステムのフォント <code>SYSTEM_FONT</code> で <code>fillText()</code> により描きます。英字だけドット文字にすると、日本語より小さく見えて行の大きさがそろわないためです。<code>SYSTEM_FONT</code> は CSS と同じく、英字の字形が整った等幅フォントを OS ごとに選ぶ並びです。<code>drawText()</code> はこの関数へ本画面の <code>ctx</code> を渡す薄い窓口になっています。</p>
 <h2 id="section-4">後で描くものが手前になる</h2>
-<p><code>draw()</code> は画面を塗り直し、背景、ゲーム内の物体、HUD、画面中央の案内の順に重ねます。<code>ctx.save()</code> と <code>ctx.restore()</code> は座標変換などの描画設定を保存・復元するためのもので、ゲームの状態や画像そのものを保存する命令ではありません。</p>
+<p><code>draw()</code> は背景、ゲーム内の物体、HUD、画面中央の案内の順に重ねます。いちばん下の星雲の画像は不透明で画面全体を覆うので、前のフレームの絵はこれで塗り隠されます。画面を揺らすときだけは画像がずれて端に隙間ができるため、先に下地の色で全面を塗ります。<code>ctx.save()</code> と <code>ctx.restore()</code> は座標変換などの描画設定を保存・復元するためのもので、ゲームの状態や画像そのものを保存する命令ではありません。</p>
 <aside class="exercise"><strong>確かめてみよう</strong><p>ゲーム画面のCSS幅を変えても、自機がポインターを追う位置が合うか確認してください。<code>canvasX()</code> が「見えている幅」と「内部の幅」をつないでいます。</p>
 </aside>
 </article>

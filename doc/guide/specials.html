@@ -71,10 +71,10 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 13 合体レーザーとボム</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 13 · 全23項目</p><h1>合体レーザーとボム</h1><p class="lead">発動条件、射線と円形範囲の判定、ゲージや弾数の消費を整理します。</p><p class="source-ref">主な参照先：canUseSpecial / activateLaser / updateLaser / LASER_MOVE / activateBomb</p></header>
 <h2 id="section-1">発動できる条件を共通にする</h2>
-<figure class="code-block"><figcaption><span>game.html · L983–983</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L983-L983">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L983–983"><code>function canUseSpecial() { return state === &quot;play&quot; &amp;&amp; !paused &amp;&amp; player.alive &amp;&amp; bannerT &lt;= 0; }</code></pre></figure>
+<figure class="code-block"><figcaption><span>game.html · L1015–1015</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1015-L1015">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1015–1015"><code>function canUseSpecial() { return state === &quot;play&quot; &amp;&amp; !paused &amp;&amp; player.alive &amp;&amp; bannerT &lt;= 0; }</code></pre></figure>
 <p>プレイ中、ポーズしていない、自機が生存中、ウェーブ開始バナーが消えている、という条件を両方の必殺技で使います。そのうえでレーザーは満タンのゲージ、ボムは残数と再使用までの待ち時間を確認します。使えない場合は false を返し、資源を消費しません。</p>
 <h2 id="section-2">レーザーは縦長の四角形</h2>
-<figure class="code-block"><figcaption><span>game.html · L985–994</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L985-L994">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L985–994"><code>function activateLaser() {
+<figure class="code-block"><figcaption><span>game.html · L1017–1026</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1017-L1026">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1017–1026"><code>function activateLaser() {
   if (!canUseSpecial() || special.charge &lt; LASER_MAX || special.laserT &gt; 0) return false;
   special.charge = 0;
   special.laserT = 1.2;
@@ -85,7 +85,7 @@
   return true;
 }</code></pre></figure>
 <p>発射時にゲージを0にし、1.2秒の持続時間、幅、毎秒のダメージを決めます。幅は <code>14 + 連結砲の数 × 10</code> px、威力は毎秒 <code>20 + 連結砲の数 × 8</code> なので、連結砲がなければ幅14 px・毎秒20、4門なら幅54 px・毎秒52になります。連結砲自体は消費しません。</p>
-<figure class="code-block"><figcaption><span>game.html · L1015–1027</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1015-L1027">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1015–1027"><code>function updateLaser(dt) {
+<figure class="code-block"><figcaption><span>game.html · L1047–1059</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1047-L1059">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1047–1059"><code>function updateLaser(dt) {
   if (special.laserT &lt;= 0) return;
   const duration = Math.min(dt, special.laserT);
   const beam = { x: player.x - special.laserW / 2, y: 58, w: special.laserW, h: PLAYER_Y - 58 };
@@ -101,7 +101,7 @@
 <p>射線と重なった通常の敵は撃破し、敵弾も除去します。ボスには毎秒の威力に有効な経過秒数を掛けたダメージを与えます。最終フレームでは残り時間以上のダメージにならないよう <code>Math.min(dt, special.laserT)</code> を使います。</p>
 <h2 id="section-3">照射中は自機が遅くなる</h2>
 <p>射線の四角形は毎フレーム、その時点の <code>player.x</code> を中心に作り直します。自機を横へ動かせば射線もついてくるので、速さがそのままだと、マウスを横に振るだけで編隊全体をなぎ払えてしまいます。そこで照射中は、自機の速さを <code>LASER_MOVE</code> までに抑えます。</p>
-<figure class="code-block"><figcaption><span>game.html · L753–755</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L753-L755">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L753–755"><code>// 合体レーザー照射中の自機の最高速度(px/秒)。反動で鈍り、横に振って編隊全体をなぎ払えないようにする。
+<figure class="code-block"><figcaption><span>game.html · L780–782</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L780-L782">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L780–782"><code>// 合体レーザー照射中の自機の最高速度(px/秒)。反動で鈍り、横に振って編隊全体をなぎ払えないようにする。
 // ボスの最高速度(約 59px/秒)よりは速く、動くコアを追い続けることはできる。
 const LASER_MOVE = 70;</code></pre></figure>
 <p>毎秒70 pxなので、1.2秒の照射中に動けるのは約84 px、編隊の2〜3列ぶんです。一方、ボスの最高速度（約59 px/秒）よりは速いので、左右に揺れるコアを追い続けることはできます。速さを抑える処理そのものは「<a href="input.html">08 自機の移動と入力</a>」で扱います。</p>
@@ -109,7 +109,7 @@ const LASER_MOVE = 70;</code></pre></figure>
 </aside>
 <h2 id="section-4">ボムは敵弾全体と近くの敵に作用する</h2>
 <p>ボムは初期2個、最大3個です。使用すると敵弾をすべて消し、自機から半径240 px以内に中心がある敵を撃破します。距離は <code>Math.hypot(dx, dy)</code> で求めます。ボスに対しては攻撃を中断し、各部位へ <code>BOSS_BOMB_DAMAGE</code> のダメージを試みます。</p>
-<figure class="code-block"><figcaption><span>game.html · L757–757</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L757-L757">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L757–757"><code>const BOSS_BOMB_DAMAGE = 5;  // ボムがボスの各部位に与えるダメージ</code></pre></figure>
+<figure class="code-block"><figcaption><span>game.html · L784–784</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L784-L784">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L784–784"><code>const BOSS_BOMB_DAMAGE = 5;  // ボムがボスの各部位に与えるダメージ</code></pre></figure>
 <p>ボム1個で各部位に5ダメージを与えます。コアの保護条件は通常どおり適用されるので、砲台が残っている間はコアへのダメージは無効です。</p>
 <p>ボム使用後は少なくとも1.6秒の無敵時間が付きます。レーザーもボムもバリアを削りません。ボムが補充されるのはボスを撃破したときの1個だけで、ウェーブクリアやミスでの復帰では補充されません。</p>
 <aside class="exercise"><strong>確かめてみよう</strong><p>画面下のボタンとキーボード入力が同じ <code>activateLaser()</code> / <code>activateBomb()</code> を呼ぶことを確認してください。入口が違っても使用条件は共通です。</p>
