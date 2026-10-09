@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<!-- Source of the share card shown when a page is posted on X and similar sites.
+     Open it at 1200 x 630 and take a screenshot (see generation.txt). Add ?lang=en for the English card. -->
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>ASTRO DEFENDER share card</title>
+<style>
+  @font-face { font-family: "Silkscreen"; src: url("../fonts/silkscreen-400.woff2") format("woff2"); font-weight: 400; }
+  @font-face { font-family: "Silkscreen"; src: url("../fonts/silkscreen-700.woff2") format("woff2"); font-weight: 700; }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    display: grid; grid-template-columns: minmax(0, 1fr) 372px; align-items: center; gap: 56px;
+    padding: 0 84px 0 88px; color: #e8ecfa; -webkit-font-smoothing: antialiased;
+    font-family: "Noto Sans CJK JP", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+    background:
+      radial-gradient(2px 2px at 6% 18%, rgba(255, 255, 255, .8), transparent 70%),
+      radial-gradient(1.5px 1.5px at 17% 74%, rgba(255, 255, 255, .6), transparent 70%),
+      radial-gradient(2px 2px at 31% 9%, rgba(200, 247, 255, .75), transparent 70%),
+      radial-gradient(1.5px 1.5px at 44% 88%, rgba(255, 255, 255, .55), transparent 70%),
+      radial-gradient(2px 2px at 55% 30%, rgba(255, 180, 232, .7), transparent 70%),
+      radial-gradient(1.5px 1.5px at 63% 62%, rgba(255, 255, 255, .6), transparent 70%),
+      radial-gradient(2px 2px at 95% 12%, rgba(255, 255, 255, .7), transparent 70%),
+      radial-gradient(1.5px 1.5px at 97% 86%, rgba(200, 247, 255, .6), transparent 70%),
+      radial-gradient(640px 520px at 80% 50%, rgba(40, 110, 150, .22), transparent 70%),
+      radial-gradient(900px 600px at 18% -10%, #1a2358, transparent 70%),
+      #060813;
+  }
+  .logo { font-family: "Silkscreen", monospace; font-weight: 700; line-height: 1; }
+  .astro { display: block; font-size: 112px; letter-spacing: .02em; color: #7df9ff; text-shadow: 6px 6px 0 #ff2e88, 0 0 36px rgba(125, 249, 255, .55); }
+  .defender { display: block; margin-top: 18px; font-size: 58px; letter-spacing: .14em; color: #f4f7ff; text-shadow: 3px 3px 0 #ff2e88, 0 0 26px rgba(255, 46, 136, .45); }
+  .edition { margin-top: 22px; font: 400 15px/1.4 "Silkscreen", monospace; letter-spacing: .32em; color: #ff6ad5; }
+  .tagline { margin-top: 40px; font-size: 40px; font-weight: 700; line-height: 1.4; color: #fff; }
+  .sub { margin-top: 10px; font-size: 22px; line-height: 1.6; color: #c3cbec; }
+  .play { display: inline-flex; align-items: center; gap: 12px; margin-top: 30px; padding: 12px 22px; font-size: 21px; font-weight: 700; color: #161200; background: #ffe066; border-radius: 10px; box-shadow: 0 0 30px rgba(255, 224, 102, .35); }
+  .screen { position: relative; padding: 9px; background: #020308; border: 2px solid #33408a; border-radius: 16px; box-shadow: 0 0 50px rgba(96, 158, 255, .35), 0 0 130px rgba(255, 46, 136, .16); }
+  .screen::after { content: ""; position: absolute; inset: 9px; border-radius: 8px; background: repeating-linear-gradient(to bottom, rgba(255, 255, 255, .035) 0 1px, transparent 1px 3px); }
+  .screen img { display: block; width: 100%; border-radius: 8px; }
+  html[lang="en"] .tagline { font-size: 38px; line-height: 1.3; }
+</style>
+</head>
+<body>
+<div>
+  <h1 class="logo"><span class="astro">ASTRO</span><span class="defender">DEFENDER</span></h1>
+  <p class="edition">— NEON ARCADE EDITION —</p>
+  <p class="tagline" data-en="Chain your hits.<br>Build your firepower.">撃って、つなげて、強くなる。</p>
+  <p class="sub" data-en="A neon arcade shooter you can play in your browser">ブラウザで遊べるネオンアーケードシューティング</p>
+  <p><span class="play" data-en="▶ Play free now">▶ 無料ですぐ遊べる</span></p>
+</div>
+<div class="screen"><img src="../../doc/img/play.png" alt=""></div>
+<script>
+  if (new URLSearchParams(location.search).get("lang") === "en") {
+    document.documentElement.lang = "en";
+    for (const el of document.querySelectorAll("[data-en]")) el.innerHTML = el.dataset.en;
+  }
+</script>
+</body>
+</html>

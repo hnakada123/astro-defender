@@ -1,0 +1,15 @@
+ASTRO DEFENDER share card images
+
+These images appear when a page is posted on X or another site that reads Open Graph tags.
+
+Files:
+  card.html    Source layout (logo, tagline, button and the doc/img/play.png screenshot)
+  og-ja.png    1200 x 630 card for the Japanese pages (index.html, doc/index.html)
+  og-en.png    1200 x 630 card for the English page (doc/index.en.html)
+
+To regenerate, serve the repository root and screenshot card.html at 1200 x 630 with a scale factor of 1:
+  python3 -m http.server 8000
+  chromium --headless --hide-scrollbars --window-size=1200,630 --screenshot=assets/social/og-ja.png "http://localhost:8000/assets/social/card.html"
+  chromium --headless --hide-scrollbars --window-size=1200,630 --screenshot=assets/social/og-en.png "http://localhost:8000/assets/social/card.html?lang=en"
+
+The Silkscreen font comes from ../fonts/ (SIL Open Font License 1.1). Japanese text uses the system's Noto Sans CJK JP.
