@@ -8,22 +8,26 @@
   <meta name="description" content="時間制限のある強化と、シールド・連結砲のような回数で管理する効果を分けます。">
   <link rel="stylesheet" href="../guide.css">
   <script src="../guide.js" defer></script>
+  <link rel="icon" href="../../favicon.ico" sizes="16x16 32x32 48x48">
+  <link rel="icon" type="image/png" href="../../assets/icons/favicon-32.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="../../assets/icons/apple-touch-icon.png" sizes="180x180">
 </head>
 <body>
 <a class="skip-link" href="#main">本文へ移動</a>
 <header class="site-header">
   <div class="header-inner">
-    <a class="brand" href="../index.html"><span class="brand-mark" aria-hidden="true">A</span>ASTRO DEFENDER</a>
+    <a class="brand" href="../index.html"><img class="brand-mark" src="../../assets/icons/icon-192.png" width="36" height="36" alt="">ASTRO DEFENDER</a>
     <nav class="header-links" aria-label="サイトメニュー">
-      <a href="../index.html#chapters">解説一覧</a>
+      <a href="../source.html#chapters">解説一覧</a>
       <a href="../../index.html">ゲームをプレイ</a>
       <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
-      <a href="../index.en.html" lang="en" hreflang="en">English</a>
+      <a href="../source.en.html" lang="en" hreflang="en">English</a>
     </nav>
   </div>
 </header>
 <div class="doc-layout">
-<details class="sidebar" open><summary>ソースコード解説・目次</summary><nav aria-label="解説の各項目">
+<details class="chapter-toc" open><summary>ソースコード解説・目次</summary><nav aria-label="解説の各項目">
+<div class="toc-group">
 <p class="nav-group">ゲームの土台を知る</p><ol>
 <li><a href="getting-started.html"><span>00</span>この解説の読み方</a></li>
 <li><a href="architecture.html"><span>01</span>1ファイルの全体構成</a></li>
@@ -33,6 +37,8 @@
 <li><a href="sprites.html"><span>05</span>文字列からドット絵を作る</a></li>
 <li><a href="collision.html"><span>06</span>四角形の当たり判定</a></li>
 </ol>
+</div>
+<div class="toc-group">
 <p class="nav-group">戦闘の仕組みを追う</p><ol>
 <li><a href="formation.html"><span>07</span>敵の編隊とウェーブ生成</a></li>
 <li><a href="input.html"><span>08</span>自機の移動と入力</a></li>
@@ -41,12 +47,16 @@
 <li><a href="score.html"><span>11</span>スコア・コンボ・残機</a></li>
 <li><a href="powerups.html" aria-current="page"><span>12</span>カプセルと連結ビーム砲</a></li>
 </ol>
+</div>
+<div class="toc-group">
 <p class="nav-group">戦闘と成長を広げる</p><ol>
 <li><a href="specials.html"><span>13</span>合体レーザーとボム</a></li>
 <li><a href="upgrades.html"><span>14</span>ウェーブクリアと強化3択</a></li>
 <li><a href="boss.html"><span>15</span>大型戦艦のボス戦</a></li>
 <li><a href="flights.html"><span>16</span>編隊から突入する敵</a></li>
 </ol>
+</div>
+<div class="toc-group">
 <p class="nav-group">演出・品質・改造を学ぶ</p><ol>
 <li><a href="effects.html"><span>17</span>演出と描画の高速化</a></li>
 <li><a href="audio.html"><span>18</span>効果音と BGM の合成</a></li>
@@ -55,9 +65,10 @@
 <li><a href="modding.html"><span>21</span>改造するときの着眼点</a></li>
 <li><a href="glossary.html"><span>22</span>用語集と読み返し先</a></li>
 </ol>
+</div>
 </nav></details>
 <main id="main" class="doc-main">
-<nav class="breadcrumb" aria-label="現在の位置"><a href="../index.html">ソースコード解説</a> / 12 カプセルと連結ビーム砲</nav>
+<nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 12 カプセルと連結ビーム砲</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 12 · 全23項目</p><h1>カプセルと連結ビーム砲</h1><p class="lead">時間制限のある強化と、シールド・連結砲のような回数で管理する効果を分けます。</p><p class="source-ref">主な参照先：PU_DEFS / maybeDrop / applyPU / active</p></header>
 <h2 id="section-1">4種類の効果をデータで定義する</h2>
 <figure class="code-block"><figcaption><span>index.html · L641–646</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L641-L646">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L641–646"><code>const PU_DEFS = {
@@ -103,7 +114,7 @@
 </nav></main></div>
 <footer class="site-footer"><div class="container footer-inner">
   <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
-  <p><a href="../index.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
 </div></footer>
 </body>
 </html>

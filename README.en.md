@@ -3,12 +3,14 @@
 *[日本語版はこちら / Japanese version](README.md)*
 
 **▶ Play now: <https://hnakada123.github.io/astro-defender/>**
-**📖 Source code guide: <https://hnakada123.github.io/astro-defender/doc/index.en.html>** (beginner-friendly, 23 chapters)
+**🎮 Game guide: <https://hnakada123.github.io/astro-defender/doc/index.en.html>**
+**📖 Source code guide: <https://hnakada123.github.io/astro-defender/doc/source.en.html>** (beginner-friendly, 23 chapters)
 
 Current version: **v1.0.1** ([changelog](CHANGELOG.en.md))
 
 A neo-retro fixed-screen shooter you play in the browser with the mouse.
-No external libraries and no external assets — everything lives in the single `index.html` file.
+In-game graphics and audio are generated from code, and the game runs from a single `index.html` file without external libraries.
+Browser favicons and icon images are provided in `favicon.ico` and `assets/icons/`.
 
 Built on classic formation-shooter gameplay, with a modern arcade layer on top:
 neon glow effects, a combo multiplier, power-ups and a synthwave soundtrack.
@@ -112,8 +114,8 @@ A beginner-friendly guide walks through `index.html` in 23 chapters: the game lo
 sprite generation, collision detection, sound synthesis with Web Audio, and more, with line-numbered
 excerpts from the real source and interactive labs that run in the browser.
 
-- English: <https://hnakada123.github.io/astro-defender/doc/index.en.html> ([doc/index.en.html](doc/index.en.html))
-- 日本語: <https://hnakada123.github.io/astro-defender/doc/> ([doc/index.html](doc/index.html))
+- English: <https://hnakada123.github.io/astro-defender/doc/source.en.html> ([doc/source.en.html](doc/source.en.html))
+- 日本語: <https://hnakada123.github.io/astro-defender/doc/source.html> ([doc/source.html](doc/source.html))
 
 ## Tests
 

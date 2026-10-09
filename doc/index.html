@@ -4,104 +4,119 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
-  <title>項目一覧 | ASTRO DEFENDER ソースコード解説</title>
-  <meta name="description" content="ASTRO DEFENDER のソースコードを全23項目で解説。ゲームループ、Canvas、当たり判定、ボス戦、Web Audio、テストを実装に沿って学べます。">
+  <title>ASTRO DEFENDER — ゲーム紹介・遊び方・操作方法</title>
+  <meta name="description" content="ASTRO DEFENDERはブラウザで遊べる無料のシューティングゲーム。ゲーム画面、遊び方、操作方法、パワーアップ、合体レーザーとボムを紹介します。">
   <link rel="stylesheet" href="guide.css">
-  <script src="guide.js" defer></script>
+  <link rel="stylesheet" href="home.css">
+  <link rel="alternate" hreflang="ja" href="index.html">
+  <link rel="alternate" hreflang="en" href="index.en.html">
+  <link rel="icon" href="../favicon.ico" sizes="16x16 32x32 48x48">
+  <link rel="icon" type="image/png" href="../assets/icons/favicon-32.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png" sizes="180x180">
+  <script src="home.js" defer></script>
 </head>
-<body>
+<body class="game-home">
 <a class="skip-link" href="#main">本文へ移動</a>
-<header class="site-header">
-  <div class="header-inner">
-    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">A</span>ASTRO DEFENDER</a>
-    <nav class="header-links" aria-label="サイトメニュー">
-      <a href="index.html#chapters">解説一覧</a>
-      <a href="../index.html">ゲームをプレイ</a>
-      <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
-      <a href="index.en.html" lang="en" hreflang="en">English</a>
-    </nav>
-  </div>
-</header>
-<main id="main">
-<header class="hero"><div class="container hero-inner">
-  <div>
-    <p class="eyebrow">SOURCE CODE GUIDE</p>
-    <h1><span>ASTRO DEFENDER</span>ゲームの動きを、<br>コードから読み解く。</h1>
-    <p class="lead">1つの HTML ファイルで動くシューティングゲーム。<br>画面に描く、敵を動かす、弾を当てる、音を鳴らす。<br>その仕組みを、実際のソースと一緒に学ぶ解説です。</p>
-    <div class="actions"><a class="button" href="#chapters">解説の項目を見る ↓</a><a class="button secondary" href="guide/getting-started.html">はじめて読む方へ</a></div>
-  </div>
-  <figure class="hero-figure"><a href="../index.html" aria-label="ASTRO DEFENDERをプレイ"><img src="img/play.png" alt="敵の編隊、弾、自機、バリアをCanvasに描いたASTRO DEFENDERのプレイ画面" width="960" height="1280"></a><figcaption>この画面の絵も音も、コードから生成。</figcaption></figure>
+<header class="site-header"><div class="header-inner">
+  <a class="brand" href="index.html"><img class="brand-mark" src="../assets/icons/icon-192.png" width="36" height="36" alt="">ASTRO DEFENDER</a>
+  <nav class="header-links" aria-label="サイトメニュー">
+    <a href="#screenshots">ゲーム画面</a>
+    <a href="#how-to">遊び方</a>
+    <a href="#controls">操作方法</a>
+    <a href="source.html">ソースコード解説</a>
+    <a href="index.en.html" lang="en" hreflang="en">English</a>
+  </nav>
 </div></header>
-<div class="container"><ul class="meta" aria-label="解説の概要"><li>全23項目 / 4つの分野</li><li>対象ソース v1.0.1</li><li>HTML・CSS・JavaScript</li><li>Canvas 2D / Web Audio</li></ul></div>
+<main id="main">
+<header class="game-hero"><div class="container hero-inner">
+  <div>
+    <p class="eyebrow">ブラウザで遊べるネオンアーケード</p>
+    <h1 class="game-title">ASTRO<br>DEFENDER</h1>
+    <p class="game-tagline">撃って、つなげて、強くなる。</p>
+    <p class="lead">迫る編隊を撃ち落とし、カプセルで自機を強化。<br>連結ビーム砲と合体レーザーを武器に、<br>5ウェーブごとに現れる大型戦艦へ挑もう。</p>
+    <div class="actions"><a class="button" href="../index.html">ゲームをプレイ →</a><a class="button secondary" href="#how-to">遊び方を見る</a></div>
+    <p class="hero-note">無料・インストール不要 / マウス・キーボード操作</p>
+  </div>
+  <figure class="hero-figure"><a href="../index.html" aria-label="ゲームをプレイ"><img src="img/play.png" alt="ネオンの敵編隊に向けて自機が射撃するプレイ画面。緑のバリアとレーザーゲージ、スコアが表示されている。" width="960" height="1280"></a><figcaption>マウスを動かして移動、クリック長押しで連射。</figcaption></figure>
+</div></header>
+<div class="container"><ul class="meta" aria-label="ゲームの概要"><li>ブラウザでそのままプレイ</li><li>日本語・英語に対応</li><li>5ウェーブごとにボス戦</li><li>v1.0.1 · CC0</li></ul></div>
 
-<section class="container section" aria-labelledby="start-title">
-  <div class="section-heading"><h2 id="start-title">まずは、この順番で。</h2><p>全体像をつかむための5項目</p></div>
-  <p class="lead">ファイルの役割を知り、時間と状態の管理を押さえたら、入力から弾の処理へ。<br>「操作すると画面が変わる」までの流れを追えます。</p>
-  <ol class="reading-path">
-<li><a href="guide/architecture.html"><span>01 / どこに何があるか</span><strong>全体構成 →</strong></a></li>
-<li><a href="guide/game-loop.html"><span>02 / 時間を進める</span><strong>ゲームループ →</strong></a></li>
-<li><a href="guide/state-machine.html"><span>03 / 処理を切り替える</span><strong>状態遷移 →</strong></a></li>
-<li><a href="guide/input.html"><span>08 / 操作を受け取る</span><strong>自機と入力 →</strong></a></li>
-<li><a href="guide/bullets.html"><span>09 / ルールを適用する</span><strong>弾と衝突 →</strong></a></li>
-</ol></section>
+<section class="container section" id="screenshots" aria-labelledby="screenshots-title">
+  <div class="section-heading"><h2 id="screenshots-title">ゲーム画面で見る、3つの見どころ</h2><p>画像を選ぶと拡大できます</p></div>
+  <p class="lead">編隊との撃ち合いから、強化の選択、ボスとの攻防まで。ウェーブを進めるほど戦い方が広がります。</p>
+  <div class="gallery">
+<figure class="screen-card"><a href="img/laser.png"><img src="img/laser.png" alt="自機から画面上方へ太い合体レーザーが伸びている。" width="960" height="1280" loading="lazy"></a><figcaption><h3>連結砲と合体レーザー</h3><p>連結ビーム砲で火力を増やし、ゲージが満タンになったらレーザーを発射。射線上の敵と敵弾をまとめて消し去ります。</p></figcaption></figure>
+<figure class="screen-card"><a href="img/bosslaser.png"><img src="img/bosslaser.png" alt="大型戦艦と、赤く表示されたレーザーの攻撃範囲。" width="960" height="1280" loading="lazy"></a><figcaption><h3>5ウェーブごとの大型戦艦</h3><p>左右の砲台を壊して中央コアを攻撃。赤く示されたレーザーの予告位置から離れ、反撃の機会を狙います。</p></figcaption></figure>
+<figure class="screen-card"><a href="img/upgrade.png"><img src="img/upgrade.png" alt="ウェーブクリア後に3枚の強化カードが表示されている。" width="960" height="1280" loading="lazy"></a><figcaption><h3>毎ウェーブ、強化を1つ選択</h3><p>ビーム・移動速度・回収範囲を伸ばすか、残機やボムを補給するか。次のウェーブに向けて自機を育てます。</p></figcaption></figure>
+</div></section>
 
-<section class="container section" id="chapters" aria-labelledby="chapters-title">
-  <div class="section-heading"><h2 id="chapters-title">ソースコード解説</h2><p>気になる項目から読めます</p></div>
-  <p class="lead">各ページに、仕組みの説明・ソースの抜粋・確認課題をまとめました。<br>関数名を手掛かりに、ゲーム本体のコードと行き来してください。</p>
-  <nav class="category-nav" aria-label="解説の分野">
-<a href="#basics">ゲームの土台を知る</a>
-<a href="#gameplay">戦闘の仕組みを追う</a>
-<a href="#advanced">戦闘と成長を広げる</a>
-<a href="#finishing">演出・品質・改造を学ぶ</a>
-</nav>
-<section class="chapter-group" id="basics" aria-labelledby="basics-title"><div class="group-heading"><span>01 / 7 ITEMS</span><h3 id="basics-title">ゲームの土台を知る</h3></div><p>ファイルの構成から、時間・状態・描画・当たり判定まで。</p><div class="chapter-grid">
-<a class="chapter-card" id="s00" href="guide/getting-started.html"><span class="chapter-number">00</span><h4>この解説の読み方</h4><p>ゲームを動かし、画面の変化とコードを結び付けるところから始めます。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s01" href="guide/architecture.html"><span class="chapter-number">01</span><h4>1ファイルの全体構成</h4><p>HTML・CSS・JavaScript の役割と、入力から描画までのデータの流れを整理します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s02" href="guide/game-loop.html"><span class="chapter-number">02</span><h4>ゲームループと時間</h4><p>経過時間 dt、フレームの予約、ポーズ中の停止処理を読み解きます。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s03" href="guide/state-machine.html"><span class="chapter-number">03</span><h4>画面と状態遷移</h4><p>タイトル、プレイ、ミス、クリア、強化選択、ゲームオーバーを状態で管理します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s04" href="guide/canvas.html"><span class="chapter-number">04</span><h4>Canvas の座標と描画</h4><p>内部座標と表示サイズの違い、文字描画、重ねる順序を確認します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s05" href="guide/sprites.html"><span class="chapter-number">05</span><h4>文字列からドット絵を作る</h4><p>X と . の配列を画像に変換し、2コマのスプライトとして再利用します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s06" href="guide/collision.html"><span class="chapter-number">06</span><h4>四角形の当たり判定</h4><p>4つの不等式で重なりを調べ、絵とは別に衝突範囲を定義します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-</div></section>
-<section class="chapter-group" id="gameplay" aria-labelledby="gameplay-title"><div class="group-heading"><span>02 / 6 ITEMS</span><h3 id="gameplay-title">戦闘の仕組みを追う</h3></div><p>自機と敵を動かし、弾・バリア・得点・アイテムをつなぎます。</p><div class="chapter-grid">
-<a class="chapter-card" id="s07" href="guide/formation.html"><span class="chapter-number">07</span><h4>敵の編隊とウェーブ生成</h4><p>50体の相対位置、折り返し、残り数に応じた速度、射撃する敵の選び方を追います。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s08" href="guide/input.html"><span class="chapter-number">08</span><h4>自機の移動と入力</h4><p>ポインターとキーボードを共通の状態にまとめ、移動速度と連射を制御します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s09" href="guide/bullets.html"><span class="chapter-number">09</span><h4>弾の移動と衝突の順序</h4><p>配列の逆順走査、弾が消える条件、シールドとミスの分岐を説明します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s10" href="guide/barriers.html"><span class="chapter-number">10</span><h4>崩れるバリアの実装</h4><p>小さなマスの配列で盾を表し、弾が触れた場所と周囲を削ります。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s11" href="guide/score.html"><span class="chapter-number">11</span><h4>スコア・コンボ・残機</h4><p>撃破時の加点、2.2秒のコンボ猶予、残機の増加とハイスコア保存を追います。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s12" href="guide/powerups.html"><span class="chapter-number">12</span><h4>カプセルと連結ビーム砲</h4><p>時間制限のある強化と、シールド・連結砲のような回数で管理する効果を分けます。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-</div></section>
-<section class="chapter-group" id="advanced" aria-labelledby="advanced-title"><div class="group-heading"><span>03 / 4 ITEMS</span><h3 id="advanced-title">戦闘と成長を広げる</h3></div><p>必殺技、ウェーブ間の選択、ボスと突入する敵を読み解きます。</p><div class="chapter-grid">
-<a class="chapter-card" id="s13" href="guide/specials.html"><span class="chapter-number">13</span><h4>合体レーザーとボム</h4><p>発動条件、射線と円形範囲の判定、ゲージや弾数の消費を整理します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s14" href="guide/upgrades.html"><span class="chapter-number">14</span><h4>ウェーブクリアと強化3択</h4><p>戦闘を止めて候補を選ばせ、強化を保ったまま次のウェーブを作ります。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s15" href="guide/boss.html"><span class="chapter-number">15</span><h4>大型戦艦のボス戦</h4><p>部位ごとの耐久値、コアの保護、予告位置を固定する攻撃を実装します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s16" href="guide/flights.html"><span class="chapter-number">16</span><h4>編隊から突入する敵</h4><p>敵に一時的な飛行状態を追加し、急降下・ジグザグ・横方向の突入を切り替えます。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-</div></section>
-<section class="chapter-group" id="finishing" aria-labelledby="finishing-title"><div class="group-heading"><span>04 / 6 ITEMS</span><h3 id="finishing-title">演出・品質・改造を学ぶ</h3></div><p>絵と音を仕上げ、テストで確かめ、自分の変更につなげます。</p><div class="chapter-grid">
-<a class="chapter-card" id="s17" href="guide/effects.html"><span class="chapter-number">17</span><h4>演出と描画の高速化</h4><p>パーティクル、加算合成、ヒットストップと、画像を再利用する工夫を整理します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s18" href="guide/audio.html"><span class="chapter-number">18</span><h4>効果音と BGM の合成</h4><p>発振器・音量・ノイズから音を作り、BGMを少し先の時刻へ予約します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s19" href="guide/localization.html"><span class="chapter-number">19</span><h4>日本語・英語と設定の保存</h4><p>文言を辞書に集め、CanvasとHTMLの表示をまとめて切り替えます。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s20" href="guide/tests.html"><span class="chapter-number">20</span><h4>ゲームロジックのテスト</h4><p>ブラウザ部分を置き換え、本番のJavaScriptに対してルールを検証します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s21" href="guide/modding.html"><span class="chapter-number">21</span><h4>改造するときの着眼点</h4><p>数値、絵、アイテム、強化を変更するときに、関連する処理を一緒に確認します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s22" href="guide/glossary.html"><span class="chapter-number">22</span><h4>用語集と読み返し先</h4><p>解説に登場する用語を、実際の変数・関数・関連項目と結び付けます。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-</div></section>
+<section class="container section" id="how-to" aria-labelledby="how-to-title">
+  <h2 id="how-to-title">まずは、1ウェーブをクリアしよう</h2>
+  <p class="lead">基本は「左右へ動く」「撃つ」「避ける」の3つ。操作に慣れたら、連続撃破やカプセルの回収も狙ってみましょう。</p>
+  <ol class="play-steps">
+<li><span class="step-number">01</span><h3>ゲームを開いてスタート</h3><p>「ゲームをプレイ」から画面を開き、タイトル画面をクリック。スペースキーまたはEnterキーでも始められます。</p></li>
+<li><span class="step-number">02</span><h3>左右に動いて、撃って、避ける</h3><p>マウスを左右に動かして自機を操作し、クリックを押し続けて射撃。敵弾や突入してくる敵を避けながら、編隊を減らします。</p></li>
+<li><span class="step-number">03</span><h3>全滅させたら、次の強化へ</h3><p>敵をすべて倒すとウェーブクリア。3つの候補から強化を1つ選ぶと、次のウェーブが始まります。</p></li>
+</ol><div class="rule-grid">
+  <section class="rules"><h3>覚えておきたいルール</h3><ul>
+<li>残機は3からスタート。敵弾や突入する敵に当たるとミスになり、残機がなくなるとゲームオーバーです。</li>
+<li>編隊が地上まで侵入すると、残機があってもゲームオーバーになります。</li>
+<li>緑のバリアは弾を防ぎますが、自分の弾も通しません。撃たれると崩れ、次のウェーブで復元します。</li>
+<li>5ウェーブごとに大型戦艦が出現。左右の砲台を破壊してから、中央コアを撃破します。</li>
+</ul></section><section class="rules"><h3>スコアを伸ばすコツ</h3><ul>
+<li>2.2秒以内に撃破をつなぐとコンボが継続。倍率は最大×8まで上がります。</li>
+<li>ノーダメージでウェーブをクリアすると、パーフェクトボーナスがもらえます。</li>
+<li>5000点ごとに残機が1つ増えます。残機の上限は5です。</li>
+<li>ときどき画面上部を横切る円盤も得点源。無理に追わず、敵弾の少ないタイミングを狙いましょう。</li>
+</ul></section></div></section>
+
+<section class="container section" id="controls" aria-labelledby="controls-title">
+  <h2 id="controls-title">操作方法</h2>
+  <p class="lead">マウス中心でも、キーボード中心でも遊べます。レーザーとボムには、ゲーム画面の下に専用ボタンもあります。</p>
+  <div class="table-wrap controls-table" tabindex="0" role="region" aria-label="ゲームの操作一覧"><table>
+  <thead><tr><th scope="col">操作</th><th scope="col">マウス・画面のボタン</th><th scope="col">キーボード</th></tr></thead><tbody>
+<tr><th scope="row">スタート・再挑戦</th><td>タイトル・ゲームオーバー画面をクリック</td><td><kbd>Space</kbd> / <kbd>Enter</kbd></td></tr>
+<tr><th scope="row">左右へ移動</th><td>ゲーム画面の上でマウスを左右へ移動</td><td><kbd>←</kbd> <kbd>→</kbd> / <kbd>A</kbd> <kbd>D</kbd></td></tr>
+<tr><th scope="row">ショット</th><td>左クリックを長押し</td><td><kbd>Space</kbd> / <kbd>Enter</kbd> を長押し</td></tr>
+<tr><th scope="row">合体レーザー</th><td>右クリック / 「合体レーザー」ボタン<small>ゲージが満タンのときに使用できます</small></td><td><kbd>Z</kbd></td></tr>
+<tr><th scope="row">緊急回避ボム</th><td>「ボム」ボタン<small>残数があるときに使用できます</small></td><td><kbd>X</kbd></td></tr>
+<tr><th scope="row">強化を選ぶ</th><td>強化カードをクリック</td><td><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd><small>または <kbd>↑</kbd> <kbd>↓</kbd> で選び、<kbd>Enter</kbd> で決定</small></td></tr>
+<tr><th scope="row">一時停止・再開</th><td>一時停止中にゲーム画面をクリックすると再開</td><td><kbd>P</kbd> / <kbd>Esc</kbd></td></tr>
+<tr><th scope="row">サウンド切替</th><td>—</td><td><kbd>M</kbd></td></tr>
+<tr><th scope="row">表示言語</th><td>ゲーム画面下の「日本語」「ENGLISH」</td><td>—</td></tr>
+</tbody></table></div>
+  <p class="section-note">レーザーとボムは戦闘中のみ使用できます。ウェーブ開始の表示中、強化選択中、一時停止中には発動しません。</p>
 </section>
 
-<section class="container section" aria-labelledby="flow-title">
-  <h2 id="flow-title">ひとつの操作が、画面になるまで。</h2>
-  <p class="lead">ゲームは「入力」「状態の更新」「描画」を繰り返しています。<br>描かれた絵と、その裏で変わるデータを分けて読むのが出発点です。</p>
-<ol class="flow"><li><strong>1. 入力を記録</strong><small><code>keys</code> / <code>mouseX</code></small></li><li><strong>2. 状態を更新</strong><small><code>update(dt)</code></small></li><li><strong>3. 衝突と得点</strong><small><code>hit()</code> / <code>addScore()</code></small></li><li><strong>4. 画面を描画</strong><small><code>draw(t)</code></small></li></ol>
-<p><a href="guide/architecture.html">ファイル全体の構成を詳しく見る →</a></p></section>
+<section class="container section" id="powerups" aria-labelledby="powerups-title">
+  <h2 id="powerups-title">カプセルを拾って、ピンチを切り抜ける</h2>
+  <p class="lead">倒した敵が落とすカプセルを拾うと、自機がパワーアップ。4種類の効果は組み合わせて使えます。</p>
+  <div class="powerup-grid">
+<section class="powerup"><span class="powerup-symbol wide" aria-hidden="true">W</span><h3>W · 3方向ショット</h3><p>8秒間、正面と左右へ同時に発射。広い範囲の敵を狙えます。</p></section>
+<section class="powerup"><span class="powerup-symbol rapid" aria-hidden="true">R</span><h3>R · 連射強化</h3><p>8秒間、ショットの発射間隔が短くなります。</p></section>
+<section class="powerup"><span class="powerup-symbol shield" aria-hidden="true">S</span><h3>S · シールド</h3><p>ダメージを1回防ぎます。防いだ場合は連結砲も残ります。</p></section>
+<section class="powerup"><span class="powerup-symbol beam" aria-hidden="true">B</span><h3>B · ビーム砲連結</h3><p>1回の取得で左右に1門ずつ追加し、最大4門に。時間制限はありませんが、ミスで解除されます。</p></section>
+</div><div class="special-grid">
+  <section class="special"><h3><kbd>Z</kbd> 合体レーザー</h3><p>敵の撃破やボスへの射撃でゲージをため、満タンになったら発射。1.2秒間、射線上の敵と敵弾を貫きます。連結砲が多いほど太く強力になり、発射しても連結砲は失われません。</p></section>
+  <section class="special"><h3><kbd>X</kbd> 緊急回避ボム</h3><p>画面全体の敵弾を消し、自機から半径240px以内の敵を撃破。ボスのレーザーも中断し、使用後は1.6秒間無敵になります。初期2個、最大3個。危険が迫ったら早めに使いましょう。</p></section>
+</div><p class="section-note">ウェーブ間に選ぶビーム・速度・回収の強化は、ミスしても維持されます。新しいゲームを始めるとリセットされます。</p></section>
 
-<section class="container section" aria-labelledby="resources-title">
-  <h2 id="resources-title">手元のソースで確かめる</h2>
-  <div class="resource-grid"><div><h3>ゲームとソースコード</h3><p>ゲーム本体はルートの <code>index.html</code> です。各解説のコード枠から、GitHubの該当箇所へ移動できます。</p><p><a href="../index.html">ゲームをプレイ</a> · <a href="../index.html" download="astro-defender.html">本体HTMLを保存</a></p></div>
-  <div><h3>変更後はテストで確認</h3><p>リポジトリのルートで次を実行します。ゲームのルールをNode.jsの組み込みテスト機能で検証できます。</p><div class="code-block"><pre tabindex="0"><code>node --test tests/*.test.cjs</code></pre></div><a href="guide/tests.html">テストの仕組みを読む →</a></div></div>
+<section class="container section" id="faq" aria-labelledby="faq-title">
+  <h2 id="faq-title">よくある質問</h2><div class="faq-list">
+<details><summary>インストールや登録は必要ですか？</summary><p>必要ありません。「ゲームをプレイ」からブラウザで開くだけで始められます。ゲームは無料です。</p></details>
+<details><summary>音が鳴らないときは？</summary><p>ゲーム画面をクリックするか、スペースキーで開始してください。ミュートになっている場合はMキーで切り替えられます。ブラウザのタブや端末の音量設定も確認してください。</p></details>
+<details><summary>ハイスコアや設定は保存されますか？</summary><p>ハイスコア、表示言語、サウンドの設定は、利用中のブラウザに保存されます。別の端末へ自動同期はされません。ブラウザの保存データを消すと記録も消えます。</p></details>
+<details><summary>オフラインでも遊べますか？</summary><p><a href="../index.html" download="astro-defender.html">ゲーム本体のHTMLを保存</a>し、ブラウザで開くと遊べます。ゲーム内の画像や音は、そのファイルから生成されます。</p></details>
+</div></section>
+
+<section class="container section" id="source-code" aria-labelledby="source-title">
+  <div class="source-callout"><div><p class="eyebrow">SOURCE CODE GUIDE</p><h2 id="source-title">ゲームの仕組みも、読んでみよう</h2><p>ゲームループ、当たり判定、敵の動き、音の合成まで。<br>全23項目のソースコード解説を、専用ページにまとめています。</p></div><a class="button secondary" href="source.html">ソースコード解説 →</a></div>
+  <div class="play-again"><p>操作が分かったら、最初のウェーブへ。</p><a class="button" href="../index.html">ゲームをプレイ →</a></div>
 </section>
 </main>
 <footer class="site-footer"><div class="container footer-inner">
-  <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
-  <p><a href="index.html#chapters">解説一覧</a> · <a href="../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+  <p>ASTRO DEFENDER · NEON ARCADE EDITION<br>ゲーム紹介・遊び方 · CC0 1.0</p>
+  <p><a href="../index.html">ゲームをプレイ</a> · <a href="source.html">ソースコード解説</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
 </div></footer>
 </body>
 </html>

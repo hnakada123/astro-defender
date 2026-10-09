@@ -1,0 +1,18 @@
+ASTRO DEFENDER icon assets
+
+Artwork: generated with the built-in imagegen tool.
+Original output: astro-defender.png (1254 x 1254 pixels).
+Packaging: ImageMagick resizing and ICO encoding; no manual artwork changes.
+
+Files:
+  astro-defender.png     Original high-resolution artwork
+  icon-512.png          512 x 512 app / sharing icon
+  icon-192.png          192 x 192 app icon and documentation header logo
+  apple-touch-icon.png  180 x 180 home-screen icon
+  favicon-48.png         48 x 48 browser icon
+  favicon-32.png         32 x 32 browser icon
+  favicon-16.png         16 x 16 browser icon
+  ../../favicon.ico     Multi-size ICO containing 16, 32 and 48 pixel images
+
+Final generation prompt:
+Use case: logo-brand. Asset type: production square app icon and favicon master for the original browser arcade shooter ASTRO DEFENDER. Create one finished 1024 by 1024 square icon, edge-to-edge, no mockup. A single centered, iconic, upward-facing spacecraft in crisp retro pixel art. The ship silhouette is horizontally symmetric: a narrow central vertical nose, stepped widening cyan-white body, broad blocky swept wings, two small purple linked cannon pods flanking the main body, and a short vivid magenta exhaust below. Make the main spacecraft big, filling roughly 72 percent of the square, with a strong simple silhouette that remains readable at 32 pixels. Use a strict visibly chunky pixel grid and a few large color blocks, not detailed illustration. Colors based on the actual game: icy white #c8f7ff, neon cyan #7df9ff, violet #c5a3ff, magenta #ff2e88. Background is solid near-black navy #080b1b with only a very restrained cyan/violet glow immediately around the craft. Foreground pixels must be razor-sharp, with luminous white core and cyan edging; keep the glow subtle so the silhouette stays legible. Flat frontal top-down arcade sprite, no perspective, no 3D, no bevels. Square canvas with full-bleed background and generous empty corners suitable for rounded app-icon cropping. No text, no letters, no title, no border, no stars, no planets, no enemies, no scene, no interface, no watermark. Only one icon.

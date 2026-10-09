@@ -1,0 +1,86 @@
+/* Game introduction and playing guide; shared typography comes from guide.css. */
+.game-home .game-hero { background: var(--soft); border-bottom: 1px solid var(--line); }
+.game-home .hero-inner { grid-template-columns: minmax(0, 1fr) 330px; gap: 60px; padding-top: 50px; padding-bottom: 50px; }
+.game-title { font-size: clamp(2.5rem, 5vw, 4rem); line-height: 1.15; letter-spacing: .025em; margin-bottom: 24px; }
+.game-tagline { font-size: clamp(1.2rem, 2vw, 1.65rem); font-weight: 700; line-height: 1.7; }
+.game-home .hero-figure img { width: 300px; }
+.hero-note { margin-top: 16px; margin-bottom: 0; font-size: .83rem; color: var(--muted); }
+.gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 28px; }
+.screen-card { margin: 0; padding: 20px; background: #fff; border: 1px solid var(--line); border-radius: 8px; }
+.screen-card > a { display: block; max-width: 236px; margin: 0 auto 18px; }
+.screen-card img { width: 100%; border-radius: 6px; }
+.screen-card h3 { margin: 0 0 8px; color: var(--ink); }
+.screen-card p { font-size: .88rem; margin: 0; }
+.screen-card figcaption { font-size: .88rem; }
+.play-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; padding: 0; list-style: none; margin: 24px 0 30px; }
+.play-steps li { margin: 0; padding: 22px; background: #fff; border: 1px solid var(--line); border-radius: 8px; }
+.step-number { display: block; font: 700 .85rem var(--mono); color: var(--accent); }
+.play-steps h3 { margin: 10px 0; }
+.play-steps p { margin: 0; font-size: .9rem; color: var(--muted); }
+.rule-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+.rule-grid h3 { margin: 0 0 12px; }
+.rule-grid ul { margin-bottom: 0; }
+.rules { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 24px; }
+.game-home kbd { display: inline-block; min-width: 1.6em; padding: 0 .4em; margin: 2px 1px; border: 1px solid #adb9aa; border-bottom-width: 2px; border-radius: 4px; color: var(--ink); background: #fff; font: .88em/1.8 var(--mono); text-align: center; }
+.controls-table { background: #fff; border: 1px solid var(--line); border-radius: 8px; }
+.controls-table table { margin: 0; font-size: .95rem; }
+.controls-table th, .controls-table td { padding: 14px 18px; }
+.controls-table th:first-child { width: 22%; }
+.controls-table tbody th { background: #f3f5ef; }
+.controls-table small { display: block; color: var(--muted); line-height: 1.7; margin-top: 4px; }
+.section-note { color: var(--muted); font-size: .87rem; margin-top: 18px; }
+.powerup-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; margin: 26px 0 36px; }
+.powerup { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 22px; }
+.powerup-symbol { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid currentColor; border-radius: 8px; font: 800 1.2rem var(--mono); }
+.powerup-symbol.wide { color: #16546a; background: #e5f5fa; }
+.powerup-symbol.rapid { color: #71500f; background: #fff4d2; }
+.powerup-symbol.shield { color: #315c45; background: #eaf0e7; }
+.powerup-symbol.beam { color: #614293; background: #f0eafa; }
+.powerup h3 { margin: 16px 0 6px; }
+.powerup p { font-size: .9rem; margin: 0; color: var(--muted); }
+.special-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.special { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 24px; }
+.special h3 { margin: 0 0 12px; }
+.special p:last-child { margin: 0; }
+.faq-list { margin-top: 24px; }
+.faq-list details { background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 16px 20px; margin-bottom: 12px; }
+.faq-list summary { font-weight: 700; cursor: pointer; }
+.faq-list details p { color: var(--muted); margin: 16px 0 0; }
+.source-callout { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 30px; align-items: center; padding: 32px; background: var(--soft); border: 1px solid var(--line); border-radius: 8px; }
+.source-callout p { margin: 0; color: var(--muted); }
+.source-callout .button { white-space: nowrap; }
+.play-again { text-align: center; margin-top: 38px; }
+.play-again p { color: var(--muted); margin-bottom: 18px; }
+@media (max-width: 960px) {
+  .game-home .hero-inner { grid-template-columns: minmax(0, 1fr) 260px; gap: 30px; }
+  .gallery { gap: 16px; }
+  .screen-card { padding: 16px; }
+  .powerup-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .game-home .hero-inner { grid-template-columns: 1fr; padding-top: 36px; padding-bottom: 36px; }
+  .game-home .hero-figure img { width: 250px; }
+  .game-home .header-links { gap: 4px 14px; }
+  .gallery, .play-steps, .rule-grid, .special-grid, .source-callout { grid-template-columns: 1fr; }
+  .screen-card { display: grid; grid-template-columns: 125px minmax(0, 1fr); align-items: center; gap: 18px; }
+  .screen-card > a { margin: 0; }
+  .screen-card figcaption { margin: 0; }
+  .controls-table th, .controls-table td { padding: 10px; }
+  .controls-table table { font-size: .83rem; }
+  .controls-table th:first-child { width: auto; }
+  .source-callout { padding: 24px; gap: 20px; }
+  .source-callout .button { justify-self: start; }
+}
+@media (max-width: 460px) {
+  .screen-card { display: block; }
+  .screen-card > a { max-width: 190px; margin: 0 auto 18px; }
+  .powerup-grid { grid-template-columns: 1fr; }
+  .rules, .special { padding: 20px; }
+  .controls-table table { min-width: 300px; }
+}
+@media print {
+  .game-home .hero-inner { display: block; }
+  .game-home .hero-figure, .play-again { display: none; }
+  .gallery, .play-steps, .powerup-grid, .special-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .source-callout { display: block; }
+}

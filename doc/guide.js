@@ -1,7 +1,7 @@
 "use strict";
 
 // 本文とページ間の移動は JavaScript なしでも利用できる。
-const chapterMenu = document.querySelector(".sidebar");
+const chapterMenu = document.querySelector(".chapter-toc");
 if (chapterMenu) {
   const compact = matchMedia("(max-width: 720px)");
   const syncMenu = () => { chapterMenu.open = !compact.matches; };
