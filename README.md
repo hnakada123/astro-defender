@@ -7,7 +7,7 @@
 **🌐 Game guide (English): <https://hnakada123.github.io/astro-defender/doc/index.en.html>**
 **📖 ソースコード解説: <https://hnakada123.github.io/astro-defender/doc/source.html>**（初学者向け・全23章）
 
-現在のバージョン: **v1.0.1**（[更新履歴](CHANGELOG.md)）
+現在のバージョン: **v2.0.0**（[更新履歴](CHANGELOG.md)）
 
 ブラウザだけで遊べる、マウス操作のネオレトロ風固定画面シューティングゲームです。
 ゲーム内の画像と音はコードから生成し、ゲーム本体は外部ライブラリなしで `game.html` 1 ファイルで動作します。
@@ -119,7 +119,7 @@ node --test tests/*.test.cjs
 ## バージョン
 
 [セマンティック バージョニング](https://semver.org/lang/ja/)に従い、リリースを `vX.Y.Z` の git タグで記録します。
-現在は **v1.0.1** です。タイトル画面の右下にも表示され、変更内容は [CHANGELOG.md](CHANGELOG.md) にまとめています。
+現在は **v2.0.0** です。タイトル画面の右下にも表示され、変更内容は [CHANGELOG.md](CHANGELOG.md) にまとめています。
 
 - X（メジャー）: 操作やルールが変わるなど、遊び方の互換性に影響する変更
 - Y（マイナー）: 新しい機能・敵・演出の追加

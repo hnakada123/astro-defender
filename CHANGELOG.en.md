@@ -5,7 +5,9 @@
 This project follows [Semantic Versioning](https://semver.org/).
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [2.0.0] - 2026-10-09
+
+This release removes the between-wave upgrade pick and reworks rules such as barriers and boss fights. Because the way you play changes, the major version goes up.
 
 ### Changed
 
@@ -59,6 +61,6 @@ First official release.
 - A beginner-friendly source code guide (Japanese / English)
 - Version number in the bottom-right corner of the title screen
 
-[Unreleased]: https://github.com/hnakada123/astro-defender/compare/v1.0.1...HEAD
+[2.0.0]: https://github.com/hnakada123/astro-defender/releases/tag/v2.0.0
 [1.0.1]: https://github.com/hnakada123/astro-defender/releases/tag/v1.0.1
 [1.0.0]: https://github.com/hnakada123/astro-defender/releases/tag/v1.0.0
