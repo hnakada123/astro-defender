@@ -7,6 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- A link to the game’s website (https://hnakada123.github.io/astro-defender/) now sits below the control hints under the game screen. The screen is drawn slightly smaller to make room, so everything still fits in one window
+- The game guide pages (Japanese and English) have a link in the header for posting on X
+- The source code guide (Japanese and English) explains the new link in chapter 01, with every code excerpt’s line numbers updated. The English whole-page screenshot was retaken
+
 ### Changed
 
 - Letters, digits and symbols on the game screen are now a 5 × 7 pixel font drawn for this game (they used to be Courier New, which looked rough on some systems). Lines that contain Japanese are drawn entirely in the system font so their characters match in size, preferring a clean monospace font for the Latin letters

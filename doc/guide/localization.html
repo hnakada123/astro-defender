@@ -6,8 +6,8 @@
   <meta name="color-scheme" content="dark">
   <title>日本語・英語と設定の保存 | ASTRO DEFENDER ソースコード解説</title>
   <meta name="description" content="文言を辞書に集め、CanvasとHTMLの表示をまとめて切り替えます。">
-  <link rel="stylesheet" href="../guide.css?v=20261009-3">
-  <script src="../guide.js?v=20261009-3" defer></script>
+  <link rel="stylesheet" href="../guide.css?v=20261009-4">
+  <script src="../guide.js?v=20261009-4" defer></script>
   <link rel="icon" href="../../favicon.ico" sizes="16x16 32x32 48x48">
   <link rel="icon" type="image/png" href="../../assets/icons/favicon-32.png" sizes="32x32">
   <link rel="apple-touch-icon" href="../../assets/icons/apple-touch-icon.png" sizes="180x180">
@@ -71,7 +71,7 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 19 日本語・英語と設定の保存</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 19 · 全23項目</p><h1>日本語・英語と設定の保存</h1><p class="lead">文言を辞書に集め、CanvasとHTMLの表示をまとめて切り替えます。</p><p class="source-ref">主な参照先：STRINGS / detectLang / T / applyLang / localStorage</p></header>
 <h2 id="section-1">保存済みの設定を優先する</h2>
-<figure class="code-block"><figcaption><span>game.html · L142–149</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L142-L149">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L142–149"><code>function detectLang() {
+<figure class="code-block"><figcaption><span>game.html · L146–153</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L146-L153">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L146–153"><code>function detectLang() {
   try {
     const saved = localStorage.getItem(LANG_KEY);
     if (Object.hasOwn(STRINGS, saved)) return saved;
@@ -81,13 +81,13 @@
 }</code></pre></figure>
 <p>言語はブラウザに保存した値が辞書に存在すればそれを採用します。保存値がなければブラウザの言語を調べ、<code>ja</code> で始まれば日本語、それ以外は英語です。ストレージが使えなくても検出処理を続けます。</p>
 <h2 id="section-2">固定文言も、値を埋め込む文言も同じ入口にする</h2>
-<figure class="code-block"><figcaption><span>game.html · L154–157</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L154-L157">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L154–157"><code>function T(key, ...args) {
+<figure class="code-block"><figcaption><span>game.html · L158–161</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L158-L161">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L158–161"><code>function T(key, ...args) {
   const v = STRINGS[lang][key];
   return typeof v === &quot;function&quot; ? v(...args) : v;
 }</code></pre></figure>
 <p><code>STRINGS</code> の値は、普通の文字列だけでなく関数にもできます。ゲージや残数、ボスのレベルを埋め込む文言は関数にし、<code>T()</code> が必要な引数を渡します。呼び出し元は文字列か関数かを意識する必要がありません。操作説明の <code>hint</code> は4行分の配列で、<code>applyLang()</code> が改行タグでつないで表示します。</p>
 <h2 id="section-3">切り替えるときに更新するもの</h2>
-<figure class="code-block"><figcaption><span>game.html · L1291–1302</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1291-L1302">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1291–1302"><code>function applyLang(next) {
+<figure class="code-block"><figcaption><span>game.html · L1295–1306</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1295-L1306">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1295–1306"><code>function applyLang(next) {
   if (next &amp;&amp; next !== lang) {
     lang = next;
     try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}

@@ -6,8 +6,8 @@
   <meta name="color-scheme" content="dark">
   <title>弾の移動と衝突の順序 | ASTRO DEFENDER ソースコード解説</title>
   <meta name="description" content="配列の逆順走査、弾が消える条件、シールドとミスの分岐を説明します。">
-  <link rel="stylesheet" href="../guide.css?v=20261009-3">
-  <script src="../guide.js?v=20261009-3" defer></script>
+  <link rel="stylesheet" href="../guide.css?v=20261009-4">
+  <script src="../guide.js?v=20261009-4" defer></script>
   <link rel="icon" href="../../favicon.ico" sizes="16x16 32x32 48x48">
   <link rel="icon" type="image/png" href="../../assets/icons/favicon-32.png" sizes="32x32">
   <link rel="apple-touch-icon" href="../../assets/icons/apple-touch-icon.png" sizes="180x180">
@@ -71,7 +71,7 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 09 弾の移動と衝突の順序</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 09 · 全23項目</p><h1>弾の移動と衝突の順序</h1><p class="lead">配列の逆順走査、弾が消える条件、シールドとミスの分岐を説明します。</p><p class="source-ref">主な参照先：pBullets / eBullets / damagePlayer / hitPlayer</p></header>
 <h2 id="section-1">弾は位置と速度を持つオブジェクト</h2>
-<figure class="code-block"><figcaption><span>game.html · L1685–1692</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1685-L1692">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1685–1692"><code>  // --- 自弾 ---
+<figure class="code-block"><figcaption><span>game.html · L1689–1696</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1689-L1696">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1689–1696"><code>  // --- 自弾 ---
   for (let i = pBullets.length - 1; i &gt;= 0; i--) {
     const p = pBullets[i];
     p.y -= SHOT_SPEED * dt;
@@ -87,7 +87,7 @@
 <h2 id="section-3">削除しながら調べるなら後ろから</h2>
 <p><code>splice(i, 1)</code> は要素を消し、後ろの要素を前へ詰めます。前から進むループだと、詰まってきた要素を飛ばすことがあります。末尾から先頭へ調べれば、まだ調べていない要素の位置は変わりません。</p>
 <h2 id="section-4">シールドと残機減少を分ける</h2>
-<figure class="code-block"><figcaption><span>game.html · L1498–1510</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1498-L1510">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1498–1510"><code>function damagePlayer() {
+<figure class="code-block"><figcaption><span>game.html · L1502–1514</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1502-L1514">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1502–1514"><code>function damagePlayer() {
   waveNoDamage = false;
   resetCombo();
   if (active.shield &gt; 0) {

@@ -6,8 +6,8 @@
   <meta name="color-scheme" content="dark">
   <title>崩れるバリアの実装 | ASTRO DEFENDER ソースコード解説</title>
   <meta name="description" content="小さなマスの配列で盾を表し、敵弾が触れた場所と周囲を削ります。">
-  <link rel="stylesheet" href="../guide.css?v=20261009-3">
-  <script src="../guide.js?v=20261009-3" defer></script>
+  <link rel="stylesheet" href="../guide.css?v=20261009-4">
+  <script src="../guide.js?v=20261009-4" defer></script>
   <link rel="icon" href="../../favicon.ico" sizes="16x16 32x32 48x48">
   <link rel="icon" type="image/png" href="../../assets/icons/favicon-32.png" sizes="32x32">
   <link rel="apple-touch-icon" href="../../assets/icons/apple-touch-icon.png" sizes="180x180">
@@ -73,7 +73,7 @@
 <h2 id="section-1">1枚の画像ではなく、マスの集まり</h2>
 <figure class="shot wide"><img src="../img/barriers.png" alt="4つのバリア。小さなマスが消えることで穴が開く。" width="960" height="140" loading="lazy"><figcaption>4つのバリア。小さなマスが消えることで穴が開く。</figcaption></figure>
 <p>バリアは14列 × 10行、1マス4 pxの格子です。<code>g[r][c]</code> が1なら存在し、0なら穴です。生成時に上の角と下中央を切り抜き、描画時は値が残っているマスだけを塗ります（塗った結果は画像として取っておきます。最後の節を参照）。</p>
-<figure class="code-block"><figcaption><span>game.html · L878–894</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L878-L894">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L878–894"><code>function makeBarriers() {
+<figure class="code-block"><figcaption><span>game.html · L882–898</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L882-L898">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L882–898"><code>function makeBarriers() {
   barriers = [];
   const cols = 14, rows = 10, cell = 4, bw = cols * cell;
   for (let i = 0; i &lt; 4; i++) {
@@ -91,7 +91,7 @@
       g.push(line);
     }</code></pre></figure>
 <h2 id="section-2">画面座標をマスの番号に変える</h2>
-<figure class="code-block"><figcaption><span>game.html · L1357–1366</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1357-L1366">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1357–1366"><code>function barrierHit(rect, blast) {
+<figure class="code-block"><figcaption><span>game.html · L1361–1370</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1361-L1370">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1361–1370"><code>function barrierHit(rect, blast) {
   for (const b of barriers) {
     if (!hit(rect, b)) continue;
     const c0 = Math.max(0, Math.floor((rect.x - b.x) / b.cell));
@@ -108,10 +108,10 @@
 <p>敵弾のほかに、編隊がバリアへ下りてきた場合は <code>erodeBarriers()</code> が敵と重なったマスを削ります。合体レーザーとボムは <code>barrierHit()</code> を通らないため、バリアを壊しません。次のウェーブでは <code>makeBarriers()</code> で作り直します。</p>
 <h2 id="section-4">削れたときだけ描き直す</h2>
 <p>バリア4つのマスを毎フレーム1つずつ塗ると、400回ほどの <code>fillRect()</code> になります。けれどもバリアの形が変わるのは弾が当たったときだけです。そこで各バリアに専用の画像 <code>img</code> を持たせ、形が変わったことを示す印 <code>dirty</code> を付けます。</p>
-<figure class="code-block"><figcaption><span>game.html · L895–896</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L895-L896">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L895–896"><code>    const img = barrierImgs[i] ??= prerender(bw, rows * cell, () =&gt; {});
+<figure class="code-block"><figcaption><span>game.html · L899–900</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L899-L900">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L899–900"><code>    const img = barrierImgs[i] ??= prerender(bw, rows * cell, () =&gt; {});
     barriers.push({ x, y, w: bw, h: rows * cell, cell, cols, rows, g, img, dirty: true });</code></pre></figure>
 <p>画像はウェーブをまたいで使い回すので、<code>barrierImgs</code> に4枚だけ作っておきます。<code>??=</code> は「まだ無ければ作って入れる」という書き方です。新しいバリアは <code>dirty: true</code> で始まるので、最初の描画で一度だけ塗られます。</p>
-<figure class="code-block"><figcaption><span>game.html · L1805–1822</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1805-L1822">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1805–1822"><code>function drawBarriers() {
+<figure class="code-block"><figcaption><span>game.html · L1809–1826</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1809-L1826">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1809–1826"><code>function drawBarriers() {
   for (const b of barriers) {
     if (b.dirty) {
       const g = b.img.getContext(&quot;2d&quot;);

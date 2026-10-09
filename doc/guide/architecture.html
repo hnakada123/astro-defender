@@ -6,8 +6,8 @@
   <meta name="color-scheme" content="dark">
   <title>1ファイルの全体構成 | ASTRO DEFENDER ソースコード解説</title>
   <meta name="description" content="HTML・CSS・JavaScript の役割と、入力から描画までのデータの流れを整理します。">
-  <link rel="stylesheet" href="../guide.css?v=20261009-3">
-  <script src="../guide.js?v=20261009-3" defer></script>
+  <link rel="stylesheet" href="../guide.css?v=20261009-4">
+  <script src="../guide.js?v=20261009-4" defer></script>
   <link rel="icon" href="../../favicon.ico" sizes="16x16 32x32 48x48">
   <link rel="icon" type="image/png" href="../../assets/icons/favicon-32.png" sizes="32x32">
   <link rel="apple-touch-icon" href="../../assets/icons/apple-touch-icon.png" sizes="180x180">
@@ -71,8 +71,8 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 01 1ファイルの全体構成</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 01 · 全23項目</p><h1>1ファイルの全体構成</h1><p class="lead">HTML・CSS・JavaScript の役割と、入力から描画までのデータの流れを整理します。</p><p class="source-ref">主な参照先：cvs / ctx / player / update / draw</p></header>
 <h2 id="section-1">画面の骨組みとゲーム本体</h2>
-<p>HTML はゲーム画面用の Canvas、必殺技と言語のボタン、操作説明を配置します。CSS は画面の大きさや周囲の装飾を担当します。自機・敵・弾は HTML 要素ではなく、JavaScript が Canvas に描く図形です。</p>
-<figure class="code-block"><figcaption><span>game.html · L47–56</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L47-L56">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L47–56"><code>&lt;div class=&quot;frame&quot;&gt;&lt;canvas id=&quot;game&quot; width=&quot;480&quot; height=&quot;640&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;
+<p>HTML はゲーム画面用の Canvas、必殺技と言語のボタン、操作説明、紹介ページへのリンクを配置します。CSS は画面の大きさや周囲の装飾を担当します。自機・敵・弾は HTML 要素ではなく、JavaScript が Canvas に描く図形です。</p>
+<figure class="code-block"><figcaption><span>game.html · L50–60</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L50-L60">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L50–60"><code>&lt;div class=&quot;frame&quot;&gt;&lt;canvas id=&quot;game&quot; width=&quot;480&quot; height=&quot;640&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;
 &lt;div class=&quot;actions&quot;&gt;
   &lt;button id=&quot;laserButton&quot; type=&quot;button&quot; disabled&gt;Z 合体レーザー 0%&lt;/button&gt;
   &lt;button id=&quot;bombButton&quot; type=&quot;button&quot; disabled&gt;X ボム ×2&lt;/button&gt;
@@ -81,8 +81,9 @@
     &lt;button id=&quot;langEn&quot; type=&quot;button&quot; aria-pressed=&quot;false&quot;&gt;ENGLISH&lt;/button&gt;
   &lt;/div&gt;
 &lt;/div&gt;
-&lt;p class=&quot;hint&quot; id=&quot;hint&quot;&gt;&lt;/p&gt;</code></pre></figure>
-<div class="table-wrap" tabindex="0" role="region" aria-label="層・役割・読む場所"><table><thead><tr><th scope="col">層</th><th scope="col">役割</th><th scope="col">読む場所</th></tr></thead><tbody><tr><th scope="row">HTML</th><td>Canvas・ボタン・操作説明を置く</td><td><code>&lt;body&gt;</code> の冒頭</td></tr><tr><th scope="row">CSS</th><td>表示サイズ、枠、走査線を整える</td><td><code>&lt;style&gt;</code></td></tr><tr><th scope="row">JavaScript</th><td>状態を更新し、絵と音を出す</td><td><code>&lt;script&gt;</code></td></tr></tbody></table></div>
+&lt;p class=&quot;hint&quot; id=&quot;hint&quot;&gt;&lt;/p&gt;
+&lt;p class=&quot;site-link&quot;&gt;&lt;a href=&quot;https://hnakada123.github.io/astro-defender/&quot;&gt;hnakada123.github.io/astro-defender&lt;/a&gt;&lt;/p&gt;</code></pre></figure>
+<div class="table-wrap" tabindex="0" role="region" aria-label="層・役割・読む場所"><table><thead><tr><th scope="col">層</th><th scope="col">役割</th><th scope="col">読む場所</th></tr></thead><tbody><tr><th scope="row">HTML</th><td>Canvas・ボタン・操作説明・リンクを置く</td><td><code>&lt;body&gt;</code> の冒頭</td></tr><tr><th scope="row">CSS</th><td>表示サイズ、枠、走査線を整える</td><td><code>&lt;style&gt;</code></td></tr><tr><th scope="row">JavaScript</th><td>状態を更新し、絵と音を出す</td><td><code>&lt;script&gt;</code></td></tr></tbody></table></div>
 <h2 id="section-2">入力・状態・描画を分けて読む</h2>
 <ol class="flow"><li><strong>1. 入力</strong><small><code>keys</code> や <code>mouseX</code> を更新</small></li><li><strong>2. 計算</strong><small><code>update(dt)</code> が状態を進める</small></li><li><strong>3. 描画</strong><small><code>draw(t)</code> が画面を作る</small></li></ol>
 <p>例えば右キーを押すと、入力イベントが <code>keys.right</code> を true にします。<code>updatePlay()</code> がそれを読んで <code>player.x</code> を増やし、<code>drawGame()</code> が新しい座標に自機を描きます。入力イベントと描画の間にゲーム状態がある、と考えると読みやすくなります。</p>

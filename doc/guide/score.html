@@ -6,8 +6,8 @@
   <meta name="color-scheme" content="dark">
   <title>スコア・コンボ・残機 | ASTRO DEFENDER ソースコード解説</title>
   <meta name="description" content="撃破時の加点、2.2秒のコンボ猶予、残機の増加とハイスコア保存を追います。">
-  <link rel="stylesheet" href="../guide.css?v=20261009-3">
-  <script src="../guide.js?v=20261009-3" defer></script>
+  <link rel="stylesheet" href="../guide.css?v=20261009-4">
+  <script src="../guide.js?v=20261009-4" defer></script>
   <link rel="icon" href="../../favicon.ico" sizes="16x16 32x32 48x48">
   <link rel="icon" type="image/png" href="../../assets/icons/favicon-32.png" sizes="32x32">
   <link rel="apple-touch-icon" href="../../assets/icons/apple-touch-icon.png" sizes="180x180">
@@ -73,10 +73,10 @@
 <h2 id="section-1">撃破の処理は1か所に集める</h2>
 <p><code>killAlien()</code> は生存フラグを確認してから敵を消し、生存数を減らします。その後、ゲージ充電、コンボ更新、加点、粒子やリング、カプセル抽選、ヒットストップ、効果音をまとめて処理します。複数の弾が同じ敵を調べても、二重に得点しないための入口にもなっています。</p>
 <h2 id="section-2">上の段ほど多くつなぐ</h2>
-<figure class="code-block"><figcaption><span>game.html · L769–771</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L769-L771">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L769–771"><code>const COMBO_WINDOW = 2.2;
+<figure class="code-block"><figcaption><span>game.html · L773–775</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L773-L775">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L773–775"><code>const COMBO_WINDOW = 2.2;
 // ×2〜×8 に上がるのに必要な連続撃破数。上の段ほど多くつなぐ必要があり、×8 は 1 ウェーブをほぼ途切れずに撃ち続けた証になる。
 const COMBO_STEPS = [3, 7, 12, 18, 25, 33, 42];</code></pre></figure>
-<figure class="code-block"><figcaption><span>game.html · L964–974</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L964-L974">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L964–974"><code>function bumpCombo() {
+<figure class="code-block"><figcaption><span>game.html · L968–978</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L968-L978">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L968–978"><code>function bumpCombo() {
   combo.n++; combo.t = COMBO_WINDOW;
   let m = 1;
   while (m &lt;= COMBO_STEPS.length &amp;&amp; combo.n &gt;= COMBO_STEPS[m - 1]) m++;
@@ -90,9 +90,9 @@ const COMBO_STEPS = [3, 7, 12, 18, 25, 33, 42];</code></pre></figure>
 <p>撃破するたびに残り時間を <code>COMBO_WINDOW</code>、つまり2.2秒へ戻します。<code>COMBO_STEPS</code> は×2〜×8に上がるのに必要な連続撃破数で、3体で×2、7体で×3、12体で×4…42体で最大の×8になります。段が上がるほど必要な数が増えるので、×8は1ウェーブ（50体）をほとんど途切れずに撃ち続けたときだけ届きます。</p>
 <p><code>while</code> ループは、<code>combo.n</code> が届いている段の数だけ <code>m</code> を進めます。通常の敵の素点は上段30点、中段20点、下段10点。倍率を更新してから加点するので、3体目から新しい倍率が適用されます。コンボは被弾したとき、2.2秒の時間切れ、そして次のウェーブの開始時（<code>makeWave()</code> の <code>resetCombo()</code>）に×1へ戻ります。</p>
 <h2 id="section-3">10000点で1機、以降20000点ごとに残機を増やす</h2>
-<figure class="code-block"><figcaption><span>game.html · L768–768</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L768-L768">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L768–768"><code>const FIRST_LIFE = 10000, LIFE_STEP = 20000; // 1UP は 10000 点で 1 回、以降 20000 点ごと</code></pre></figure>
+<figure class="code-block"><figcaption><span>game.html · L772–772</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L772-L772">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L772–772"><code>const FIRST_LIFE = 10000, LIFE_STEP = 20000; // 1UP は 10000 点で 1 回、以降 20000 点ごと</code></pre></figure>
 <p>残機が増える点数は定数で決めています。最初は <code>FIRST_LIFE</code> の10000点、それ以降は <code>LIFE_STEP</code> の20000点ごとなので、10000点、30000点、50000点…で残機が1つ増えます。</p>
-<figure class="code-block"><figcaption><span>game.html · L937–949</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L937-L949">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L937–949"><code>function addScore(n) {
+<figure class="code-block"><figcaption><span>game.html · L941–953</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L941-L953">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L941–953"><code>function addScore(n) {
   score += n;
   if (score &gt; hi) { hi = score; newRecord = true; }
   while (score &gt;= nextLife) {
@@ -108,7 +108,7 @@ const COMBO_STEPS = [3, 7, 12, 18, 25, 33, 42];</code></pre></figure>
 <p>次の残機獲得ラインを <code>nextLife</code> で管理します。ゲーム開始時に <code>FIRST_LIFE</code> を入れておき、ラインを越えるたびに <code>LIFE_STEP</code> を足します。大きな加点で複数のラインをまたいでも処理できるよう <code>while</code> を使います。残機は最大5ですが、満タンでもライン自体は先へ進みます。</p>
 <p>「1UP!」の表示は画面中央ではなく y=430 に出します。中央付近 (y=244〜380) にはウェーブ開始の表示や「WAVE CLEAR!」「PERFECT!」、次のウェーブで始まる攻撃の予告が出るため、文字が重ならない高さにずらしています。</p>
 <h2 id="section-4">保存する値と表示する値</h2>
-<figure class="code-block"><figcaption><span>game.html · L935–935</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L935-L935">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L935–935"><code>function saveHi() { try { localStorage.setItem(HI_KEY, String(hi)); } catch (e) {} }</code></pre></figure>
+<figure class="code-block"><figcaption><span>game.html · L939–939</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L939-L939">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L939–939"><code>function saveHi() { try { localStorage.setItem(HI_KEY, String(hi)); } catch (e) {} }</code></pre></figure>
 <p>ハイスコアはゲームオーバー時に <code>localStorage</code> へ文字列として保存します。読み書きに失敗してもゲームを続けられるよう <code>try</code> / <code>catch</code> で囲っています。画面用の <code>scoreShown</code> は実際の <code>score</code> に少しずつ近づけ、数字が滑らかに増える演出に使います。</p>
 <aside class="exercise"><strong>確かめてみよう</strong><p><code>combo.n</code> が6と7のとき、<code>while</code> ループで <code>m</code> がいくつまで進むかを数え、×2と×3の境目を確かめてください。</p>
 </aside>

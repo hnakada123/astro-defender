@@ -6,8 +6,8 @@
   <meta name="color-scheme" content="dark">
   <title>自機の移動と入力 | ASTRO DEFENDER ソースコード解説</title>
   <meta name="description" content="ポインターとキーボードを共通の状態にまとめ、移動速度と連射を制御します。">
-  <link rel="stylesheet" href="../guide.css?v=20261009-3">
-  <script src="../guide.js?v=20261009-3" defer></script>
+  <link rel="stylesheet" href="../guide.css?v=20261009-4">
+  <script src="../guide.js?v=20261009-4" defer></script>
   <link rel="icon" href="../../favicon.ico" sizes="16x16 32x32 48x48">
   <link rel="icon" type="image/png" href="../../assets/icons/favicon-32.png" sizes="32x32">
   <link rel="apple-touch-icon" href="../../assets/icons/apple-touch-icon.png" sizes="180x180">
@@ -71,12 +71,12 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 08 自機の移動と入力</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 08 · 全23項目</p><h1>自機の移動と入力</h1><p class="lead">ポインターとキーボードを共通の状態にまとめ、移動速度と連射を制御します。</p><p class="source-ref">主な参照先：keys / mouseX / inputMode / releaseControls / updatePlay / LASER_MOVE</p></header>
 <h2 id="section-1">イベントでは操作を覚えておく</h2>
-<figure class="code-block"><figcaption><span>game.html · L1257–1259</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1257-L1259">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1257–1259"><code>function releaseControls() {
+<figure class="code-block"><figcaption><span>game.html · L1261–1263</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1261-L1263">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1261–1263"><code>function releaseControls() {
   shooting = false; keys.left = false; keys.right = false; keys.fire = false;
 }</code></pre></figure>
 <p>ポインター移動は目標位置 <code>mouseX</code>、左右キーは <code>keys.left</code> と <code>keys.right</code>、射撃は <code>shooting</code> または <code>keys.fire</code> に記録します。実際の移動と弾の生成は、毎フレームの <code>updatePlay()</code> が担当します。</p>
 <h2 id="section-2">どちらの入力も速度を通して動かす</h2>
-<figure class="code-block"><figcaption><span>game.html · L1555–1564</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1555-L1564">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1555–1564"><code>  // 合体レーザーの照射中は反動でマウス・キーボードとも LASER_MOVE まで遅くなる。
+<figure class="code-block"><figcaption><span>game.html · L1559–1568</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1559-L1568">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1559–1568"><code>  // 合体レーザーの照射中は反動でマウス・キーボードとも LASER_MOVE まで遅くなる。
   const lasing = special.laserT &gt; 0, speed = 340;
   if (inputMode === &quot;mouse&quot;) {
     const target = clampPlayerX(mouseX), step = (lasing ? LASER_MOVE : speed * 2) * dt;
