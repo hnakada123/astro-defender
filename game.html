@@ -1,0 +1,2107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ASTRO DEFENDER</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: radial-gradient(1200px 800px at 50% -200px, #131a3d, #05060f);
+    display: flex; flex-direction: column; align-items: center;
+    gap: 10px; font-family: ui-monospace, 'Courier New', monospace; color: #9fb4ff;
+  }
+  .frame {
+    position: relative; line-height: 0; border: 2px solid #33408a; border-radius: 12px;
+    padding: 8px; background: #020308;
+    box-shadow: 0 0 44px rgba(96,158,255,.30), 0 0 120px rgba(255,46,136,.12), inset 0 0 30px rgba(0,0,0,.8);
+    margin-top: auto; /* justify-content:center だとビューポートより高い時に上端が見切れるため */
+  }
+  canvas {
+    width: min(92vw, max(240px, calc(75dvh - 150px))); aspect-ratio: 3 / 4;
+    image-rendering: pixelated; background: #04050c; border-radius: 6px;
+    touch-action: none; user-select: none;
+  }
+  /* CRT風の走査線とビネット */
+  .frame::after {
+    content: ""; position: absolute; inset: 8px; border-radius: 6px; pointer-events: none;
+    background:
+      repeating-linear-gradient(to bottom, rgba(255,255,255,.03) 0 1px, transparent 1px 3px),
+      radial-gradient(ellipse at center, transparent 55%, rgba(0,0,10,.35));
+  }
+  .hint { font-size: 12px; letter-spacing: .08em; opacity: .75; line-height: 1.7; text-align: center; }
+  .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 0 12px; }
+  .actions > button { border: 1px solid #c5a3ff; border-radius: 7px; padding: 9px 14px; background: #15152f; color: #e4d8ff; font: bold 12px ui-monospace, monospace; cursor: pointer; touch-action: manipulation; }
+  .actions > button:disabled { opacity: .45; cursor: default; }
+  .actions button:focus-visible { outline: 2px solid #ffe066; outline-offset: 3px; }
+  .hint { max-width: 760px; padding: 0 10px 10px; }
+  .lang { display: flex; gap: 6px; }
+  .lang button { border: 1px solid #33408a; border-radius: 6px; padding: 5px 12px; background: #0d1024; color: #8fa0d8; font: bold 11px ui-monospace, monospace; letter-spacing: .06em; cursor: pointer; touch-action: manipulation; }
+  .lang button[aria-pressed="true"] { border-color: #7df9ff; background: #16213f; color: #eaffff; }
+</style>
+<link rel="icon" type="image/x-icon" href="favicon.ico?v=20261009-2" sizes="16x16 32x32 48x48"><link rel="icon" type="image/png" href="assets/icons/favicon-16.png?v=20261009-2" sizes="16x16"><link rel="icon" type="image/png" href="assets/icons/favicon-32.png?v=20261009-2" sizes="32x32"><link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=20261009-2" sizes="180x180"></head>
+<body>
+<div class="frame"><canvas id="game" width="480" height="640"></canvas></div>
+<div class="actions">
+  <button id="laserButton" type="button" disabled>Z 合体レーザー 0%</button>
+  <button id="bombButton" type="button" disabled>X ボム ×2</button>
+  <div class="lang" role="group" aria-label="Language / 言語">
+    <button id="langJa" type="button" aria-pressed="true">日本語</button>
+    <button id="langEn" type="button" aria-pressed="false">ENGLISH</button>
+  </div>
+</div>
+<p class="hint" id="hint"></p>
+
+<script>
+"use strict";
+
+/* ================= 基本ユーティリティ ================= */
+
+const VERSION = "1.0.1"; // セマンティック バージョニング。上げ方は README の「バージョン」を参照
+const W = 480, H = 640;
+const cvs = document.getElementById("game");
+const ctx = cvs.getContext("2d", { alpha: false }); // 毎フレーム全面を塗るので不透明にし、ページとの合成コストを下げる
+const laserButton = document.getElementById("laserButton");
+const bombButton = document.getElementById("bombButton");
+// ボタンに直前に書いた内容。同じなら DOM に書き込まない(毎フレームの textContent 更新はレイアウト再計算を招く)。
+const shownButtons = { laserOn: null, gauge: null, bombOn: null, bombs: null, lang: null };
+
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const rand = (a, b) => a + Math.random() * (b - a);
+const hit = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+const pad6 = n => String(n).padStart(6, "0");
+
+const HI_KEY = "astro-defender-hiscore";
+const MUTE_KEY = "astro-defender-muted";
+const LANG_KEY = "astro-defender-lang";
+
+/* ================= 表示言語 / Localization ================= */
+
+const STRINGS = {
+  ja: {
+    hint: [
+      "マウス移動: 自機を操作 ／ クリック（長押しで連射）: ショット ／ 落ちてくるカプセルでパワーアップ",
+      "W: 3方向ショット　R: 連射強化　S: シールド　B: ビーム砲連結（最大4門）",
+      "Z / 右クリック: 合体レーザー　X: ボム　強化選択: 1・2・3 / クリック",
+      "P: ポーズ ／ M: サウンド切替 ／ ← → ＋ スペースでも操作可",
+    ],
+    laserBtn: gauge => `Z 合体レーザー ${gauge}`,
+    bombBtn: n => `X ボム ×${n}`,
+    upgrades: {
+      beam: { name: "ビーム強化", detail: "連結ビームの貫通数・威力と合体レーザーを強化" },
+      speed: { name: "エンジン強化", detail: "移動速度 +15% / マウス・キーボード両対応" },
+      magnet: { name: "回収フィールド", detail: "カプセルを引き寄せる範囲を拡大" },
+      repair: { name: "緊急整備", detail: "残機 +1（最大5）/ 満タンなら +1000点" },
+      supply: { name: "防衛補給", detail: "ボム +1（最大3）とシールド / +300点" },
+      charge: { name: "エネルギー補給", detail: "合体レーザーを満充電 / +300点" },
+    },
+    bossCore: "中央コアを狙え！",
+    bossGuns: "BOSS / 左右の砲台を破壊せよ",
+    upgradePick: "1つ選んで出撃 / 強化はミスしても継続",
+    upgradeKeys: "クリック / 1・2・3 / ↑↓ + Enter",
+    upgradeLevels: (beam, speed, magnet) => `強化Lv.  ビーム ${beam}  速度 ${speed}  回収 ${magnet}`,
+    titleCombo: "連続撃破でコンボ倍率 ×8 まで上昇!",
+    titlePowerups: "W: 3方向  R: 連射  S: シールド",
+    titleBeam: "B: ビーム砲を左右に連結・最大4門 / ミスで解除",
+    titleStart: "クリック で スタート",
+    titleMove: "マウス移動で自機を操作 / 長押しで連射",
+    titleSpecial: "Z / 右クリック: 合体レーザー   X: ボム",
+    titleWave: "毎ウェーブ強化3択 / 5ウェーブごとにボス",
+    titleSystem: "P: ポーズ   M: サウンド切替",
+    clearNext: "次は強化を1つ選択",
+    retry: "クリックでもう一度",
+    resume: "P で再開",
+  },
+  en: {
+    hint: [
+      "Move the mouse to fly / Click (hold to auto-fire) to shoot / Grab falling capsules to power up",
+      "W: 3-way shot / R: rapid fire / S: shield / B: beam link (up to 4 cannons)",
+      "Z or right-click: link laser / X: bomb / Upgrade select: 1, 2, 3 or click",
+      "P: pause / M: toggle sound / Arrow keys + Space also work",
+    ],
+    laserBtn: gauge => `Z LINK LASER ${gauge}`,
+    bombBtn: n => `X BOMB ×${n}`,
+    upgrades: {
+      beam: { name: "BEAM UPGRADE", detail: "More link-beam pierce and power / stronger link laser" },
+      speed: { name: "ENGINE UPGRADE", detail: "Move speed +15% / works with mouse and keyboard" },
+      magnet: { name: "MAGNET FIELD", detail: "Widens the range that pulls capsules in" },
+      repair: { name: "EMERGENCY REPAIR", detail: "Life +1 (max 5) / +1000 pts when already full" },
+      supply: { name: "DEFENSE SUPPLY", detail: "Bomb +1 (max 3) and a shield / +300 pts" },
+      charge: { name: "ENERGY CHARGE", detail: "Fills the link laser gauge / +300 pts" },
+    },
+    bossCore: "AIM FOR THE CORE!",
+    bossGuns: "BOSS / DESTROY BOTH TURRETS",
+    upgradePick: "PICK ONE AND LAUNCH / UPGRADES SURVIVE A MISS",
+    upgradeKeys: "CLICK / 1 2 3 / ↑↓ + ENTER",
+    upgradeLevels: (beam, speed, magnet) => `UPGRADE Lv.  BEAM ${beam}  SPEED ${speed}  MAGNET ${magnet}`,
+    titleCombo: "CHAIN YOUR KILLS FOR A COMBO UP TO ×8!",
+    titlePowerups: "W: 3-WAY  R: RAPID  S: SHIELD",
+    titleBeam: "B: LINK UP TO 4 BEAM CANNONS / LOST ON A MISS",
+    titleStart: "CLICK TO START",
+    titleMove: "MOVE THE MOUSE TO FLY / HOLD TO AUTO-FIRE",
+    titleSpecial: "Z / RIGHT-CLICK: LINK LASER   X: BOMB",
+    titleWave: "1 OF 3 UPGRADES PER WAVE / BOSS EVERY 5 WAVES",
+    titleSystem: "P: PAUSE   M: TOGGLE SOUND",
+    clearNext: "CHOOSE AN UPGRADE NEXT",
+    retry: "CLICK TO PLAY AGAIN",
+    resume: "PRESS P TO RESUME",
+  },
+};
+
+function detectLang() {
+  try {
+    const saved = localStorage.getItem(LANG_KEY);
+    if (Object.hasOwn(STRINGS, saved)) return saved;
+  } catch (e) {}
+  const tag = typeof navigator !== "undefined" ? String(navigator.language || "") : "";
+  return tag.toLowerCase().startsWith("ja") ? "ja" : "en";
+}
+
+let lang = detectLang();
+
+// 引数を取る文言は関数で持ち、T() が呼び出しまで面倒を見る。
+function T(key, ...args) {
+  const v = STRINGS[lang][key];
+  return typeof v === "function" ? v(...args) : v;
+}
+
+function upgradeText(key) { return STRINGS[lang].upgrades[key]; }
+
+function drawTextOn(g, s, x, y, o = {}) {
+  g.font = `${o.weight || 700} ${o.size || 13}px 'Courier New', ui-monospace, monospace`;
+  g.fillStyle = o.color || "#cfd8ff";
+  g.textAlign = o.align || "center";
+  g.textBaseline = "alphabetic";
+  g.fillText(s, x, y);
+}
+
+function drawText(s, x, y, o) { drawTextOn(ctx, s, x, y, o); }
+
+/* ================= サウンド（Web Audio 合成・全て自作） ================= */
+
+let actx = null;
+let muted = false;
+try { muted = localStorage.getItem(MUTE_KEY) === "1"; } catch (e) {}
+
+function ac() {
+  if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+  if (actx.state === "suspended") actx.resume();
+  return actx;
+}
+
+function beep({ f0 = 440, f1 = f0, dur = 0.1, type = "square", vol = 0.12, delay = 0 }) {
+  if (muted) return;
+  try {
+    const a = ac(), t = a.currentTime + delay;
+    const o = a.createOscillator(), g = a.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(f0, t);
+    o.frequency.exponentialRampToValueAtTime(Math.max(f1, 1), t + dur);
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(a.destination);
+    o.start(t); o.stop(t + dur + 0.02);
+  } catch (e) {}
+}
+
+function boom(dur = 0.35, vol = 0.25, fc = 700) {
+  if (muted) return;
+  try {
+    // 共有ノイズバッファを再生し、減衰はゲインで付ける(以前は呼ぶたびに乱数でバッファを作っていた)。
+    const a = ac(), t = a.currentTime;
+    const n = a.createBufferSource(); n.buffer = ensureNoise(a); n.loop = true;
+    const f = a.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = fc;
+    const g = a.createGain();
+    g.gain.setValueAtTime(vol, t);
+    g.gain.linearRampToValueAtTime(0, t + dur);
+    n.connect(f); f.connect(g); g.connect(a.destination);
+    n.start(t); n.stop(t + dur);
+  } catch (e) {}
+}
+
+let saucerOsc = null;
+function saucerSoundStart() {
+  if (muted || saucerOsc) return;
+  try {
+    const a = ac();
+    const o = a.createOscillator(), g = a.createGain();
+    const l = a.createOscillator(), lg = a.createGain();
+    o.type = "triangle"; o.frequency.value = 520;
+    l.type = "sine"; l.frequency.value = 9;
+    lg.gain.value = 90;
+    l.connect(lg); lg.connect(o.frequency);
+    g.gain.value = 0.04;
+    o.connect(g); g.connect(a.destination);
+    o.start(); l.start();
+    saucerOsc = { o, l, g };
+  } catch (e) {}
+}
+function saucerSoundStop() {
+  if (!saucerOsc) return;
+  try {
+    const t = actx.currentTime;
+    saucerOsc.g.gain.setTargetAtTime(0.0001, t, 0.03);
+    saucerOsc.o.stop(t + 0.15); saucerOsc.l.stop(t + 0.15);
+  } catch (e) {}
+  saucerOsc = null;
+}
+
+const sfx = {
+  shoot: () => beep({ f0: 900, f1: 240, dur: 0.09, type: "square", vol: 0.09 }),
+  beam: () => beep({ f0: 1500, f1: 360, dur: 0.13, type: "triangle", vol: 0.08 }),
+  alien: () => { boom(0.14, 0.15, 1300); beep({ f0: 320, f1: 60, dur: 0.1, type: "sawtooth", vol: 0.08 }); },
+  player: () => { boom(0.55, 0.3, 500); beep({ f0: 220, f1: 40, dur: 0.45, type: "sawtooth", vol: 0.14 }); },
+  spark: () => beep({ f0: 1300, f1: 500, dur: 0.05, type: "square", vol: 0.06 }),
+  saucerKill: () => [660, 880, 1150].forEach((f, i) => beep({ f0: f, dur: 0.09, type: "square", vol: 0.11, delay: i * 0.07 })),
+  oneUp: () => [523, 659, 784, 1046].forEach((f, i) => beep({ f0: f, dur: 0.09, type: "triangle", vol: 0.13, delay: i * 0.08 })),
+  clear: () => [392, 523, 659, 784].forEach((f, i) => beep({ f0: f, dur: 0.11, type: "square", vol: 0.1, delay: i * 0.09 })),
+  perfect: () => [660, 880, 990, 1320].forEach((f, i) => beep({ f0: f, dur: 0.1, type: "triangle", vol: 0.12, delay: i * 0.07 })),
+  over: () => beep({ f0: 300, f1: 70, dur: 0.9, type: "triangle", vol: 0.14 }),
+  step: alt => beep({ f0: alt ? 84 : 66, dur: 0.06, type: "square", vol: 0.045 }),
+  tier: m => beep({ f0: 420 + m * 90, f1: 780 + m * 90, dur: 0.09, type: "square", vol: 0.1 }),
+  pickup: () => [740, 1180].forEach((f, i) => beep({ f0: f, dur: 0.07, type: "square", vol: 0.11, delay: i * 0.06 })),
+  shieldBreak: () => { boom(0.25, 0.2, 900); beep({ f0: 900, f1: 200, dur: 0.22, type: "sawtooth", vol: 0.1 }); },
+};
+
+/* ================= BGM（シンセウェイブ風・リアルタイム合成） ================= */
+
+const music = { timer: null, next: 0, step: 0 };
+const BPM = 112, MSTEP = 60 / BPM / 2; // 8分音符
+const CHORDS = [110, 87.31, 130.81, 98];      // A2 F2 C3 G2
+const LEADS = [440, 349.23, 523.25, 392];
+let noiseBuf = null;
+
+function ensureNoise(a) { // 効果音と BGM で共有する 1 秒分のホワイトノイズ
+  if (noiseBuf) return noiseBuf;
+  const len = a.sampleRate | 0;
+  noiseBuf = a.createBuffer(1, len, a.sampleRate);
+  const d = noiseBuf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  return noiseBuf;
+}
+
+function mnote(type, f0, f1, t, dur, vol, fc) {
+  if (muted) return;
+  try {
+    const a = actx;
+    const o = a.createOscillator(), g = a.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(f0, t);
+    if (f1) o.frequency.exponentialRampToValueAtTime(Math.max(f1, 1), t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    let n = o;
+    if (fc) { const f = a.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = fc; o.connect(f); n = f; }
+    n.connect(g); g.connect(a.destination);
+    o.start(t); o.stop(t + dur + 0.03);
+  } catch (e) {}
+}
+
+function mnoise(t, dur, vol, ftype, ffreq) {
+  if (muted) return;
+  try {
+    const a = actx, s = a.createBufferSource();
+    s.buffer = ensureNoise(a); s.loop = true;
+    const f = a.createBiquadFilter(); f.type = ftype; f.frequency.value = ffreq;
+    const g = a.createGain();
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    s.connect(f); f.connect(g); g.connect(a.destination);
+    s.start(t); s.stop(t + dur + 0.02);
+  } catch (e) {}
+}
+
+function scheduleStep(i, t) {
+  const bar = (i >> 3) & 3;
+  const inPlay = state === "play" || state === "dying" || state === "clear";
+  mnote("sawtooth", CHORDS[bar] * (i % 2 ? 2 : 1), null, t, MSTEP * 0.9, 0.04, 520);
+  if (i % 4 === 0) mnote("sine", 130, 44, t, 0.11, inPlay ? 0.1 : 0.06);
+  if (inPlay) {
+    if (i % 2 === 1) mnoise(t, 0.03, 0.015, "highpass", 7000);
+    if (i % 8 === 4) mnoise(t, 0.1, 0.03, "bandpass", 1900);
+    if (i % 4 === 2) mnote("triangle", LEADS[bar] * ((i >> 3) % 2 ? 1 : 0.5), null, t, MSTEP * 1.6, 0.026);
+  }
+}
+
+function musicTick() {
+  if (!actx) return;
+  while (music.next < actx.currentTime + 0.16) {
+    if (music.next < actx.currentTime) music.next = actx.currentTime + 0.05;
+    scheduleStep(music.step, music.next);
+    music.step = (music.step + 1) % 32;
+    music.next += MSTEP;
+  }
+}
+function musicStart() {
+  if (music.timer || muted || !actx) return;
+  music.next = actx.currentTime + 0.06;
+  music.timer = setInterval(musicTick, 50);
+}
+function musicStop() {
+  if (music.timer) { clearInterval(music.timer); music.timer = null; }
+}
+
+/* ================= ドット絵スプライト（全て本作オリジナルのデザイン） ================= */
+
+function makeSprite(rows, color, scale = 2) {
+  const c = document.createElement("canvas");
+  c.width = rows[0].length * scale;
+  c.height = rows.length * scale;
+  const g = c.getContext("2d");
+  g.fillStyle = color;
+  rows.forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) if (row[x] === "X") g.fillRect(x * scale, y * scale, scale, scale);
+  });
+  return c;
+}
+
+const CAN_FILTER = (() => {
+  const g = document.createElement("canvas").getContext("2d");
+  return typeof g.filter === "string";
+})();
+
+function withGlow(img, blur = 3, alpha = 0.85) {
+  const pad = blur * 3;
+  const c = document.createElement("canvas");
+  c.width = img.width + pad * 2;
+  c.height = img.height + pad * 2;
+  const g = c.getContext("2d");
+  if (CAN_FILTER) {
+    g.filter = `blur(${blur}px)`;
+    g.globalAlpha = alpha;
+    g.drawImage(img, pad, pad);
+    g.filter = "none";
+  } else {
+    g.globalAlpha = alpha / 6;
+    for (let dx = -blur; dx <= blur; dx += blur)
+      for (let dy = -blur; dy <= blur; dy += blur) g.drawImage(img, pad + dx, pad + dy);
+  }
+  return { img: c, pad };
+}
+
+function glowDot(hex, r) {
+  const c = document.createElement("canvas");
+  c.width = c.height = r * 2;
+  const g = c.getContext("2d");
+  const gr = g.createRadialGradient(r, r, 0, r, r, r);
+  gr.addColorStop(0, hex + "dd");
+  gr.addColorStop(0.5, hex + "55");
+  gr.addColorStop(1, hex + "00");
+  g.fillStyle = gr;
+  g.fillRect(0, 0, r * 2, r * 2);
+  return c;
+}
+
+function makeTrail(hex, w, h, brightAtTop) {
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  const g = c.getContext("2d");
+  const gr = g.createLinearGradient(0, 0, 0, h);
+  gr.addColorStop(brightAtTop ? 0 : 1, hex + "99");
+  gr.addColorStop(brightAtTop ? 1 : 0, hex + "00");
+  g.fillStyle = gr;
+  g.fillRect(0, 0, w, h);
+  return c;
+}
+
+// shadowBlur 付きの描画は毎フレーム行うと重いので、形が変わらないものは一度だけ画像にしておく。
+function prerender(w, h, paint, opts) {
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  paint(c.getContext("2d", opts));
+  return c;
+}
+
+function makeNebula(hex, r) {
+  const c = document.createElement("canvas");
+  c.width = c.height = r * 2;
+  const g = c.getContext("2d");
+  const gr = g.createRadialGradient(r, r, 0, r, r, r);
+  gr.addColorStop(0, hex + "66");
+  gr.addColorStop(1, hex + "00");
+  g.fillStyle = gr;
+  g.fillRect(0, 0, r * 2, r * 2);
+  return c;
+}
+
+const TYPES = {
+  a: { // トゲ型エイリアン
+    pts: 30, color: "#ff6ad5",
+    frames: [[
+      ".X..XX..X.",
+      "..X.XX.X..",
+      ".XXXXXXXX.",
+      "XXX.XX.XXX",
+      "XXXXXXXXXX",
+      ".XXXXXXXX.",
+      "..X....X..",
+      ".X......X.",
+    ], [
+      "X...XX...X",
+      ".X..XX..X.",
+      ".XXXXXXXX.",
+      "XXX.XX.XXX",
+      "XXXXXXXXXX",
+      ".XXXXXXXX.",
+      "..X....X..",
+      "...X..X...",
+    ]],
+  },
+  b: { // まる型エイリアン
+    pts: 20, color: "#61e8ff",
+    frames: [[
+      "...XXXXXX...",
+      "..XXXXXXXX..",
+      ".XXX.XX.XXX.",
+      "XXXX.XX.XXXX",
+      "X.XXXXXXXX.X",
+      "X.XXXXXXXX.X",
+      "...XX..XX...",
+      "..X......X..",
+    ], [
+      "...XXXXXX...",
+      "..XXXXXXXX..",
+      ".XXX.XX.XXX.",
+      "XXXX.XX.XXXX",
+      "X.XXXXXXXX.X",
+      "X.XXXXXXXX.X",
+      "..XX....XX..",
+      "....X..X....",
+    ]],
+  },
+  c: { // カブトムシ型エイリアン
+    pts: 10, color: "#7dff7a",
+    frames: [[
+      "..X......X..",
+      "X..X....X..X",
+      "X.XXXXXXXX.X",
+      "XXXX.XX.XXXX",
+      ".XXXXXXXXXX.",
+      "..XXXXXXXX..",
+      ".X.X....X.X.",
+      "X...X..X...X",
+    ], [
+      "..X......X..",
+      ".X.X....X.X.",
+      "X.XXXXXXXX.X",
+      "XXXX.XX.XXXX",
+      ".XXXXXXXXXX.",
+      "..XXXXXXXX..",
+      "..X.X..X.X..",
+      ".X...XX...X.",
+    ]],
+  },
+};
+for (const k in TYPES) {
+  const t = TYPES[k];
+  t.img = t.frames.map(f => makeSprite(f, t.color));
+  t.glow = t.img.map(im => withGlow(im, 3, 0.8));
+  t.w = t.img[0].width;
+  t.h = t.img[0].height;
+}
+
+const SHIP_IMG = makeSprite([
+  "......X......",
+  "......X......",
+  ".....XXX.....",
+  ".....XXX.....",
+  ".X..XXXXX..X.",
+  ".XX.XXXXX.XX.",
+  ".XXXXXXXXXXX.",
+  "XXXXXXXXXXXXX",
+], "#c8f7ff");
+const SHIP_GLOW = withGlow(SHIP_IMG, 4, 0.9);
+
+const BEAM_COLOR = "#c5a3ff";
+const CANNON_IMG = makeSprite([
+  "..X..",
+  "..X..",
+  ".XXX.",
+  ".XXX.",
+  "XXXXX",
+  "XX.XX",
+  "XXXXX",
+  ".XXX.",
+  "..X..",
+], BEAM_COLOR);
+const CANNON_GLOW = withGlow(CANNON_IMG, 3, 0.9);
+const BEAM_GLOW = glowDot(BEAM_COLOR, 15);
+const BEAM_TRAIL = makeTrail(BEAM_COLOR, 8, 42, true);
+
+const SAUCER_IMG = makeSprite([
+  ".....XXXXXX.....",
+  "...XX.XXXX.XX...",
+  "..XXXXXXXXXXXX..",
+  ".XX.XX.XX.XX.XX.",
+  "XXXXXXXXXXXXXXXX",
+  "..XX...XX...XX..",
+  "....X......X....",
+], "#ffb454");
+const SAUCER_GLOW = withGlow(SAUCER_IMG, 4, 0.9);
+
+const P_GLOW = glowDot("#7df9ff", 9);
+const E_GLOW = glowDot("#ffd24d", 8);
+const P_TRAIL = makeTrail("#7df9ff", 4, 26, true);
+const E_TRAIL = makeTrail("#ffd24d", 4, 20, false);
+
+// タイトルロゴ: 光彩層と文字層に分け、光彩層の透明度を揺らして脈動させる。
+const TITLE_LOGO_Y = 80; // ロゴ画像を置くキャンバス上の y
+function paintTitleLogo(g, glow) {
+  const y = -TITLE_LOGO_Y;
+  try { g.letterSpacing = "8px"; } catch (e) {}
+  if (glow) { g.shadowColor = "#7df9ff"; g.shadowBlur = 20; }
+  drawTextOn(g, "ASTRO", W / 2 + 3, 149 + y, { size: 54, color: "#ff2e88", weight: 900 });
+  drawTextOn(g, "ASTRO", W / 2, 146 + y, { size: 54, color: "#7df9ff", weight: 900 });
+  if (glow) g.shadowColor = "#ff2e88";
+  drawTextOn(g, "DEFENDER", W / 2 + 2, 194 + y, { size: 31, color: "#7df9ff", weight: 900 });
+  drawTextOn(g, "DEFENDER", W / 2, 192 + y, { size: 31, color: "#ffffff", weight: 900 });
+}
+const TITLE_GLOW = prerender(W, 160, g => paintTitleLogo(g, true));
+const TITLE_TEXT = prerender(W, 160, g => {
+  paintTitleLogo(g, false);
+  try { g.letterSpacing = "3px"; } catch (e) {}
+  drawTextOn(g, "- NEON ARCADE EDITION -", W / 2, 222 - TITLE_LOGO_Y, { size: 11, color: "#ff6ad5" });
+});
+
+const GAMEOVER_Y = 194;
+const GAMEOVER_TEXT = prerender(W, 80, g => {
+  g.shadowColor = "#ff4d6d"; g.shadowBlur = 16;
+  drawTextOn(g, "GAME OVER", W / 2, 244 - GAMEOVER_Y, { size: 40, color: "#ff4d6d", weight: 900 });
+});
+
+// ボスの船体(砲台とコアは毎フレーム描く)。原点は船体中心で、光彩のはみ出し分を余白に取る。
+const BOSS_HULL_PAD = 24;
+const BOSS_HULL = prerender(160 + BOSS_HULL_PAD * 2, 48 + BOSS_HULL_PAD * 2, g => {
+  g.translate(80 + BOSS_HULL_PAD, 8 + BOSS_HULL_PAD);
+  g.shadowColor = "#ff6ad5"; g.shadowBlur = 14;
+  g.fillStyle = "#35294c"; g.strokeStyle = "#c5a3ff"; g.lineWidth = 2;
+  g.beginPath();
+  g.moveTo(-80, 32); g.lineTo(-65, 4); g.lineTo(-26, 4); g.lineTo(-18, -8);
+  g.lineTo(18, -8); g.lineTo(26, 4); g.lineTo(65, 4); g.lineTo(80, 32);
+  g.lineTo(62, 40); g.lineTo(-62, 40); g.closePath(); g.fill(); g.stroke();
+});
+
+// 合体レーザーの光彩付きの柱。幅ごとに一度だけ短い柱を描いておき、上下の端(光彩のはみ出し)はそのまま、
+// 中央の帯だけを縦に引き伸ばして任意の長さにする。
+const LASER_BLUR = 20, LASER_CAP = 70, LASER_BAND = 20, laserStrips = new Map();
+function laserStrip(width) {
+  let strip = laserStrips.get(width);
+  if (strip) return strip;
+  const w = Math.ceil(width + 10 + LASER_BLUR * 4), h = LASER_CAP * 2 + LASER_BAND, y0 = LASER_BLUR * 2, hh = h - y0 * 2;
+  strip = prerender(w, h, g => {
+    const x = w / 2;
+    g.globalCompositeOperation = "lighter";
+    g.shadowColor = BEAM_COLOR; g.shadowBlur = LASER_BLUR;
+    g.fillStyle = "#b792ff66"; g.fillRect(x - width / 2 - 5, y0, width + 10, hh);
+    g.fillStyle = "#d2afffcc"; g.fillRect(x - width / 2, y0, width, hh);
+    g.fillStyle = "#ffffff"; g.fillRect(x - width * 0.2, y0, width * 0.4, hh);
+  });
+  laserStrips.set(width, strip);
+  return strip;
+}
+
+function drawLaserColumn(strip, cx, top, bottom) {
+  const w = strip.width, x = cx - w / 2, y0 = LASER_BLUR * 2, cap = LASER_CAP - y0;
+  ctx.drawImage(strip, 0, 0, w, LASER_CAP, x, top - y0, w, LASER_CAP);
+  ctx.drawImage(strip, 0, LASER_CAP, w, LASER_BAND, x, top + cap, w, bottom - top - cap * 2);
+  ctx.drawImage(strip, 0, LASER_CAP + LASER_BAND, w, LASER_CAP, x, bottom - cap, w, LASER_CAP);
+}
+
+const NEBULAE = [
+  { img: makeNebula("#4b2d8f", 170), x: 90, y: 150, dx: 40, dy: 24, ph: 0 },
+  { img: makeNebula("#0e5d84", 200), x: 380, y: 300, dx: 55, dy: 30, ph: 2.1 },
+  { img: makeNebula("#8f2d6e", 150), x: 230, y: 480, dx: 45, dy: 20, ph: 4.2 },
+];
+
+/* ================= ゲーム状態 ================= */
+
+const ROWS = 5, COLS = 10, CELL_W = 36, CELL_H = 30, DROP = 14;
+const ROW_TYPE = ["a", "b", "b", "c", "c"];
+const TOTAL = ROWS * COLS;
+const GROUND_Y = H - 26;
+const PLAYER_Y = H - 60;
+const STAR_COLORS = ["#39456e", "#6f83c9", "#bcd0ff"];
+const DASH_WARNING = [8, 6], DASH_NONE = [];
+const LIFE_STEP = 5000;
+const COMBO_WINDOW = 2.2;
+const MULT_COLORS = ["#cfd8ff", "#7df9ff", "#7dff7a", "#ffe066", "#ff9a5c", "#ff6ad5", "#ff4d6d", "#ff2e88"];
+const BEAM_OFFSETS = [-24, 24, -42, 42];
+const LASER_MAX = 100, BOMB_MAX = 3, BOMB_RADIUS = 240;
+const UPGRADE_DEFS = {
+  beam: { color: BEAM_COLOR, max: 5 },
+  speed: { color: "#61e8ff", max: 5 },
+  magnet: { color: "#7dff7a", max: 5 },
+  repair: { color: "#ff9a5c" },
+  supply: { color: "#ffe066" },
+  charge: { color: "#ff6ad5" },
+};
+
+const PU_DEFS = {
+  wide: { label: "W", color: "#61e8ff", dur: 8, name: "3-WAY!" },
+  rapid: { label: "R", color: "#ffe066", dur: 8, name: "RAPID!" },
+  shield: { label: "S", color: "#7dff7a", dur: 0, name: "SHIELD!" },
+  beam: { label: "B", color: BEAM_COLOR, dur: 0, name: "BEAM LINK", max: BEAM_OFFSETS.length },
+};
+for (const k in PU_DEFS) PU_DEFS[k].glowImg = glowDot(PU_DEFS[k].color, 14);
+
+let state = "title";       // title | play | dying | clear | upgrade | gameover
+let stateT = 0;
+let paused = false;
+
+let score = 0, scoreShown = 0, wave = 1, lives = 3, nextLife = LIFE_STEP;
+let newRecord = false, maxMult = 1, waveNoDamage = true, perfectBonus = 0;
+let hi = 0;
+try { hi = +(localStorage.getItem(HI_KEY) || 0) || 0; } catch (e) {}
+
+const player = { x: W / 2, alive: true, cool: 0, inv: 0 };
+let mouseX = W / 2, inputMode = "mouse", shooting = false;
+const keys = { left: false, right: false, fire: false };
+
+let aliens = [], aliveN = 0;
+const form = { ox: 60, oy: 96, dir: 1, anim: 0, animT: 0 };
+let fireT = 1.5, bannerT = 0, freezeT = 0;
+let pBullets = [], eBullets = [];
+let saucer = null, saucerT = 15;
+let barriers = [], particles = [], popups = [], rings = [], powerups = [];
+const combo = { n: 0, t: 0, mult: 1 };
+const active = { wide: 0, rapid: 0, shield: 0, beam: 0 };
+const upgrades = { beam: 0, speed: 0, magnet: 0 };
+const special = { charge: 0, laserT: 0, laserW: 0, laserDps: 0, bombs: 2, bombT: 0 };
+let boss = null, flightT = 6, flightCount = 0;
+let upgradeChoices = [], upgradeIndex = 0;
+let shake = 0;
+
+const starLayers = [0, 1, 2].map(l => Array.from({ length: [36, 26, 14][l] }, () => ({
+  x: Math.random() * W, y: Math.random() * H,
+  sp: [6, 14, 26][l], size: l === 2 ? 2 : 1,
+  tw: Math.random() * 6.28,
+})));
+
+const HORIZON_GLOW = ctx.createLinearGradient(0, GROUND_Y - 14, 0, GROUND_Y);
+HORIZON_GLOW.addColorStop(0, "#2f9e5f00");
+HORIZON_GLOW.addColorStop(1, "#2f9e5f66");
+
+function setState(s) {
+  state = s; stateT = 0;
+  cvs.style.cursor = (s === "play" && !paused) ? "none" : "pointer";
+}
+
+function setPaused(v) {
+  paused = v;
+  if (paused) releaseControls();
+  cvs.style.cursor = (state === "play" && !paused) ? "none" : "pointer";
+  if (paused) { saucerSoundStop(); musicStop(); }
+  else {
+    if (saucer && state === "play") saucerSoundStart();
+    musicStart();
+    ensureLoop();
+  }
+}
+
+function playerRect() { return { x: player.x - 13, y: PLAYER_Y, w: 26, h: 16 }; }
+
+function clampPlayerX(x) {
+  // 連結砲も画面内に収める。当たり判定は自機本体のみ。
+  const margin = active.beam > 0 ? Math.abs(BEAM_OFFSETS[active.beam - 1]) + 8 : 20;
+  return clamp(x, margin, W - margin);
+}
+
+// 毎フレーム何百回も呼ぶ当たり判定では SCRATCH に書き込んで使い回し、オブジェクト生成(GC 負荷)を避ける。
+// SCRATCH の中身は次の alienRectInto 呼び出しで上書きされるので、保持せずその場で使い切ること。
+const SCRATCH = { x: 0, y: 0, w: 0, h: 0 };
+function alienRectInto(a, out) {
+  const t = TYPES[a.type];
+  if (a.flight) { out.x = a.flight.x; out.y = a.flight.y; }
+  else { out.x = form.ox + a.c * CELL_W + (CELL_W - t.w) / 2; out.y = form.oy + a.r * CELL_H; }
+  out.w = t.w; out.h = t.h;
+  return out;
+}
+function alienRect(a) { return alienRectInto(a, { x: 0, y: 0, w: 0, h: 0 }); }
+
+function makeBarriers() {
+  barriers = [];
+  const cols = 14, rows = 10, cell = 4, bw = cols * cell;
+  for (let i = 0; i < 4; i++) {
+    const x = (W * (i + 1)) / 5 - bw / 2, y = H - 150;
+    const g = [];
+    for (let r = 0; r < rows; r++) {
+      const line = [];
+      for (let c = 0; c < cols; c++) {
+        let solid = 1;
+        const cut = 4 - r; // 上部の角を斜めに落としたアーチ形
+        if (cut > 0 && (c < cut || c >= cols - cut)) solid = 0;
+        if (r >= rows - 3 && c >= 4 && c < cols - 4) solid = 0; // 下の切り欠き
+        line.push(solid);
+      }
+      g.push(line);
+    }
+    barriers.push({ x, y, w: bw, h: rows * cell, cell, cols, rows, g });
+  }
+}
+
+function makeWave() {
+  aliens = [];
+  boss = null;
+  if (wave % 5 === 0) makeBoss();
+  else {
+    for (let r = 0; r < ROWS; r++)
+      for (let c = 0; c < COLS; c++)
+        aliens.push({ r, c, type: ROW_TYPE[r], alive: true });
+  }
+  aliveN = aliens.length;
+  form.ox = 60;
+  form.oy = 96 + Math.min(wave - 1, 5) * 10;
+  form.dir = 1; form.anim = 0; form.animT = 0;
+  pBullets = []; eBullets = []; particles = []; popups = []; rings = []; powerups = [];
+  saucer = null; saucerSoundStop(); saucerT = rand(10, 20);
+  fireT = 1.5; bannerT = 1.3; freezeT = 0;
+  waveNoDamage = true; perfectBonus = 0;
+  player.alive = true; player.inv = 1.5; player.cool = 0;
+  special.laserT = 0; special.bombT = 0;
+  flightT = 6; flightCount = 0; upgradeChoices = [];
+  makeBarriers();
+}
+
+function startGame() {
+  score = 0; scoreShown = 0; wave = 1; lives = 3; nextLife = LIFE_STEP;
+  newRecord = false; maxMult = 1;
+  active.wide = 0; active.rapid = 0; active.shield = 0; active.beam = 0;
+  upgrades.beam = 0; upgrades.speed = 0; upgrades.magnet = 0;
+  special.charge = 0; special.bombs = 2;
+  paused = false; releaseControls();
+  resetCombo();
+  makeWave();
+  setState("play");
+}
+
+function saveHi() { try { localStorage.setItem(HI_KEY, String(hi)); } catch (e) {} }
+
+function addScore(n) {
+  score += n;
+  if (score > hi) { hi = score; newRecord = true; }
+  while (score >= nextLife) {
+    nextLife += LIFE_STEP;
+    if (lives < 5) {
+      lives++;
+      popup(W / 2, H / 2 - 40, "1UP!", "#ffe066", 20);
+      sfx.oneUp();
+    }
+  }
+}
+
+function gameOver() {
+  player.alive = false;
+  special.laserT = 0; releaseControls();
+  saucerSoundStop();
+  saveHi();
+  sfx.over();
+  setState("gameover");
+}
+
+/* ================= コンボ・パワーアップ ================= */
+
+function resetCombo() { combo.n = 0; combo.t = 0; combo.mult = 1; }
+
+function bumpCombo() {
+  combo.n++; combo.t = COMBO_WINDOW;
+  const m = Math.min(8, 1 + Math.floor(combo.n / 4));
+  if (m > combo.mult) {
+    combo.mult = m;
+    maxMult = Math.max(maxMult, m);
+    popup(player.x, PLAYER_Y - 34, `COMBO ×${m}`, MULT_COLORS[m - 1], 13);
+    sfx.tier(m);
+  }
+}
+
+function maybeDrop(x, y) {
+  if (Math.random() > 0.08 || powerups.length >= 2) return;
+  const ks = Object.keys(PU_DEFS);
+  powerups.push({ x, y, type: ks[(Math.random() * ks.length) | 0], ph: Math.random() * 6.28 });
+}
+
+function applyPU(type) {
+  const d = PU_DEFS[type];
+  let name = d.name;
+  if (type === "shield") active.shield = 1;
+  else if (type === "beam") {
+    const wasMax = active.beam === d.max;
+    active.beam = Math.min(d.max, active.beam + 2);
+    player.x = clampPlayerX(player.x);
+    name = wasMax ? "BEAM LINK MAX!" : `${d.name} ×${active.beam}!`;
+    spawnRing(player.x, PLAYER_Y + 8, d.color, 180, 0.35);
+  }
+  else active[type] = d.dur;
+  popup(player.x, PLAYER_Y - 24, name, d.color, 13);
+  sfx.pickup();
+}
+
+/* ================= 必殺技・ウェーブ強化 ================= */
+
+function gainCharge(n) {
+  if (special.laserT > 0) return; // レーザー自身の撃破では再充電しない。
+  const before = special.charge;
+  special.charge = Math.min(LASER_MAX, special.charge + n);
+  if (before < LASER_MAX && special.charge === LASER_MAX) {
+    popup(W / 2, PLAYER_Y - 60, "LASER READY! [Z]", BEAM_COLOR, 16);
+    sfx.pickup();
+  }
+}
+
+function canUseSpecial() { return state === "play" && !paused && player.alive && bannerT <= 0; }
+
+function activateLaser() {
+  if (!canUseSpecial() || special.charge < LASER_MAX || special.laserT > 0) return false;
+  special.charge = 0;
+  special.laserT = 1.2;
+  special.laserW = 14 + active.beam * 10 + upgrades.beam * 3;
+  special.laserDps = 20 + active.beam * 8 + upgrades.beam * 4;
+  shake = 0.18;
+  beep({ f0: 180, f1: 1800, dur: 0.7, type: "sawtooth", vol: 0.1 });
+  return true;
+}
+
+function activateBomb() {
+  if (!canUseSpecial() || special.bombs <= 0 || special.bombT > 0) return false;
+  special.bombs--; special.bombT = 0.65;
+  player.inv = Math.max(player.inv, 1.6);
+  eBullets = [];
+  spawnRing(player.x, PLAYER_Y, "#ffe066", BOMB_RADIUS / 0.65, 0.65);
+  shake = 0.35; boom(0.55, 0.3, 800);
+  for (const a of aliens) {
+    if (!a.alive) continue;
+    const r = alienRect(a);
+    if (Math.hypot(r.x + r.w / 2 - player.x, r.y + r.h / 2 - PLAYER_Y) <= BOMB_RADIUS) killAlien(a, r);
+  }
+  if (boss) {
+    boss.warning = 0; boss.laserT = 0; boss.attackT = 2.5;
+    for (const part of boss.parts) damageBossPart(part, 10, "bomb");
+  }
+  return true;
+}
+
+function updateLaser(dt) {
+  if (special.laserT <= 0) return;
+  const duration = Math.min(dt, special.laserT);
+  const beam = { x: player.x - special.laserW / 2, y: 58, w: special.laserW, h: PLAYER_Y - 58 };
+  for (const a of aliens) {
+    if (!a.alive) continue;
+    const r = alienRectInto(a, SCRATCH);
+    if (hit(beam, r)) killAlien(a, r);
+  }
+  eBullets = eBullets.filter(b => !hit(beam, b));
+  if (saucer && hit(beam, saucer)) killSaucer();
+  if (boss) {
+    for (const part of boss.parts) {
+      if (part.hp > 0 && hit(beam, bossPartRect(part))) damageBossPart(part, special.laserDps * duration, "laser");
+    }
+  }
+  special.laserT = Math.max(0, special.laserT - dt);
+}
+
+function openUpgrades() {
+  const pool = Object.keys(UPGRADE_DEFS).filter(k => !UPGRADE_DEFS[k].max || upgrades[k] < UPGRADE_DEFS[k].max);
+  upgradeChoices = [];
+  while (upgradeChoices.length < 3) upgradeChoices.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  upgradeIndex = 0;
+  releaseControls();
+  setState("upgrade");
+}
+
+function chooseUpgrade(index) {
+  if (state !== "upgrade" || paused || !upgradeChoices[index]) return false;
+  const key = upgradeChoices[index];
+  if (key in upgrades) upgrades[key]++;
+  else if (key === "repair") {
+    if (lives < 5) lives++; else addScore(1000);
+  } else if (key === "supply") {
+    special.bombs = Math.min(BOMB_MAX, special.bombs + 1); active.shield = 1; addScore(300);
+  } else if (key === "charge") {
+    special.charge = LASER_MAX; addScore(300);
+  }
+  releaseControls();
+  wave++; makeWave(); setState("play");
+  popup(W / 2, 350, upgradeText(key).name, UPGRADE_DEFS[key].color, 16);
+  sfx.pickup();
+  return true;
+}
+
+function upgradeCardRect(index) { return { x: 34, y: 242 + index * 88, w: W - 68, h: 76 }; }
+
+/* ================= 大型戦艦 ================= */
+
+function makeBoss() {
+  const level = wave / 5;
+  boss = {
+    x: W / 2, y: 112, t: 0, attackT: 2, warning: 0, laserT: 0, targetX: W / 2,
+    parts: [
+      { kind: "gun", offset: -54, hp: 14 + level * 4, max: 14 + level * 4, flash: 0 },
+      { kind: "gun", offset: 54, hp: 14 + level * 4, max: 14 + level * 4, flash: 0 },
+      { kind: "core", offset: 0, hp: 40 + level * 16, max: 40 + level * 16, flash: 0 },
+    ],
+  };
+}
+
+function bossPartRect(part) {
+  return { x: boss.x + part.offset - 14, y: boss.y + 10, w: 28, h: 30 };
+}
+
+function coreExposed() { return boss && boss.parts.slice(0, 2).every(p => p.hp <= 0); }
+
+function damageBossPart(part, amount, source = "shot") {
+  if (!boss || part.hp <= 0 || amount <= 0) return;
+  if (part.kind === "core" && !coreExposed()) return;
+  const r = bossPartRect(part), damage = Math.min(part.hp, amount);
+  part.hp = Math.max(0, part.hp - amount); part.flash = 0.08;
+  if (source === "shot") gainCharge(damage * 1.5);
+  if (part.hp > 0) return;
+  spawnBurst(r.x + 14, r.y + 15, "#ff9a5c", 28, 180);
+  spawnRing(r.x + 14, r.y + 15, "#ffe066", 220, 0.5);
+  addScore(part.kind === "core" ? 1000 + wave * 100 : 200);
+  boom(0.35, 0.2, 700);
+  if (part.kind === "core") {
+    boss = null; eBullets = [];
+    special.bombs = Math.min(BOMB_MAX, special.bombs + 1);
+    popup(W / 2, 205, "BOSS DOWN! / BOMB +1", "#ffe066", 18);
+    shake = 0.45;
+  } else if (coreExposed()) popup(W / 2, 205, "CORE OPEN!", "#ff6ad5", 18);
+}
+
+function hitBoss(rect, damage) {
+  if (!boss) return false;
+  for (const part of boss.parts) {
+    if (part.hp > 0 && hit(rect, bossPartRect(part))) { damageBossPart(part, damage); return true; }
+  }
+  return hit(rect, { x: boss.x - 80, y: boss.y, w: 160, h: 40 });
+}
+
+function updateBoss(dt) {
+  if (!boss || bannerT > 0) return;
+  boss.t += dt;
+  boss.parts.forEach(p => p.flash = Math.max(0, p.flash - dt));
+  if (boss.warning > 0) {
+    boss.warning = Math.max(0, boss.warning - dt);
+    if (boss.warning === 0) {
+      boss.laserT = 0.6;
+      for (const part of boss.parts) {
+        if (part.hp <= 0 || part.kind !== "gun") continue;
+        for (const vx of [-75, 0, 75]) eBullets.push({ x: boss.x + part.offset, y: boss.y + 40, w: 3, h: 9, vx, vy: 180 + Math.min(wave * 3, 90) });
+      }
+      beep({ f0: 300, f1: 80, dur: 0.35, type: "sawtooth", vol: 0.09 });
+    }
+  } else if (boss.laserT > 0) {
+    boss.laserT = Math.max(0, boss.laserT - dt);
+    const danger = { x: boss.targetX - 18, y: boss.y + 40, w: 36, h: GROUND_Y - boss.y - 40 };
+    if (boss.laserT > 0 && player.inv <= 0 && hit(danger, playerRect())) damagePlayer();
+  } else {
+    boss.x = W / 2 + Math.sin(boss.t * 0.65) * 130;
+    boss.attackT -= dt;
+    if (boss.attackT <= 0) {
+      boss.targetX = clamp(player.x, 22, W - 22);
+      boss.warning = 1.1;
+      boss.attackT = coreExposed() ? 1.5 : 2.2;
+      beep({ f0: 740, dur: 0.12, type: "square", vol: 0.07 });
+    }
+  }
+}
+
+/* ================= 編隊からの突入 ================= */
+
+function launchFlight(a, mode) {
+  const r = alienRect(a);
+  a.flight = { x: r.x, y: r.y, startX: r.x, t: 0, warning: 0.65, mode, phase: "exit",
+    vx: clamp((player.x - r.x) * 0.5, -90, 90), side: r.x < W / 2 ? -1 : 1 };
+}
+
+function updateFlights(dt) {
+  if (wave < 2 || boss || bannerT > 0) return;
+  flightT -= dt;
+  if (flightT <= 0) {
+    const candidates = aliens.filter(a => a.alive && !a.flight);
+    if (candidates.length && aliens.filter(a => a.alive && a.flight).length < Math.min(3, 1 + Math.floor(wave / 3))) {
+      launchFlight(candidates[Math.floor(Math.random() * candidates.length)], ["dive", "zigzag", "flank"][flightCount++ % 3]);
+    }
+    flightT = Math.max(2.5, 6 - wave * 0.25);
+  }
+  for (const a of aliens) {
+    if (!a.alive || !a.flight) continue;
+    const f = a.flight;
+    if (f.warning > 0) { f.warning = Math.max(0, f.warning - dt); continue; }
+    f.t += dt;
+    const speed = Math.min(260, 155 + wave * 7);
+    if (f.mode === "flank" && f.phase === "exit") {
+      f.x += f.side * speed * dt;
+      if (f.x < -30 || f.x > W + 30) {
+        f.phase = "attack"; f.y = PLAYER_Y - 160;
+        f.x = f.side < 0 ? -28 : W + 4;
+      }
+    } else {
+      f.y += speed * dt;
+      if (f.mode === "zigzag") f.x = clamp(f.startX + Math.sin(f.t * 5) * 54, 5, W - 29);
+      else f.x += (f.mode === "flank" ? -f.side * speed * 1.5 : f.vx) * dt;
+      if (player.alive && player.inv <= 0 && hit(alienRect(a), playerRect())) damagePlayer();
+      if (f.y > GROUND_Y + 24 || f.x < -60 || f.x > W + 60) a.flight = null;
+    }
+    if (state !== "play") return;
+  }
+}
+
+/* ================= エフェクト ================= */
+
+function spawnBurst(x, y, color, n = 12, sp = 110) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2, v = sp * rand(0.35, 1);
+    particles.push({
+      x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v,
+      life: rand(0.3, 0.7), max: 0.7, color, size: Math.random() < 0.3 ? 3 : 2,
+    });
+  }
+}
+
+function spawnRing(x, y, color, vr = 150, life = 0.35) {
+  rings.push({ x, y, r: 3, vr, life, max: life, color });
+}
+
+function popup(x, y, txt, color, size = 12) {
+  popups.push({ x, y, txt, color, size, life: 1 });
+}
+
+/* ================= 入力 ================= */
+
+function canvasX(e) {
+  const r = cvs.getBoundingClientRect();
+  return ((e.clientX - r.left) * W) / r.width;
+}
+
+function releaseControls() {
+  shooting = false; keys.left = false; keys.right = false; keys.fire = false;
+}
+
+function upgradeAtPointer(e) {
+  const r = cvs.getBoundingClientRect();
+  const point = { x: canvasX(e), y: (e.clientY - r.top) * H / r.height, w: 1, h: 1 };
+  return upgradeChoices.findIndex((_, i) => hit(point, upgradeCardRect(i)));
+}
+
+function handlePress() {
+  if (paused) { setPaused(false); return; }
+  if (state === "title") startGame();
+  else if (state === "gameover" && stateT > 0.6) startGame();
+}
+
+window.addEventListener("pointermove", e => {
+  if (e.target !== cvs) return;
+  if (state === "upgrade") { const i = upgradeAtPointer(e); if (i >= 0) upgradeIndex = i; return; }
+  mouseX = clamp(canvasX(e), 0, W);
+  inputMode = "mouse";
+});
+cvs.addEventListener("pointerdown", e => {
+  e.preventDefault();
+  ac(); if (!paused) musicStart();
+  if (state === "upgrade") { if (e.button === 0) chooseUpgrade(upgradeAtPointer(e)); return; }
+  if (e.button === 2) { activateLaser(); return; }
+  if (e.button !== 0) return;
+  mouseX = clamp(canvasX(e), 0, W);
+  inputMode = "mouse";
+  handlePress();
+  if (state === "play" && !paused) shooting = true;
+});
+window.addEventListener("pointerup", () => { shooting = false; });
+window.addEventListener("pointercancel", releaseControls);
+cvs.addEventListener("contextmenu", e => e.preventDefault());
+laserButton.addEventListener("click", () => { ac(); activateLaser(); });
+bombButton.addEventListener("click", () => { ac(); activateBomb(); });
+
+const langButtons = { ja: document.getElementById("langJa"), en: document.getElementById("langEn") };
+
+function applyLang(next) {
+  if (next && next !== lang) {
+    lang = next;
+    try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
+  }
+  if (document.documentElement) document.documentElement.lang = lang;
+  const hintEl = document.getElementById("hint");
+  if (hintEl) hintEl.innerHTML = T("hint").join("<br>");
+  for (const code in langButtons) langButtons[code].setAttribute("aria-pressed", String(code === lang));
+  refreshActionButtons();
+  redrawIfPaused();
+}
+
+for (const code in langButtons) langButtons[code].addEventListener("click", () => applyLang(code));
+applyLang();
+
+function toggleMute() {
+  muted = !muted;
+  try { localStorage.setItem(MUTE_KEY, muted ? "1" : "0"); } catch (e) {}
+  if (muted) { saucerSoundStop(); musicStop(); }
+  else {
+    if (saucer && state === "play" && !paused) saucerSoundStart();
+    if (actx && !paused) musicStart();
+  }
+  redrawIfPaused();
+}
+
+window.addEventListener("keydown", e => {
+  const k = e.key.toLowerCase();
+  if ([" ", "enter", "arrowleft", "arrowright", "arrowup", "arrowdown"].includes(k)) e.preventDefault();
+  if (e.repeat) return;
+  if (state === "upgrade") {
+    if (["1", "2", "3"].includes(k)) chooseUpgrade(Number(k) - 1);
+    else if (k === "arrowup") upgradeIndex = (upgradeIndex + 2) % 3;
+    else if (k === "arrowdown") upgradeIndex = (upgradeIndex + 1) % 3;
+    else if (k === "enter" || k === " ") chooseUpgrade(upgradeIndex);
+    else if (k === "m") toggleMute();
+    return;
+  }
+  if (k === "p" || k === "escape") {
+    if (state === "play" || state === "dying") setPaused(!paused);
+  } else if (k === "m") {
+    toggleMute();
+  } else if (k === "z") {
+    activateLaser();
+  } else if (k === "x") {
+    activateBomb();
+  } else if (k === " " || k === "enter") {
+    ac(); musicStart(); handlePress(); keys.fire = true;
+  } else if (k === "arrowleft" || k === "a") {
+    keys.left = true; inputMode = "keys";
+  } else if (k === "arrowright" || k === "d") {
+    keys.right = true; inputMode = "keys";
+  }
+});
+window.addEventListener("keyup", e => {
+  const k = e.key.toLowerCase();
+  if (k === " " || k === "enter") keys.fire = false;
+  else if (k === "arrowleft" || k === "a") keys.left = false;
+  else if (k === "arrowright" || k === "d") keys.right = false;
+});
+
+window.addEventListener("blur", () => { if (state === "play") setPaused(true); });
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    if (state === "play") setPaused(true);
+    else musicStop();
+  } else if (!paused && actx) {
+    musicStart();
+  }
+});
+
+/* ================= バリア処理 ================= */
+
+function barrierHit(rect, blast) {
+  for (const b of barriers) {
+    if (!hit(rect, b)) continue;
+    const c0 = Math.max(0, Math.floor((rect.x - b.x) / b.cell));
+    const c1 = Math.min(b.cols - 1, Math.floor((rect.x + rect.w - 0.01 - b.x) / b.cell));
+    const r0 = Math.max(0, Math.floor((rect.y - b.y) / b.cell));
+    const r1 = Math.min(b.rows - 1, Math.floor((rect.y + rect.h - 0.01 - b.y) / b.cell));
+    for (let r = r0; r <= r1; r++) {
+      for (let c = c0; c <= c1; c++) {
+        if (!b.g[r][c]) continue;
+        for (let dr = -blast; dr <= blast; dr++) {
+          for (let dc = -blast; dc <= blast; dc++) {
+            const rr = r + dr, cc = c + dc;
+            if (rr < 0 || cc < 0 || rr >= b.rows || cc >= b.cols) continue;
+            if (Math.abs(dr) + Math.abs(dc) <= 1 || Math.random() < 0.55) b.g[rr][cc] = 0;
+          }
+        }
+        spawnBurst(b.x + c * b.cell + 2, b.y + r * b.cell + 2, "#3ef08c", 6, 70);
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function erodeBarriers() {
+  for (const al of aliens) {
+    if (!al.alive) continue;
+    const r = alienRectInto(al, SCRATCH);
+    for (const b of barriers) {
+      if (!hit(r, b)) continue;
+      const c0 = Math.max(0, Math.floor((r.x - b.x) / b.cell));
+      const c1 = Math.min(b.cols - 1, Math.floor((r.x + r.w - 0.01 - b.x) / b.cell));
+      const r0 = Math.max(0, Math.floor((r.y - b.y) / b.cell));
+      const r1 = Math.min(b.rows - 1, Math.floor((r.y + r.h - 0.01 - b.y) / b.cell));
+      for (let rr = r0; rr <= r1; rr++)
+        for (let cc = c0; cc <= c1; cc++) b.g[rr][cc] = 0;
+    }
+  }
+}
+
+/* ================= 更新 ================= */
+
+function formSpeed() {
+  const r = aliveN / TOTAL;
+  let s = 16 + (wave - 1) * 7 + 130 * Math.pow(1 - r, 1.7);
+  if (aliveN <= 3) s += 55;
+  if (aliveN === 1) s += 75;
+  return Math.min(s, 240);
+}
+
+function formBounds() {
+  let min = Infinity, max = -Infinity;
+  for (const a of aliens) {
+    if (!a.alive || a.flight) continue;
+    const r = alienRectInto(a, SCRATCH);
+    if (r.x < min) min = r.x;
+    if (r.x + r.w > max) max = r.x + r.w;
+  }
+  return { min, max };
+}
+
+function killAlien(a, r) {
+  if (!a.alive) return;
+  a.alive = false; aliveN--;
+  gainCharge(6);
+  bumpCombo();
+  const gain = TYPES[a.type].pts * combo.mult;
+  addScore(gain);
+  if (combo.mult > 1) popup(r.x + r.w / 2, r.y, `${gain}`, MULT_COLORS[combo.mult - 1], 10);
+  spawnBurst(r.x + r.w / 2, r.y + r.h / 2, TYPES[a.type].color, 16, 130);
+  spawnRing(r.x + r.w / 2, r.y + r.h / 2, TYPES[a.type].color, 160, 0.3);
+  maybeDrop(r.x + r.w / 2, r.y + r.h / 2);
+  freezeT = 0.025;
+  sfx.alien();
+}
+
+function killSaucer() {
+  if (!saucer) return;
+  const pool = [50, 50, 50, 50, 100, 100, 100, 150, 150, 300];
+  const bonus = pool[(Math.random() * pool.length) | 0] * combo.mult;
+  addScore(bonus); gainCharge(15);
+  popup(saucer.x + 16, saucer.y, `${bonus}`, "#ffb454", 14);
+  spawnBurst(saucer.x + 16, saucer.y + 7, "#ffb454", 20, 150);
+  spawnRing(saucer.x + 16, saucer.y + 7, "#ffb454", 220, 0.4);
+  sfx.saucerKill();
+  saucer = null; saucerSoundStop(); saucerT = rand(14, 26);
+}
+
+function hitPlayer() {
+  lives--;
+  const pr = playerRect();
+  spawnBurst(pr.x + 13, pr.y + 8, "#c8f7ff", 30, 170);
+  spawnBurst(pr.x + 13, pr.y + 8, "#ff9a5c", 18, 110);
+  spawnRing(pr.x + 13, pr.y + 8, "#ff4d6d", 260, 0.5);
+  sfx.player();
+  shake = 0.5;
+  player.alive = false;
+  active.beam = 0;
+  special.laserT = 0;
+  eBullets = [];
+  shooting = false;
+  setState("dying");
+}
+
+function damagePlayer() {
+  waveNoDamage = false;
+  resetCombo();
+  if (active.shield > 0) {
+    active.shield = 0;
+    player.inv = 1.2;
+    spawnRing(player.x, PLAYER_Y + 8, "#7dff7a", 240, 0.4);
+    popup(player.x, PLAYER_Y - 24, "SHIELD BREAK", "#7dff7a", 12);
+    sfx.shieldBreak();
+    return;
+  }
+  hitPlayer();
+}
+
+// 末尾の要素と入れ替えて削除する。splice の詰め直し(O(n))を避ける。
+// パーティクルとリングは加算合成で描くので順序が変わっても見た目は同じ。
+function removeAt(arr, i) {
+  const last = arr.pop();
+  if (i < arr.length) arr[i] = last;
+}
+
+function updateCommon(dt) {
+  for (const layer of starLayers) {
+    for (const s of layer) {
+      s.y += s.sp * dt;
+      if (s.y > H) { s.y = -2; s.x = Math.random() * W; }
+    }
+  }
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 160 * dt; p.life -= dt;
+    if (p.life <= 0) removeAt(particles, i);
+  }
+  for (let i = rings.length - 1; i >= 0; i--) {
+    const r = rings[i];
+    r.r += r.vr * dt; r.life -= dt;
+    if (r.life <= 0) removeAt(rings, i);
+  }
+  for (let i = popups.length - 1; i >= 0; i--) {
+    const p = popups[i];
+    p.y -= 22 * dt; p.life -= dt * 0.9;
+    if (p.life <= 0) popups.splice(i, 1);
+  }
+  shake = Math.max(0, shake - dt * 1.2);
+  scoreShown += (score - scoreShown) * Math.min(1, dt * 12);
+  if (Math.abs(score - scoreShown) < 1) scoreShown = score;
+  if (state === "play" || state === "dying" || state === "clear") {
+    combo.t -= dt;
+    if (combo.t <= 0 && combo.n > 0) resetCombo();
+  }
+}
+
+function updatePlay(dt) {
+  if (freezeT > 0) { freezeT -= dt; return; } // キル時の一瞬のヒットストップ
+  bannerT = Math.max(0, bannerT - dt);
+
+  // --- 自機 ---
+  const speed = 340 * (1 + upgrades.speed * 0.15);
+  if (inputMode === "mouse") {
+    const target = clampPlayerX(mouseX);
+    player.x = clampPlayerX(player.x + clamp(target - player.x, -speed * dt * 2, speed * dt * 2));
+  } else player.x = clampPlayerX(player.x + speed * dt * ((keys.right ? 1 : 0) - (keys.left ? 1 : 0)));
+  player.cool -= dt;
+  player.inv = Math.max(0, player.inv - dt);
+  active.wide = Math.max(0, active.wide - dt);
+  active.rapid = Math.max(0, active.rapid - dt);
+  special.bombT = Math.max(0, special.bombT - dt);
+
+  const cd = active.rapid > 0 ? 0.12 : 0.27;
+  const maxB = (active.rapid > 0 || active.wide > 0) ? 12 : 3;
+  // ビームは通常弾の上限に数えず、共通のクールダウンで同時発射する。
+  const normalBulletCount = pBullets.reduce((n, p) => n + (p.beam ? 0 : 1), 0);
+  if ((shooting || keys.fire) && player.cool <= 0 && normalBulletCount < maxB) {
+    const mk = vx => pBullets.push({ x: player.x - 1, y: PLAYER_Y - 10, w: 2, h: 10, vx });
+    mk(0);
+    if (active.wide > 0) { mk(-70); mk(70); }
+    for (let i = 0; i < active.beam; i++) {
+      const x = player.x + BEAM_OFFSETS[i];
+      pBullets.push({ x: x - 2, y: PLAYER_Y - 32, w: 4, h: 28, vx: 0, beam: true, pierce: 1 + upgrades.beam, damage: 1 + upgrades.beam * 0.5 });
+      spawnBurst(x, PLAYER_Y - 4, BEAM_COLOR, 3, 55);
+    }
+    player.cool = cd;
+    for (let i = 0; i < 3; i++) particles.push({
+      x: player.x + rand(-3, 3), y: PLAYER_Y - 8, vx: rand(-20, 20), vy: rand(-90, -40),
+      life: 0.1, max: 0.1, color: "#7df9ff", size: 2,
+    });
+    sfx.shoot();
+    if (active.beam > 0) sfx.beam();
+  }
+  if (player.alive) {
+    particles.push({
+      x: player.x + rand(-2, 2), y: PLAYER_Y + 15, vx: rand(-12, 12), vy: rand(50, 110),
+      life: rand(0.08, 0.2), max: 0.2, color: Math.random() < 0.5 ? "#7df9ff" : "#ff9a5c", size: 2,
+    });
+  }
+
+  updateFlights(dt);
+  updateBoss(dt);
+  if (state !== "play") return;
+
+  // --- 編隊移動 ---
+  if (aliens.some(a => a.alive && !a.flight)) {
+    form.ox += form.dir * formSpeed() * dt;
+    const b = formBounds();
+    if (form.dir > 0 && b.max > W - 8) { form.ox -= b.max - (W - 8); form.dir = -1; form.oy += DROP; }
+    else if (form.dir < 0 && b.min < 8) { form.ox += 8 - b.min; form.dir = 1; form.oy += DROP; }
+
+    const period = clamp(0.65 * (aliveN / TOTAL) + 0.08, 0.1, 0.73);
+    form.animT += dt;
+    if (form.animT >= period) {
+      form.animT = 0; form.anim ^= 1;
+      sfx.step(form.anim === 1);
+    }
+
+    erodeBarriers();
+
+    // 侵入チェック
+    const prect = playerRect();
+    for (const a of aliens) {
+      if (!a.alive || a.flight) continue;
+      const r = alienRectInto(a, SCRATCH);
+      if (r.y + r.h >= PLAYER_Y + 8 || hit(r, prect)) {
+        spawnBurst(prect.x + 13, prect.y + 8, "#c8f7ff", 26, 160);
+        boom(0.6, 0.3, 500);
+        gameOver();
+        return;
+      }
+    }
+  }
+
+  // --- 敵の射撃 ---
+  fireT -= dt;
+  const maxEB = Math.min(7, 2 + wave);
+  if (fireT <= 0 && bannerT <= 0 && aliveN > 0) {
+    const base = Math.max(0.3, 1.15 - (wave - 1) * 0.07);
+    fireT = base * rand(0.5, 1.5) * (0.55 + 0.45 * (aliveN / TOTAL));
+    if (eBullets.length < maxEB) {
+      const bottoms = [];
+      for (let c = 0; c < COLS; c++) {
+        let low = null;
+        for (const a of aliens) if (a.alive && !a.flight && a.c === c && (!low || a.r > low.r)) low = a;
+        if (low) bottoms.push(low);
+      }
+      if (bottoms.length) {
+        const shooter = bottoms[(Math.random() * bottoms.length) | 0];
+        const r = alienRect(shooter);
+        eBullets.push({
+          x: r.x + r.w / 2 - 1.5, y: r.y + r.h, w: 3, h: 9,
+          vy: Math.min(330, 150 + wave * 14) * rand(0.9, 1.1),
+        });
+      }
+    }
+  }
+
+  // --- ボーナス円盤 ---
+  saucerT -= dt;
+  if (!saucer && saucerT <= 0 && aliveN > 4) {
+    const fromLeft = Math.random() < 0.5;
+    saucer = {
+      x: fromLeft ? -34 : W + 2, y: 62, w: 32, h: 14,
+      vx: (fromLeft ? 1 : -1) * Math.min(150, 95 + wave * 5),
+    };
+    saucerSoundStart();
+  }
+  if (saucer) {
+    saucer.x += saucer.vx * dt;
+    if (saucer.x > W + 40 || saucer.x < -74) {
+      saucer = null; saucerSoundStop(); saucerT = rand(14, 26);
+    }
+  }
+
+  // --- パワーアップカプセル ---
+  const prInf = { x: player.x - 17, y: PLAYER_Y - 4, w: 34, h: 24 };
+  for (let i = powerups.length - 1; i >= 0; i--) {
+    const u = powerups[i];
+    u.y += 62 * dt;
+    if (upgrades.magnet > 0) {
+      const dx = player.x - u.x, dy = PLAYER_Y - u.y, distance = Math.hypot(dx, dy);
+      if (distance > 0 && distance < 40 + upgrades.magnet * 35) {
+        const pull = Math.min(distance, 190 * dt);
+        u.x += dx / distance * pull; u.y += dy / distance * pull;
+      }
+    }
+    if (u.y > GROUND_Y) { powerups.splice(i, 1); continue; }
+    if (player.alive && hit({ x: u.x - 8, y: u.y - 8, w: 16, h: 16 }, prInf)) {
+      applyPU(u.type);
+      powerups.splice(i, 1);
+    }
+  }
+
+  updateLaser(dt);
+
+  // --- 自弾 ---
+  for (let i = pBullets.length - 1; i >= 0; i--) {
+    const p = pBullets[i];
+    p.y -= 470 * dt;
+    p.x += (p.vx || 0) * dt;
+    let dead = p.y + p.h < 0 || p.x < -20 || p.x > W + 20;
+    if (!dead && barrierHit(p, 1)) dead = true;
+    if (!dead) {
+      for (let j = eBullets.length - 1; j >= 0; j--) {
+        if (hit(p, eBullets[j])) {
+          spawnBurst(p.x, p.y, "#ffffff", 6, 90);
+          sfx.spark();
+          eBullets.splice(j, 1);
+          dead = true;
+          break;
+        }
+      }
+    }
+    if (!dead && saucer && hit(p, saucer)) {
+      killSaucer();
+      dead = true;
+    }
+    if (!dead && hitBoss(p, p.damage || 1)) dead = true;
+    if (!dead) {
+      for (const a of aliens) {
+        if (!a.alive) continue;
+        const r = alienRectInto(a, SCRATCH);
+        if (hit(p, r)) {
+          killAlien(a, r);
+          p.pierce = (p.pierce || 1) - 1;
+          if (p.pierce <= 0) { dead = true; break; }
+        }
+      }
+    }
+    if (dead) pBullets.splice(i, 1);
+  }
+
+  // --- 敵弾 ---
+  const prect = playerRect();
+  for (let i = eBullets.length - 1; i >= 0; i--) {
+    const b = eBullets[i];
+    b.y += b.vy * dt;
+    b.x += (b.vx || 0) * dt;
+    let dead = false;
+    if (b.x < -20 || b.x > W + 20) dead = true;
+    if (b.y + b.h > GROUND_Y) { spawnBurst(b.x + 1, GROUND_Y, "#ffd24d", 5, 60); dead = true; }
+    if (!dead && barrierHit(b, 1)) dead = true;
+    if (!dead && player.alive && player.inv <= 0 && hit(b, prect)) { dead = true; damagePlayer(); }
+    if (dead) eBullets.splice(i, 1);
+    if (state !== "play") return;
+  }
+
+  // --- ウェーブクリア ---
+  if (aliveN === 0 && !boss) {
+    saucerSoundStop();
+    pBullets = []; eBullets = []; powerups = [];
+    special.laserT = 0; releaseControls();
+    if (waveNoDamage) {
+      perfectBonus = 500 + wave * 100;
+      addScore(perfectBonus);
+      sfx.perfect();
+    } else {
+      perfectBonus = 0;
+      sfx.clear();
+    }
+    setState("clear");
+  }
+}
+
+function update(dt) {
+  stateT += dt;
+  updateCommon(dt);
+  if (state === "play") {
+    updatePlay(dt);
+  } else if (state === "dying") {
+    if (stateT > 1.15) {
+      if (lives > 0) { player.alive = true; player.inv = 2; setState("play"); }
+      else gameOver();
+    }
+  } else if (state === "clear") {
+    if (stateT > 1.6) openUpgrades();
+  }
+}
+
+/* ================= 描画 ================= */
+
+// 星雲はごくゆっくりしか動かないので、15fps で描き直した 1 枚の画像を毎フレーム貼る
+// (半透明の加算合成 3 回 → 不透明なコピー 1 回)。
+const SKY_INTERVAL = 1 / 15;
+const sky = { img: null, g: null, t: -Infinity };
+sky.img = prerender(W, H, g => { sky.g = g; }, { alpha: false });
+
+function refreshSky(t) {
+  if (t - sky.t < SKY_INTERVAL) return;
+  sky.t = t;
+  const g = sky.g;
+  g.globalCompositeOperation = "source-over";
+  g.fillStyle = "#04050c"; g.fillRect(0, 0, W, H);
+  g.globalCompositeOperation = "lighter";
+  for (const n of NEBULAE) {
+    const ox = Math.sin(t * 0.11 + n.ph) * n.dx;
+    const oy = Math.cos(t * 0.13 + n.ph) * n.dy;
+    g.globalAlpha = 0.5 + 0.25 * Math.sin(t * 0.3 + n.ph);
+    g.drawImage(n.img, n.x + ox - n.img.width / 2, n.y + oy - n.img.height / 2);
+  }
+  g.globalAlpha = 1;
+  g.globalCompositeOperation = "source-over";
+}
+
+function drawBackground(t) {
+  refreshSky(t);
+  ctx.drawImage(sky.img, 0, 0);
+
+  starLayers.forEach((layer, l) => {
+    ctx.fillStyle = STAR_COLORS[l];
+    for (const s of layer) {
+      ctx.globalAlpha = 0.35 + 0.55 * (0.5 + 0.5 * Math.sin(t * 2 + s.tw));
+      ctx.fillRect(s.x, s.y, s.size, s.size);
+    }
+  });
+  ctx.globalAlpha = 1;
+}
+
+function drawBarriers() {
+  for (const b of barriers) {
+    for (let r = 0; r < b.rows; r++) {
+      for (let c = 0; c < b.cols; c++) {
+        if (!b.g[r][c]) continue;
+        ctx.fillStyle = (r + c) % 2 ? "#2fd47e" : "#3ef08c";
+        ctx.fillRect(b.x + c * b.cell, b.y + r * b.cell, b.cell, b.cell);
+      }
+    }
+  }
+}
+
+/* 編隊レイヤー: 編隊は一体で動くので、スプライトと光彩をそれぞれ 1 枚の画像にまとめておき、
+   生存状況かアニメ番号が変わった時だけ描き直す。毎フレームの drawImage が最大 100 回 → 2 回になる。 */
+const FORM_PAD = 12; // 光彩のはみ出し分(withGlow の pad = 9 より大きく)
+const FORM_W = COLS * CELL_W + FORM_PAD * 2, FORM_H = ROWS * CELL_H + FORM_PAD * 2;
+const formLayer = { key: NaN, list: null, empty: true, sprite: null, glow: null, sg: null, gg: null, sx: 0, sy: 0, sw: 0, sh: 0 };
+formLayer.sprite = prerender(FORM_W, FORM_H, g => { formLayer.sg = g; });
+formLayer.glow = prerender(FORM_W, FORM_H, g => { formLayer.gg = g; g.globalCompositeOperation = "lighter"; });
+
+function formationKey() {
+  // アニメ番号と「生存かつ編隊内」のビット列を 1 つの整数にまとめる(50 体 + 先頭ビットで 2^53 に収まる)。
+  let key = form.anim + 2;
+  for (const a of aliens) key = key * 2 + (a.alive && !a.flight ? 1 : 0);
+  return key;
+}
+
+function refreshFormLayer() {
+  const key = formationKey();
+  if (key === formLayer.key && aliens === formLayer.list) return;
+  formLayer.key = key; formLayer.list = aliens; formLayer.empty = true;
+  const sg = formLayer.sg, gg = formLayer.gg;
+  sg.clearRect(0, 0, FORM_W, FORM_H);
+  gg.clearRect(0, 0, FORM_W, FORM_H);
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const a of aliens) {
+    if (!a.alive || a.flight) continue;
+    const ty = TYPES[a.type], gl = ty.glow[form.anim];
+    const x = a.c * CELL_W + (CELL_W - ty.w) / 2 + FORM_PAD, y = a.r * CELL_H + FORM_PAD;
+    sg.drawImage(ty.img[form.anim], x, y);
+    gg.drawImage(gl.img, x - gl.pad, y - gl.pad);
+    // 光彩はスプライトを内包するので、光彩の範囲が描いた領域の外接矩形になる。
+    x0 = Math.min(x0, x - gl.pad); y0 = Math.min(y0, y - gl.pad);
+    x1 = Math.max(x1, x - gl.pad + gl.img.width); y1 = Math.max(y1, y - gl.pad + gl.img.height);
+    formLayer.empty = false;
+  }
+  formLayer.sx = x0; formLayer.sy = y0; formLayer.sw = x1 - x0; formLayer.sh = y1 - y0;
+}
+
+// レイヤーのうち、生存エイリアンが描かれている範囲だけを転送する(残りが少ないほど安くなる)。
+function blitFormLayer(img) {
+  if (formLayer.empty) return;
+  const { sx, sy, sw, sh } = formLayer;
+  ctx.drawImage(img, sx, sy, sw, sh, form.ox - FORM_PAD + sx, form.oy - FORM_PAD + sy, sw, sh);
+}
+
+function drawGlowPass(t) {
+  ctx.globalCompositeOperation = "lighter";
+
+  refreshFormLayer();
+  blitFormLayer(formLayer.glow);
+  for (const a of aliens) {
+    if (!a.alive || !a.flight) continue;
+    const gl = TYPES[a.type].glow[form.anim];
+    ctx.drawImage(gl.img, a.flight.x - gl.pad, a.flight.y - gl.pad);
+  }
+
+  if (saucer) ctx.drawImage(SAUCER_GLOW.img, saucer.x - SAUCER_GLOW.pad, saucer.y - SAUCER_GLOW.pad);
+
+  for (const p of pBullets) {
+    if (p.beam) {
+      ctx.drawImage(BEAM_TRAIL, p.x - 2, p.y);
+      ctx.drawImage(BEAM_GLOW, p.x - 13, p.y - 10);
+    } else {
+      ctx.drawImage(P_TRAIL, p.x - 1, p.y);
+      ctx.drawImage(P_GLOW, p.x - 8, p.y - 4);
+    }
+  }
+  for (const b of eBullets) {
+    ctx.drawImage(E_TRAIL, b.x - 0.5, b.y + b.h - 20);
+    ctx.drawImage(E_GLOW, b.x - 6.5, b.y + 1);
+  }
+
+  for (const u of powerups) {
+    const d = PU_DEFS[u.type];
+    ctx.globalAlpha = 0.6 + 0.3 * Math.sin(t * 5 + u.ph);
+    ctx.drawImage(d.glowImg, u.x - 14, u.y - 14);
+    ctx.globalAlpha = 1;
+  }
+
+  if (player.alive) {
+    ctx.drawImage(SHIP_GLOW.img, player.x - 13 - SHIP_GLOW.pad, PLAYER_Y - SHIP_GLOW.pad);
+    for (let i = 0; i < active.beam; i++) {
+      ctx.drawImage(CANNON_GLOW.img, player.x + BEAM_OFFSETS[i] - 5 - CANNON_GLOW.pad, PLAYER_Y - 4 - CANNON_GLOW.pad);
+    }
+    if (active.shield > 0) {
+      ctx.globalAlpha = 0.45 + 0.25 * Math.sin(t * 6);
+      ctx.strokeStyle = "#7dff7a";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(player.x, PLAYER_Y + 8, 22, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  for (const p of particles) {
+    ctx.globalAlpha = Math.max(0, p.life / p.max);
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x, p.y, p.size, p.size);
+  }
+  ctx.globalAlpha = 1;
+
+  for (const r of rings) {
+    ctx.globalAlpha = Math.max(0, r.life / r.max);
+    ctx.strokeStyle = r.color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  // 地平線のネオン
+  ctx.fillStyle = HORIZON_GLOW;
+  ctx.fillRect(0, GROUND_Y - 14, W, 14);
+
+  ctx.globalCompositeOperation = "source-over";
+}
+
+function drawCapsule(u, t) {
+  const d = PU_DEFS[u.type], s = 9 + Math.sin(t * 5 + u.ph) * 1.5;
+  ctx.save();
+  ctx.translate(u.x, u.y);
+  ctx.rotate(Math.PI / 4);
+  ctx.fillStyle = "#04050c";
+  ctx.fillRect(-s / 2, -s / 2, s, s);
+  ctx.strokeStyle = d.color;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(-s / 2, -s / 2, s, s);
+  ctx.restore();
+  drawText(d.label, u.x, u.y + 4, { size: 10, color: d.color, weight: 900 });
+}
+
+function drawHud() {
+  drawText("SCORE", 12, 15, { align: "left", size: 10, color: "#5f6fa8" });
+  drawText(pad6(Math.round(scoreShown)), 12, 32, { align: "left", size: 16, color: "#ffffff" });
+  if (combo.mult > 1) {
+    const col = MULT_COLORS[combo.mult - 1];
+    drawText(`×${combo.mult}`, 112, 32, { align: "left", size: 15, color: col });
+    ctx.fillStyle = col;
+    ctx.fillRect(112, 36, 44 * clamp(combo.t / COMBO_WINDOW, 0, 1), 3);
+  }
+  drawText(`HI ${pad6(hi)}`, W / 2, 20, { size: 12, color: "#8fa0d8" });
+  drawText(`WAVE ${String(wave).padStart(2, "0")}`, W - 12, 20, { align: "right", size: 13, color: "#cfd8ff" });
+  const ready = special.charge >= LASER_MAX;
+  drawText("Z LASER", 12, 52, { align: "left", size: 10, color: BEAM_COLOR });
+  ctx.fillStyle = "#252039"; ctx.fillRect(64, 44, 100, 8);
+  ctx.fillStyle = ready ? "#ffffff" : BEAM_COLOR;
+  ctx.fillRect(64, 44, special.charge, 8);
+  drawText(ready ? "READY!" : `${Math.floor(special.charge)}%`, 172, 52, { align: "left", size: 10, color: ready ? "#ffe066" : BEAM_COLOR });
+  drawText(`X BOMB ${special.bombs}/${BOMB_MAX}`, W - 12, 52, { align: "right", size: 11, color: "#ffe066" });
+
+  ctx.fillStyle = "#2f9e5f";
+  ctx.fillRect(0, GROUND_Y, W, 2);
+  for (let i = 0; i < lives; i++) ctx.drawImage(SHIP_IMG, 10 + i * 28, H - 21, 20, 12);
+
+  // 装備は地面より下に並べ、画面端の自機や連結砲と重ねない。
+  let hx = 164;
+  const hy = H - 10;
+  for (const k of ["wide", "rapid"]) {
+    if (active[k] <= 0) continue;
+    const d = PU_DEFS[k];
+    ctx.fillStyle = d.color;
+    ctx.fillRect(hx, hy - 9, 11, 11);
+    drawText(d.label, hx + 5.5, hy, { size: 9, color: "#04050c", weight: 900 });
+    ctx.fillStyle = d.color + "88";
+    ctx.fillRect(hx + 15, hy - 6, 24 * clamp(active[k] / d.dur, 0, 1), 4);
+    hx += 48;
+  }
+  if (active.beam > 0) {
+    const d = PU_DEFS.beam;
+    ctx.fillStyle = d.color;
+    ctx.fillRect(hx, hy - 9, 11, 11);
+    drawText(d.label, hx + 5.5, hy, { size: 9, color: "#04050c", weight: 900 });
+    drawText(`${active.beam}/${d.max}`, hx + 15, hy, { align: "left", size: 11, color: d.color });
+    hx += 48;
+  }
+  if (active.shield > 0) {
+    const d = PU_DEFS.shield;
+    ctx.fillStyle = d.color;
+    ctx.fillRect(hx, hy - 9, 11, 11);
+    drawText(d.label, hx + 5.5, hy, { size: 9, color: "#04050c", weight: 900 });
+  }
+  drawText(muted ? "♪ OFF" : "♪ ON", W - 12, H - 10, { align: "right", size: 11, color: "#5f6fa8" });
+}
+
+function drawBoss(t) {
+  if (!boss) return;
+  if (boss.warning > 0 || boss.laserT > 0) {
+    const x = boss.targetX, y = boss.y + 40;
+    ctx.fillStyle = boss.laserT > 0 ? "#ff4d6dbb" : "#ff4d6d22";
+    ctx.fillRect(x - 18, y, 36, GROUND_Y - y);
+    ctx.strokeStyle = "#ff4d6d"; ctx.lineWidth = 2;
+    ctx.setLineDash(boss.warning > 0 ? DASH_WARNING : DASH_NONE);
+    ctx.strokeRect(x - 18, y, 36, GROUND_Y - y);
+    ctx.setLineDash(DASH_NONE);
+    if (boss.laserT > 0) {
+      ctx.fillStyle = "#fff0f4"; ctx.fillRect(x - 6, y, 12, GROUND_Y - y);
+    } else {
+      drawText("! DANGER !", clamp(x, 52, W - 52), GROUND_Y - 85, { size: 12, color: "#ff8a9e" });
+      drawText(`${boss.warning.toFixed(1)}s`, clamp(x, 30, W - 30), GROUND_Y - 65, { size: 11, color: "#ffe066" });
+    }
+  }
+  ctx.drawImage(BOSS_HULL, boss.x - 80 - BOSS_HULL_PAD, boss.y - 8 - BOSS_HULL_PAD);
+  ctx.save();
+  ctx.translate(boss.x, boss.y);
+  for (const part of boss.parts) {
+    const x = part.offset;
+    if (part.hp <= 0) {
+      ctx.fillStyle = "#15131d"; ctx.fillRect(x - 12, 12, 24, 26);
+      continue;
+    }
+    const exposed = part.kind !== "core" || coreExposed();
+    ctx.fillStyle = part.flash > 0 ? "#ffffff" : exposed ? "#ff9a5c" : "#6273a1";
+    ctx.fillRect(x - 14, 10, 28, 30);
+    ctx.fillStyle = "#21182d"; ctx.fillRect(x - 9, 14, 18, 16);
+    ctx.fillStyle = exposed ? "#ffe066" : "#91b2e4";
+    if (part.kind === "gun") ctx.fillRect(x - 4, 24, 8, 20);
+    else {
+      ctx.globalAlpha = 0.6 + Math.sin(t * 10) * 0.3;
+      ctx.fillRect(x - 6, 18, 12, 12); ctx.globalAlpha = 1;
+    }
+    ctx.fillStyle = "#191523"; ctx.fillRect(x - 15, 49, 30, 3);
+    ctx.fillStyle = "#ff9a5c"; ctx.fillRect(x - 15, 49, 30 * part.hp / part.max, 3);
+  }
+  ctx.restore();
+  const health = boss.parts.reduce((sum, p) => sum + p.hp, 0);
+  const maxHealth = boss.parts.reduce((sum, p) => sum + p.max, 0);
+  ctx.fillStyle = "#352033"; ctx.fillRect(72, 77, W - 144, 5);
+  ctx.fillStyle = "#ff6ad5"; ctx.fillRect(72, 77, (W - 144) * health / maxHealth, 5);
+  drawText(T(coreExposed() ? "bossCore" : "bossGuns"), W / 2, 71, { size: 10, color: "#ffb4e8" });
+}
+
+function drawSpecials(t) {
+  if (special.bombT > 0) {
+    ctx.fillStyle = `rgba(255,224,102,${special.bombT * 0.22})`;
+    ctx.fillRect(0, 58, W, GROUND_Y - 58);
+  }
+  if (special.laserT <= 0 || !player.alive) return;
+  const width = special.laserW, x = player.x, top = 58, strip = laserStrip(width);
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  drawLaserColumn(strip, x, top, PLAYER_Y);
+  ctx.shadowColor = BEAM_COLOR; ctx.shadowBlur = LASER_BLUR;
+  ctx.strokeStyle = "#e5cdff"; ctx.lineWidth = 3;
+  for (let i = 0; i < active.beam; i++) {
+    ctx.beginPath(); ctx.moveTo(x + BEAM_OFFSETS[i], PLAYER_Y - 4);
+    ctx.lineTo(x, PLAYER_Y - 44); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawUpgrades() {
+  ctx.fillStyle = "rgba(2,3,10,0.94)"; ctx.fillRect(0, 58, W, GROUND_Y - 58);
+  drawText("CHOOSE YOUR UPGRADE", W / 2, 166, { size: 23, color: "#ffe066" });
+  drawText(`WAVE ${wave} CLEAR → ${wave + 1}${(wave + 1) % 5 === 0 ? " / BOSS" : ""}`, W / 2, 192, { size: 12, color: "#9fb4ff" });
+  drawText(T("upgradePick"), W / 2, 219, { size: 12, color: "#cfd8ff" });
+  upgradeChoices.forEach((key, i) => {
+    const d = UPGRADE_DEFS[key], txt = upgradeText(key), r = upgradeCardRect(i), selected = i === upgradeIndex;
+    ctx.fillStyle = selected ? "#272039" : "#111527"; ctx.fillRect(r.x, r.y, r.w, r.h);
+    ctx.strokeStyle = selected ? d.color : "#334068"; ctx.lineWidth = selected ? 2 : 1;
+    ctx.strokeRect(r.x, r.y, r.w, r.h);
+    ctx.fillStyle = d.color; ctx.fillRect(r.x + 14, r.y + 16, 24, 24);
+    drawText(String(i + 1), r.x + 26, r.y + 33, { size: 16, color: "#080b16" });
+    drawText(txt.name, r.x + 52, r.y + 31, { align: "left", size: 17, color: d.color });
+    if (d.max) drawText(`Lv.${upgrades[key]} → ${upgrades[key] + 1}`, r.x + r.w - 14, r.y + 31, { align: "right", size: 11, color: "#cfd8ff" });
+    drawText(txt.detail, r.x + 14, r.y + 58, { align: "left", size: 10, color: "#cfd8ff" });
+  });
+  drawText(T("upgradeKeys"), W / 2, 533, { size: 12, color: "#ffe066" });
+  drawText(T("upgradeLevels", upgrades.beam, upgrades.speed, upgrades.magnet), W / 2, 561, { size: 11, color: "#9fb4ff" });
+}
+
+function drawGame(t) {
+  drawBarriers();
+  drawGlowPass(t);
+
+  blitFormLayer(formLayer.sprite);
+  for (const a of aliens) {
+    if (!a.alive || !a.flight) continue;
+    const ty = TYPES[a.type], f = a.flight, warn = f.warning > 0;
+    ctx.drawImage(ty.img[form.anim], f.x, f.y);
+    ctx.strokeStyle = warn ? "#ffe066" : "#ff9a5c"; ctx.lineWidth = 1;
+    ctx.strokeRect(f.x - 3, f.y - 3, ty.w + 6, ty.h + 6);
+    if (warn) drawText("!", f.x + ty.w / 2, f.y - 8, { size: 16, color: "#ffe066" });
+  }
+
+  drawBoss(t);
+
+  if (saucer) ctx.drawImage(SAUCER_IMG, saucer.x, saucer.y);
+
+  for (const p of pBullets) {
+    if (p.beam) {
+      ctx.fillStyle = BEAM_COLOR;
+      ctx.fillRect(p.x - 1, p.y, p.w + 2, p.h);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(p.x + 1, p.y, 2, p.h);
+    } else {
+      ctx.fillStyle = "#eaffff";
+      ctx.fillRect(p.x, p.y, p.w, p.h);
+    }
+  }
+
+  ctx.fillStyle = "#ffd24d";
+  const wig = (Math.floor(t * 18) % 2) * 2 - 1;
+  for (const b of eBullets) {
+    ctx.fillRect(b.x + wig, b.y, 3, 3);
+    ctx.fillRect(b.x - wig, b.y + 3, 3, 3);
+    ctx.fillRect(b.x + wig, b.y + 6, 3, 3);
+  }
+
+  for (const u of powerups) drawCapsule(u, t);
+  drawSpecials(t);
+
+  if (player.alive && !(player.inv > 0 && Math.floor(t * 12) % 2 === 0)) {
+    ctx.strokeStyle = BEAM_COLOR;
+    ctx.lineWidth = 2;
+    for (let i = 0; i < active.beam; i++) {
+      const offset = BEAM_OFFSETS[i];
+      const inner = i < 2 ? Math.sign(offset) * 10 : BEAM_OFFSETS[i - 2];
+      ctx.beginPath();
+      ctx.moveTo(player.x + inner, PLAYER_Y + 11);
+      ctx.lineTo(player.x + offset, PLAYER_Y + 11);
+      ctx.stroke();
+    }
+    for (let i = 0; i < active.beam; i++) {
+      ctx.drawImage(CANNON_IMG, player.x + BEAM_OFFSETS[i] - 5, PLAYER_Y - 4);
+    }
+    ctx.drawImage(SHIP_IMG, player.x - 13, PLAYER_Y);
+  }
+
+  for (const p of popups) {
+    ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
+    drawText(p.txt, p.x, p.y, { size: p.size, color: p.color });
+  }
+  ctx.globalAlpha = 1;
+
+  if (bannerT > 0) {
+    const p = 1 - bannerT / 1.3;
+    const size = 30 + 26 * Math.max(0, 1 - p * 4);
+    ctx.globalAlpha = Math.min(1, bannerT * 2) * Math.min(1, p * 6 + 0.2);
+    drawText(boss ? `BOSS WAVE ${wave}` : `WAVE ${wave}`, W / 2, 300, { size: boss ? size * 0.7 : size, color: boss ? "#ff6ad5" : "#ffe066", weight: 900 });
+    ctx.globalAlpha = 1;
+  }
+}
+
+function drawTitle(t) {
+  drawText(`HI-SCORE ${pad6(hi)}`, W / 2, 84, { size: 14, color: "#8fa0d8" });
+
+  ctx.globalAlpha = 0.7 + 0.3 * Math.sin(t * 2); // 光彩の脈動
+  ctx.drawImage(TITLE_GLOW, 0, TITLE_LOGO_Y);
+  ctx.globalAlpha = 1;
+  ctx.drawImage(TITLE_TEXT, 0, TITLE_LOGO_Y);
+
+  const f = Math.floor(t * 2) % 2;
+  const table = [
+    { img: TYPES.a.img[f], txt: "= 30 PTS", color: TYPES.a.color },
+    { img: TYPES.b.img[f], txt: "= 20 PTS", color: TYPES.b.color },
+    { img: TYPES.c.img[f], txt: "= 10 PTS", color: TYPES.c.color },
+    { img: SAUCER_IMG, txt: "= ??? PTS", color: "#ffb454" },
+  ];
+  table.forEach((row, i) => {
+    const y = 268 + i * 34;
+    ctx.drawImage(row.img, 178 - row.img.width / 2, y - row.img.height / 2);
+    drawText(row.txt, 212, y + 5, { align: "left", size: 15, color: row.color });
+  });
+
+  drawText(T("titleCombo"), W / 2, 420, { size: 12, color: "#ffe066" });
+  drawText(T("titlePowerups"), W / 2, 440, { size: 12, color: "#7dff7a" });
+  drawText(T("titleBeam"), W / 2, 460, { size: 11, color: BEAM_COLOR });
+
+  if (Math.floor(t * 2) % 2 === 0) {
+    drawText(T("titleStart"), W / 2, 488, { size: 19, color: "#ffe066" });
+  }
+  drawText(T("titleMove"), W / 2, 530, { size: 12, color: "#8fa0d8" });
+  drawText(T("titleSpecial"), W / 2, 550, { size: 12, color: BEAM_COLOR });
+  drawText(T("titleWave"), W / 2, 572, { size: 12, color: "#ffe066" });
+  drawText(T("titleSystem"), W / 2, 596, { size: 11, color: "#8fa0d8" });
+  drawText(`v${VERSION}`, W - 10, H - 10, { align: "right", size: 10, color: "#5f6fa8" });
+}
+
+function drawOverlay(t) {
+  if (state === "upgrade") drawUpgrades();
+  else if (state === "clear") {
+    drawText("WAVE CLEAR!", W / 2, 290, { size: 30, color: "#7dff7a", weight: 900 });
+    if (perfectBonus > 0) {
+      drawText(`PERFECT! +${perfectBonus}`, W / 2, 326, { size: 17, color: "#ffe066" });
+    }
+    drawText(`NEXT: WAVE ${wave + 1}`, W / 2, 356, { size: 14, color: "#cfd8ff" });
+    drawText(T("clearNext"), W / 2, 385, { size: 12, color: "#ffe066" });
+  } else if (state === "gameover") {
+    ctx.fillStyle = "rgba(2,3,10,0.65)";
+    ctx.fillRect(0, 0, W, H);
+    ctx.drawImage(GAMEOVER_TEXT, 0, GAMEOVER_Y);
+    drawText(`SCORE ${pad6(score)}`, W / 2, 300, { size: 17, color: "#ffffff" });
+    drawText(`HI-SCORE ${pad6(hi)}`, W / 2, 326, { size: 14, color: "#8fa0d8" });
+    drawText(`WAVE ${wave}   MAX COMBO ×${maxMult}`, W / 2, 352, { size: 13, color: "#cfd8ff" });
+    if (newRecord && Math.floor(t * 3) % 2 === 0) {
+      drawText("NEW RECORD!", W / 2, 386, { size: 16, color: "#ffe066" });
+    }
+    if (stateT > 0.6 && Math.floor(t * 2) % 2 === 0) {
+      drawText(T("retry"), W / 2, 430, { size: 16, color: "#ffe066" });
+    }
+  }
+  if (paused) {
+    ctx.fillStyle = "rgba(2,3,10,0.55)";
+    ctx.fillRect(0, 0, W, H);
+    drawText("PAUSED", W / 2, 310, { size: 32, color: "#ffe066", weight: 900 });
+    drawText(T("resume"), W / 2, 344, { size: 14, color: "#cfd8ff" });
+  }
+}
+
+function refreshActionButtons() {
+  const usable = canUseSpecial();
+  const laserOn = usable && special.charge >= LASER_MAX && special.laserT <= 0;
+  const bombOn = usable && special.bombs > 0 && special.bombT <= 0;
+  const gauge = Math.floor(special.charge);
+  const langChanged = lang !== shownButtons.lang;
+  if (langChanged || laserOn !== shownButtons.laserOn || gauge !== shownButtons.gauge) {
+    shownButtons.laserOn = laserOn; shownButtons.gauge = gauge;
+    laserButton.disabled = !laserOn;
+    laserButton.textContent = T("laserBtn", gauge >= LASER_MAX ? "READY!" : `${gauge}%`);
+  }
+  if (langChanged || bombOn !== shownButtons.bombOn || special.bombs !== shownButtons.bombs) {
+    shownButtons.bombOn = bombOn; shownButtons.bombs = special.bombs;
+    bombButton.disabled = !bombOn;
+    bombButton.textContent = T("bombBtn", special.bombs);
+  }
+  shownButtons.lang = lang;
+}
+
+function draw(t) {
+  refreshActionButtons();
+  ctx.fillStyle = "#04050c";
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.save();
+  if (shake > 0) ctx.translate(rand(-1, 1) * shake * 10, rand(-1, 1) * shake * 10);
+
+  drawBackground(t);
+
+  if (state === "title") {
+    drawTitle(t);
+  } else {
+    drawGame(t);
+    drawHud();
+    drawOverlay(t);
+  }
+  ctx.restore();
+}
+
+/* ================= メインループ ================= */
+
+let last = performance.now();
+let rafId = 0; // 予約中の requestAnimationFrame。0 ならループは止まっている
+const IDLE_FRAME_MS = 1000 / 30; // タイトルとゲームオーバーは動きが少ないので 30fps に抑える
+
+function frame(now) {
+  rafId = 0;
+  if ((state === "title" || state === "gameover") && now - last < IDLE_FRAME_MS - 1) {
+    rafId = requestAnimationFrame(frame);
+    return;
+  }
+  const dt = Math.min((now - last) / 1000, 0.05);
+  last = now;
+  if (!paused) update(dt);
+  draw(now / 1000);
+  // ポーズ中は静止画のままにしてループを止める。再開は setPaused(false) → ensureLoop()。
+  if (!paused) rafId = requestAnimationFrame(frame);
+}
+
+function ensureLoop() {
+  if (rafId || paused) return;
+  last = performance.now();
+  rafId = requestAnimationFrame(frame);
+}
+
+// ポーズ中はループが止まっているので、表示に関わる設定を変えた時は 1 フレームだけ描き直す。
+function redrawIfPaused() {
+  if (paused) draw(performance.now() / 1000);
+}
+
+ensureLoop();
+</script>
+</body>
+</html>

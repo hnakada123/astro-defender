@@ -19,7 +19,7 @@
     <a class="brand" href="../index.html"><img class="brand-mark" src="../../assets/icons/icon-192.png" width="36" height="36" alt="">ASTRO DEFENDER</a>
     <nav class="header-links" aria-label="サイトメニュー">
       <a href="../source.html#chapters">解説一覧</a>
-      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="../../game.html">ゲームをプレイ</a>
       <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
       <a href="../source.en.html" lang="en" hreflang="en">English</a>
     </nav>
@@ -72,7 +72,7 @@
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 01 · 全23項目</p><h1>1ファイルの全体構成</h1><p class="lead">HTML・CSS・JavaScript の役割と、入力から描画までのデータの流れを整理します。</p><p class="source-ref">主な参照先：cvs / ctx / player / update / draw</p></header>
 <h2 id="section-1">画面の骨組みとゲーム本体</h2>
 <p>HTML はゲーム画面用の Canvas、必殺技と言語のボタン、操作説明を配置します。CSS は画面の大きさや周囲の装飾を担当します。自機・敵・弾は HTML 要素ではなく、JavaScript が Canvas に描く図形です。</p>
-<figure class="code-block"><figcaption><span>index.html · L45–54</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L45-L54">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L45–54"><code>&lt;div class=&quot;frame&quot;&gt;&lt;canvas id=&quot;game&quot; width=&quot;480&quot; height=&quot;640&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;
+<figure class="code-block"><figcaption><span>game.html · L45–54</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L45-L54">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L45–54"><code>&lt;div class=&quot;frame&quot;&gt;&lt;canvas id=&quot;game&quot; width=&quot;480&quot; height=&quot;640&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;
 &lt;div class=&quot;actions&quot;&gt;
   &lt;button id=&quot;laserButton&quot; type=&quot;button&quot; disabled&gt;Z 合体レーザー 0%&lt;/button&gt;
   &lt;button id=&quot;bombButton&quot; type=&quot;button&quot; disabled&gt;X ボム ×2&lt;/button&gt;
@@ -97,7 +97,7 @@
 </nav></main></div>
 <footer class="site-footer"><div class="container footer-inner">
   <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
-  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../game.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
 </div></footer>
 </body>
 </html>

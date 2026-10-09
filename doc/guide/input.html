@@ -19,7 +19,7 @@
     <a class="brand" href="../index.html"><img class="brand-mark" src="../../assets/icons/icon-192.png" width="36" height="36" alt="">ASTRO DEFENDER</a>
     <nav class="header-links" aria-label="サイトメニュー">
       <a href="../source.html#chapters">解説一覧</a>
-      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="../../game.html">ゲームをプレイ</a>
       <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
       <a href="../source.en.html" lang="en" hreflang="en">English</a>
     </nav>
@@ -71,12 +71,12 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 08 自機の移動と入力</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 08 · 全23項目</p><h1>自機の移動と入力</h1><p class="lead">ポインターとキーボードを共通の状態にまとめ、移動速度と連射を制御します。</p><p class="source-ref">主な参照先：keys / mouseX / inputMode / releaseControls / updatePlay</p></header>
 <h2 id="section-1">イベントでは操作を覚えておく</h2>
-<figure class="code-block"><figcaption><span>index.html · L1077–1079</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L1077-L1079">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L1077–1079"><code>function releaseControls() {
+<figure class="code-block"><figcaption><span>game.html · L1077–1079</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1077-L1079">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1077–1079"><code>function releaseControls() {
   shooting = false; keys.left = false; keys.right = false; keys.fire = false;
 }</code></pre></figure>
 <p>ポインター移動は目標位置 <code>mouseX</code>、左右キーは <code>keys.left</code> と <code>keys.right</code>、射撃は <code>shooting</code> または <code>keys.fire</code> に記録します。実際の移動と弾の生成は、毎フレームの <code>updatePlay()</code> が担当します。</p>
 <h2 id="section-2">どちらの入力も速度を通して動かす</h2>
-<figure class="code-block"><figcaption><span>index.html · L1354–1362</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L1354-L1362">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L1354–1362"><code>  const speed = 340 * (1 + upgrades.speed * 0.15);
+<figure class="code-block"><figcaption><span>game.html · L1354–1362</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1354-L1362">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1354–1362"><code>  const speed = 340 * (1 + upgrades.speed * 0.15);
   if (inputMode === &quot;mouse&quot;) {
     const target = clampPlayerX(mouseX);
     player.x = clampPlayerX(player.x + clamp(target - player.x, -speed * dt * 2, speed * dt * 2));
@@ -100,7 +100,7 @@
 </nav></main></div>
 <footer class="site-footer"><div class="container footer-inner">
   <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
-  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../game.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
 </div></footer>
 </body>
 </html>

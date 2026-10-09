@@ -19,7 +19,7 @@
     <a class="brand" href="../index.html"><img class="brand-mark" src="../../assets/icons/icon-192.png" width="36" height="36" alt="">ASTRO DEFENDER</a>
     <nav class="header-links" aria-label="サイトメニュー">
       <a href="../source.html#chapters">解説一覧</a>
-      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="../../game.html">ゲームをプレイ</a>
       <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
       <a href="../source.en.html" lang="en" hreflang="en">English</a>
     </nav>
@@ -71,13 +71,13 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 06 四角形の当たり判定</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 06 · 全23項目</p><h1>四角形の当たり判定</h1><p class="lead">4つの不等式で重なりを調べ、絵とは別に衝突範囲を定義します。</p><p class="source-ref">主な参照先：hit / playerRect / alienRectInto / SCRATCH</p></header>
 <h2 id="section-1">左右・上下の4条件をすべて満たす</h2>
-<figure class="code-block"><figcaption><span>index.html · L72–72</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L72-L72">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L72–72"><code>const hit = (a, b) =&gt; a.x &lt; b.x + b.w &amp;&amp; a.x + a.w &gt; b.x &amp;&amp; a.y &lt; b.y + b.h &amp;&amp; a.y + a.h &gt; b.y;</code></pre></figure>
+<figure class="code-block"><figcaption><span>game.html · L72–72</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L72-L72">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L72–72"><code>const hit = (a, b) =&gt; a.x &lt; b.x + b.w &amp;&amp; a.x + a.w &gt; b.x &amp;&amp; a.y &lt; b.y + b.h &amp;&amp; a.y + a.h &gt; b.y;</code></pre></figure>
 <p><code>x</code> と <code>y</code> は四角形の左上、<code>w</code> と <code>h</code> は幅と高さです。Aの左がBの右より左、Aの右がBの左より右、さらに上下でも同じ条件を満たしたら重なっています。回転しない四角形による判定を AABB 判定と呼びます。</p>
 <section class="lab" data-lab="hit"><h3>実験：四角形を重ねる</h3><p>Aを左右に動かします。スライダーは矢印キーでも操作できます。</p><label for="hit-x">四角形Aのx座標</label><input id="hit-x" type="range" min="0" max="296" value="90"><canvas width="360" height="200" role="img" aria-label="移動できる四角形Aと固定された四角形B">Aの右端がBの左端を超えると重なります。</canvas><output for="hit-x" aria-live="polite"></output><noscript>A.x が127〜269なら重なります。操作にはJavaScriptが必要です。</noscript></section><aside class="note"><strong>読み解くポイント</strong><p>比較は <code>&lt;</code> と <code>&gt;</code> なので、辺がぴったり触れるだけなら false です。見た目の光彩は当たり判定に含めません。</p>
 </aside>
 <h2 id="section-2">当たり判定の四角形を作る</h2>
-<figure class="code-block"><figcaption><span>index.html · L703–703</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L703-L703">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L703–703"><code>function playerRect() { return { x: player.x - 13, y: PLAYER_Y, w: 26, h: 16 }; }</code></pre></figure>
-<figure class="code-block"><figcaption><span>index.html · L714–720</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L714-L720">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L714–720"><code>function alienRectInto(a, out) {
+<figure class="code-block"><figcaption><span>game.html · L703–703</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L703-L703">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L703–703"><code>function playerRect() { return { x: player.x - 13, y: PLAYER_Y, w: 26, h: 16 }; }</code></pre></figure>
+<figure class="code-block"><figcaption><span>game.html · L714–720</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L714-L720">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L714–720"><code>function alienRectInto(a, out) {
   const t = TYPES[a.type];
   if (a.flight) { out.x = a.flight.x; out.y = a.flight.y; }
   else { out.x = form.ox + a.c * CELL_W + (CELL_W - t.w) / 2; out.y = form.oy + a.r * CELL_H; }
@@ -96,7 +96,7 @@
 </nav></main></div>
 <footer class="site-footer"><div class="container footer-inner">
   <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
-  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../game.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
 </div></footer>
 </body>
 </html>

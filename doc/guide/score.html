@@ -19,7 +19,7 @@
     <a class="brand" href="../index.html"><img class="brand-mark" src="../../assets/icons/icon-192.png" width="36" height="36" alt="">ASTRO DEFENDER</a>
     <nav class="header-links" aria-label="サイトメニュー">
       <a href="../source.html#chapters">解説一覧</a>
-      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="../../game.html">ゲームをプレイ</a>
       <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
       <a href="../source.en.html" lang="en" hreflang="en">English</a>
     </nav>
@@ -73,7 +73,7 @@
 <h2 id="section-1">撃破の処理は1か所に集める</h2>
 <p><code>killAlien()</code> は生存フラグを確認してから敵を消し、生存数を減らします。その後、ゲージ充電、コンボ更新、加点、粒子やリング、カプセル抽選、ヒットストップ、効果音をまとめて処理します。複数の弾が同じ敵を調べても、二重に得点しないための入口にもなっています。</p>
 <h2 id="section-2">4体ごとに倍率が増える</h2>
-<figure class="code-block"><figcaption><span>index.html · L807–816</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L807-L816">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L807–816"><code>function bumpCombo() {
+<figure class="code-block"><figcaption><span>game.html · L807–816</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L807-L816">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L807–816"><code>function bumpCombo() {
   combo.n++; combo.t = COMBO_WINDOW;
   const m = Math.min(8, 1 + Math.floor(combo.n / 4));
   if (m &gt; combo.mult) {
@@ -85,7 +85,7 @@
 }</code></pre></figure>
 <p>撃破するたびに残り時間を <code>COMBO_WINDOW</code>、つまり2.2秒へ戻します。4体で×2、8体で×3となり、最大は×8です。通常の敵の素点は上段30点、中段20点、下段10点。倍率を更新してから加点するので、4体目から新しい倍率が適用されます。</p>
 <h2 id="section-3">5000点ごとに残機を増やす</h2>
-<figure class="code-block"><figcaption><span>index.html · L781–792</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L781-L792">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L781–792"><code>function addScore(n) {
+<figure class="code-block"><figcaption><span>game.html · L781–792</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L781-L792">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L781–792"><code>function addScore(n) {
   score += n;
   if (score &gt; hi) { hi = score; newRecord = true; }
   while (score &gt;= nextLife) {
@@ -99,7 +99,7 @@
 }</code></pre></figure>
 <p>次の残機獲得ラインを <code>nextLife</code> で管理します。大きな加点で複数のラインをまたいでも処理できるよう <code>while</code> を使います。残機は最大5ですが、満タンでもライン自体は先へ進みます。</p>
 <h2 id="section-4">保存する値と表示する値</h2>
-<figure class="code-block"><figcaption><span>index.html · L779–779</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L779-L779">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L779–779"><code>function saveHi() { try { localStorage.setItem(HI_KEY, String(hi)); } catch (e) {} }</code></pre></figure>
+<figure class="code-block"><figcaption><span>game.html · L779–779</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L779-L779">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L779–779"><code>function saveHi() { try { localStorage.setItem(HI_KEY, String(hi)); } catch (e) {} }</code></pre></figure>
 <p>ハイスコアはゲームオーバー時に <code>localStorage</code> へ文字列として保存します。読み書きに失敗してもゲームを続けられるよう <code>try</code> / <code>catch</code> で囲っています。画面用の <code>scoreShown</code> は実際の <code>score</code> に少しずつ近づけ、数字が滑らかに増える演出に使います。</p>
 <aside class="exercise"><strong>確かめてみよう</strong><p><code>combo.n</code> が3と4のときの <code>Math.floor(combo.n / 4)</code> を計算し、倍率の境目を確かめてください。</p>
 </aside>
@@ -110,7 +110,7 @@
 </nav></main></div>
 <footer class="site-footer"><div class="container footer-inner">
   <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
-  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../game.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
 </div></footer>
 </body>
 </html>

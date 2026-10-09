@@ -2,14 +2,15 @@
 
 *[English version / 英語版はこちら](README.en.md)*
 
-**▶ 今すぐプレイ: <https://hnakada123.github.io/astro-defender/>**
-**🎮 ゲーム紹介・遊び方: <https://hnakada123.github.io/astro-defender/doc/>**
+**▶ 今すぐプレイ: <https://hnakada123.github.io/astro-defender/game.html>**
+**🎮 ゲーム紹介・遊び方（日本語）: <https://hnakada123.github.io/astro-defender/doc/index.html>**
+**🌐 Game guide (English): <https://hnakada123.github.io/astro-defender/>**
 **📖 ソースコード解説: <https://hnakada123.github.io/astro-defender/doc/source.html>**（初学者向け・全23章）
 
 現在のバージョン: **v1.0.1**（[更新履歴](CHANGELOG.md)）
 
 ブラウザだけで遊べる、マウス操作のネオレトロ風固定画面シューティングゲームです。
-ゲーム内の画像と音はコードから生成し、ゲーム本体は外部ライブラリなしで `index.html` 1 ファイルで動作します。
+ゲーム内の画像と音はコードから生成し、ゲーム本体は外部ライブラリなしで `game.html` 1 ファイルで動作します。
 ブラウザ用のfaviconとアイコン画像は `favicon.ico` と `assets/icons/` に用意しています。
 
 クラシックな編隊シューティングをベースに、ネオングロー演出・コンボ倍率・
@@ -33,13 +34,13 @@
 
 ## 起動方法
 
-`index.html` をブラウザ（Chrome / Firefox / Edge など）で開くだけで遊べます。
+[game.html](game.html) をブラウザ（Chrome / Firefox / Edge など）で開くだけで遊べます。
 
 ローカルサーバー経由で開きたい場合:
 
 ```sh
 python3 -m http.server 8000
-# → http://localhost:8000 を開く
+# → http://localhost:8000/game.html を開く
 ```
 
 ## 操作方法
@@ -106,7 +107,7 @@ python3 -m http.server 8000
 
 ## ソースコード解説
 
-`index.html` の中身を初学者向けに 23 項目で読み解く解説ページを用意しています。
+`game.html` の中身を初学者向けに 23 項目で読み解く解説ページを用意しています。
 日本語版は4つの分野に分けた項目一覧から、各項目の詳細ページへ移動できます。
 ゲームループ・状態遷移・スプライト生成・当たり判定・Web Audio による音の合成などを、
 実ソースの行番号つき抜粋、確認課題、ブラウザ上で触れる実験コーナーで説明しています。
@@ -132,7 +133,7 @@ node --test tests/*.test.cjs
 - Y（マイナー）: 新しい機能・敵・演出の追加
 - Z（パッチ）: 不具合修正や数値の微調整
 
-バージョンを上げるときは、`index.html` 冒頭の `VERSION` 定数、この README、`CHANGELOG.md` を更新し、
+バージョンを上げるときは、`game.html` 冒頭の `VERSION` 定数、この README、`CHANGELOG.md` を更新し、
 `git tag vX.Y.Z` を打って `git push --tags` します。
 
 ## 権利について

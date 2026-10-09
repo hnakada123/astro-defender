@@ -19,7 +19,7 @@
     <a class="brand" href="../index.html"><img class="brand-mark" src="../../assets/icons/icon-192.png" width="36" height="36" alt="">ASTRO DEFENDER</a>
     <nav class="header-links" aria-label="サイトメニュー">
       <a href="../source.html#chapters">解説一覧</a>
-      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="../../game.html">ゲームをプレイ</a>
       <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
       <a href="../source.en.html" lang="en" hreflang="en">English</a>
     </nav>
@@ -71,7 +71,7 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 12 カプセルと連結ビーム砲</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 12 · 全23項目</p><h1>カプセルと連結ビーム砲</h1><p class="lead">時間制限のある強化と、シールド・連結砲のような回数で管理する効果を分けます。</p><p class="source-ref">主な参照先：PU_DEFS / maybeDrop / applyPU / active</p></header>
 <h2 id="section-1">4種類の効果をデータで定義する</h2>
-<figure class="code-block"><figcaption><span>index.html · L641–646</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L641-L646">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L641–646"><code>const PU_DEFS = {
+<figure class="code-block"><figcaption><span>game.html · L641–646</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L641-L646">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L641–646"><code>const PU_DEFS = {
   wide: { label: &quot;W&quot;, color: &quot;#61e8ff&quot;, dur: 8, name: &quot;3-WAY!&quot; },
   rapid: { label: &quot;R&quot;, color: &quot;#ffe066&quot;, dur: 8, name: &quot;RAPID!&quot; },
   shield: { label: &quot;S&quot;, color: &quot;#7dff7a&quot;, dur: 0, name: &quot;SHIELD!&quot; },
@@ -79,7 +79,7 @@
 };</code></pre></figure>
 <div class="table-wrap" tabindex="0" role="region" aria-label="カプセル・状態の持ち方・効果"><table><thead><tr><th scope="col">カプセル</th><th scope="col">状態の持ち方</th><th scope="col">効果</th></tr></thead><tbody><tr><th scope="row">W</th><td><code>active.wide</code> に残り秒数</td><td>8秒間、3方向へ射撃</td></tr><tr><th scope="row">R</th><td><code>active.rapid</code> に残り秒数</td><td>8秒間、射撃間隔を短縮</td></tr><tr><th scope="row">S</th><td><code>active.shield</code> に有無</td><td>ダメージを1回防ぐ</td></tr><tr><th scope="row">B</th><td><code>active.beam</code> に砲の数</td><td>1回の取得で2門増加、最大4門</td></tr></tbody></table></div>
 <h2 id="section-2">落とす、近づける、拾う</h2>
-<figure class="code-block"><figcaption><span>index.html · L818–822</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L818-L822">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L818–822"><code>function maybeDrop(x, y) {
+<figure class="code-block"><figcaption><span>game.html · L818–822</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L818-L822">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L818–822"><code>function maybeDrop(x, y) {
   if (Math.random() &gt; 0.08 || powerups.length &gt;= 2) return;
   const ks = Object.keys(PU_DEFS);
   powerups.push({ x, y, type: ks[(Math.random() * ks.length) | 0], ph: Math.random() * 6.28 });
@@ -87,7 +87,7 @@
 <p>通常の敵の撃破時に、約8%の確率でカプセルを作ります。同時に存在できるのは2個までです。カプセルは毎秒62 pxで落下し、自機より少し大きい回収用の四角形と重なると <code>applyPU()</code> が効果を反映します。</p>
 <p>回収フィールドの強化があると、近くのカプセルを自機へ引き寄せます。距離で割った方向ベクトルに移動量を掛け、移動量は残りの距離以下に抑えます。距離0で割らない条件も含まれています。</p>
 <h2 id="section-3">連結砲は時間で消えない</h2>
-<figure class="code-block"><figcaption><span>index.html · L824–838</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L824-L838">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L824–838"><code>function applyPU(type) {
+<figure class="code-block"><figcaption><span>game.html · L824–838</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L824-L838">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L824–838"><code>function applyPU(type) {
   const d = PU_DEFS[type];
   let name = d.name;
   if (type === &quot;shield&quot;) active.shield = 1;
@@ -114,7 +114,7 @@
 </nav></main></div>
 <footer class="site-footer"><div class="container footer-inner">
   <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
-  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../game.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
 </div></footer>
 </body>
 </html>

@@ -19,7 +19,7 @@
     <a class="brand" href="../index.html"><img class="brand-mark" src="../../assets/icons/icon-192.png" width="36" height="36" alt="">ASTRO DEFENDER</a>
     <nav class="header-links" aria-label="サイトメニュー">
       <a href="../source.html#chapters">解説一覧</a>
-      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="../../game.html">ゲームをプレイ</a>
       <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
       <a href="../source.en.html" lang="en" hreflang="en">English</a>
     </nav>
@@ -69,13 +69,13 @@
 </nav></details>
 <main id="main" class="doc-main">
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 00 この解説の読み方</nav>
-<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 00 · 全23項目</p><h1>この解説の読み方</h1><p class="lead">ゲームを動かし、画面の変化とコードを結び付けるところから始めます。</p><p class="source-ref">主な参照先：index.html / tests / doc</p></header>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 00 · 全23項目</p><h1>この解説の読み方</h1><p class="lead">ゲームを動かし、画面の変化とコードを結び付けるところから始めます。</p><p class="source-ref">主な参照先：game.html / tests / doc</p></header>
 <h2 id="section-1">まずは遊んで、動きを観察する</h2>
-<p>ASTRO DEFENDER は、敵の編隊を撃ち落とす固定画面シューティングです。画面の動きは Canvas 2D、効果音と BGM は Web Audio で作られています。ゲーム本体はリポジトリ直下の <code>index.html</code> だけで動き、画像ファイルや音源ファイルを読み込む必要はありません。</p>
+<p>ASTRO DEFENDER は、敵の編隊を撃ち落とす固定画面シューティングです。画面の動きは Canvas 2D、効果音と BGM は Web Audio で作られています。ゲーム本体はリポジトリ直下の <code>game.html</code> だけで動き、画像ファイルや音源ファイルを読み込む必要はありません。</p>
 <p>この解説では、変数・関数・配列・オブジェクト・繰り返しの基本を知っている人を想定しています。初めてなら項目番号の順に、気になる仕組みがあるなら項目一覧から読み進めてください。</p>
-<ul><li><a href="../../index.html">ゲームを開く</a>。マウスで移動し、クリックを押し続けて射撃する。</li><li>敵を減らしたときの速度、弾が当たったときの変化、ウェーブ終了時の画面を観察する。</li><li>対応する解説を開き、関数名で本体のソースを検索する。</li></ul>
+<ul><li><a href="../../game.html">ゲームを開く</a>。マウスで移動し、クリックを押し続けて射撃する。</li><li>敵を減らしたときの速度、弾が当たったときの変化、ウェーブ終了時の画面を観察する。</li><li>対応する解説を開き、関数名で本体のソースを検索する。</li></ul>
 <h2 id="section-2">手元で動かす</h2>
-<p>リポジトリを取得したら、ルートの <code>index.html</code> をブラウザで開きます。HTTP 経由で確認する場合は、リポジトリのディレクトリで次のコマンドを実行し、表示されたポートの <code>http://localhost:8000/</code> にアクセスします。</p>
+<p>リポジトリを取得したら、ルートの <code>game.html</code> をブラウザで開きます。HTTP 経由で確認する場合は、リポジトリのディレクトリで次のコマンドを実行し、<code>http://localhost:8000/game.html</code> にアクセスします。</p>
 <figure class="code-block"><figcaption>ローカルサーバーの起動</figcaption><pre tabindex="0"><code>python3 -m http.server 8000</code></pre></figure>
 <h2 id="section-3">コード枠と確認課題の使い方</h2>
 <p>ファイル名・行番号の付いたコード枠は、今回の解説作成時の実ソースから抜粋しています。「ソースを見る」は GitHub の該当箇所へのリンクです。更新で行番号が変わった場合は、併記した関数名を検索してください。「説明用の例」は仕組みを小さく取り出した例です。</p>
@@ -90,7 +90,7 @@
 </nav></main></div>
 <footer class="site-footer"><div class="container footer-inner">
   <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
-  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../game.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
 </div></footer>
 </body>
 </html>

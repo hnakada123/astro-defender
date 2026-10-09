@@ -19,7 +19,7 @@
     <a class="brand" href="../index.html"><img class="brand-mark" src="../../assets/icons/icon-192.png" width="36" height="36" alt="">ASTRO DEFENDER</a>
     <nav class="header-links" aria-label="サイトメニュー">
       <a href="../source.html#chapters">解説一覧</a>
-      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="../../game.html">ゲームをプレイ</a>
       <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
       <a href="../source.en.html" lang="en" hreflang="en">English</a>
     </nav>
@@ -71,18 +71,18 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 04 Canvas の座標と描画</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 04 · 全23項目</p><h1>Canvas の座標と描画</h1><p class="lead">内部座標と表示サイズの違い、文字描画、重ねる順序を確認します。</p><p class="source-ref">主な参照先：W / H / canvasX / drawTextOn / draw</p></header>
 <h2 id="section-1">内部は480 × 640、見た目の大きさはCSS</h2>
-<figure class="code-block"><figcaption><span>index.html · L62–64</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L62-L64">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L62–64"><code>const W = 480, H = 640;
+<figure class="code-block"><figcaption><span>game.html · L62–64</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L62-L64">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L62–64"><code>const W = 480, H = 640;
 const cvs = document.getElementById(&quot;game&quot;);
 const ctx = cvs.getContext(&quot;2d&quot;, { alpha: false }); // 毎フレーム全面を塗るので不透明にし、ページとの合成コストを下げる</code></pre></figure>
 <p>Canvas の内部座標は左上が <code>(0, 0)</code>、右へ進むと x、下へ進むと y が増えます。CSS で画面を縮めても内部の480 × 640という寸法は変わりません。ゲーム中の速度や当たり判定は、この内部座標で計算します。</p>
 <h2 id="section-2">ポインターの座標を変換する</h2>
-<figure class="code-block"><figcaption><span>index.html · L1072–1075</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L1072-L1075">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L1072–1075"><code>function canvasX(e) {
+<figure class="code-block"><figcaption><span>game.html · L1072–1075</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1072-L1075">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1072–1075"><code>function canvasX(e) {
   const r = cvs.getBoundingClientRect();
   return ((e.clientX - r.left) * W) / r.width;
 }</code></pre></figure>
 <p>イベントの <code>clientX</code> から Canvas の表示位置を引き、表示幅に対する比率を求めて内部幅 <code>W</code> を掛けます。例えば表示幅が240 pxなら、左端から120 pxの位置は内部座標240になります。カード選択では y方向にも同じ変換を使います。</p>
 <h2 id="section-3">文字も図形として描く</h2>
-<figure class="code-block"><figcaption><span>index.html · L171–177</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L171-L177">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L171–177"><code>function drawTextOn(g, s, x, y, o = {}) {
+<figure class="code-block"><figcaption><span>game.html · L171–177</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L171-L177">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L171–177"><code>function drawTextOn(g, s, x, y, o = {}) {
   g.font = `${o.weight || 700} ${o.size || 13}px &#x27;Courier New&#x27;, ui-monospace, monospace`;
   g.fillStyle = o.color || &quot;#cfd8ff&quot;;
   g.textAlign = o.align || &quot;center&quot;;
@@ -101,7 +101,7 @@ const ctx = cvs.getContext(&quot;2d&quot;, { alpha: false }); // 毎フレーム
 </nav></main></div>
 <footer class="site-footer"><div class="container footer-inner">
   <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
-  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../game.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
 </div></footer>
 </body>
 </html>

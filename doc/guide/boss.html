@@ -19,7 +19,7 @@
     <a class="brand" href="../index.html"><img class="brand-mark" src="../../assets/icons/icon-192.png" width="36" height="36" alt="">ASTRO DEFENDER</a>
     <nav class="header-links" aria-label="サイトメニュー">
       <a href="../source.html#chapters">解説一覧</a>
-      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="../../game.html">ゲームをプレイ</a>
       <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
       <a href="../source.en.html" lang="en" hreflang="en">English</a>
     </nav>
@@ -71,7 +71,7 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 15 大型戦艦のボス戦</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 15 · 全23項目</p><h1>大型戦艦のボス戦</h1><p class="lead">部位ごとの耐久値、コアの保護、予告位置を固定する攻撃を実装します。</p><p class="source-ref">主な参照先：makeBoss / coreExposed / damageBossPart / updateBoss</p></header>
 <h2 id="section-1">ボスを3つの部位に分ける</h2>
-<figure class="code-block"><figcaption><span>index.html · L934–944</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L934-L944">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L934–944"><code>function makeBoss() {
+<figure class="code-block"><figcaption><span>game.html · L934–944</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L934-L944">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L934–944"><code>function makeBoss() {
   const level = wave / 5;
   boss = {
     x: W / 2, y: 112, t: 0, attackT: 2, warning: 0, laserT: 0, targetX: W / 2,
@@ -84,8 +84,8 @@
 }</code></pre></figure>
 <p>5ウェーブごとに大型戦艦を作ります。左右の砲台と中央コアを <code>parts</code> に入れ、各部位に現在HPと最大HPを持たせます。5ウェーブ目なら砲台は各18、コアは56です。部位の画面座標はボス本体の座標に <code>offset</code> を足して求めます。</p>
 <h2 id="section-2">左右の砲台を壊すまでコアを保護する</h2>
-<figure class="code-block"><figcaption><span>index.html · L950–950</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L950-L950">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L950–950"><code>function coreExposed() { return boss &amp;&amp; boss.parts.slice(0, 2).every(p =&gt; p.hp &lt;= 0); }</code></pre></figure>
-<figure class="code-block"><figcaption><span>index.html · L952–959</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L952-L959">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L952–959"><code>function damageBossPart(part, amount, source = &quot;shot&quot;) {
+<figure class="code-block"><figcaption><span>game.html · L950–950</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L950-L950">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L950–950"><code>function coreExposed() { return boss &amp;&amp; boss.parts.slice(0, 2).every(p =&gt; p.hp &lt;= 0); }</code></pre></figure>
+<figure class="code-block"><figcaption><span>game.html · L952–959</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L952-L959">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L952–959"><code>function damageBossPart(part, amount, source = &quot;shot&quot;) {
   if (!boss || part.hp &lt;= 0 || amount &lt;= 0) return;
   if (part.kind === &quot;core&quot; &amp;&amp; !coreExposed()) return;
   const r = bossPartRect(part), damage = Math.min(part.hp, amount);
@@ -109,7 +109,7 @@
 </nav></main></div>
 <footer class="site-footer"><div class="container footer-inner">
   <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
-  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../game.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
 </div></footer>
 </body>
 </html>

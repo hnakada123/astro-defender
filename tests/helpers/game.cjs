@@ -2,7 +2,7 @@ const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 const vm = require("node:vm");
 
-const html = readFileSync(join(__dirname, "..", "..", "index.html"), "utf8");
+const html = readFileSync(join(__dirname, "..", "..", "game.html"), "utf8");
 const source = html.match(/<script>([\s\S]*?)<\/script>/)[1];
 
 // 本番コードを実行し、ブラウザの描画・音声・タイマーだけを置き換える。

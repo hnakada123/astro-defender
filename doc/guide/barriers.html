@@ -19,7 +19,7 @@
     <a class="brand" href="../index.html"><img class="brand-mark" src="../../assets/icons/icon-192.png" width="36" height="36" alt="">ASTRO DEFENDER</a>
     <nav class="header-links" aria-label="サイトメニュー">
       <a href="../source.html#chapters">解説一覧</a>
-      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="../../game.html">ゲームをプレイ</a>
       <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
       <a href="../source.en.html" lang="en" hreflang="en">English</a>
     </nav>
@@ -73,7 +73,7 @@
 <h2 id="section-1">1枚の画像ではなく、マスの集まり</h2>
 <figure class="shot wide"><img src="../img/barriers.png" alt="4つのバリア。小さなマスが消えることで穴が開く。" width="960" height="140" loading="lazy"><figcaption>4つのバリア。小さなマスが消えることで穴が開く。</figcaption></figure>
 <p>バリアは14列 × 10行、1マス4 pxの格子です。<code>g[r][c]</code> が1なら存在し、0なら穴です。生成時に上の角と下中央を切り抜き、描画時は値が残っているマスだけを塗ります。</p>
-<figure class="code-block"><figcaption><span>index.html · L723–739</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L723-L739">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L723–739"><code>function makeBarriers() {
+<figure class="code-block"><figcaption><span>game.html · L723–739</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L723-L739">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L723–739"><code>function makeBarriers() {
   barriers = [];
   const cols = 14, rows = 10, cell = 4, bw = cols * cell;
   for (let i = 0; i &lt; 4; i++) {
@@ -91,7 +91,7 @@
       g.push(line);
     }</code></pre></figure>
 <h2 id="section-2">画面座標をマスの番号に変える</h2>
-<figure class="code-block"><figcaption><span>index.html · L1192–1201</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L1192-L1201">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L1192–1201"><code>function barrierHit(rect, blast) {
+<figure class="code-block"><figcaption><span>game.html · L1192–1201</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1192-L1201">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1192–1201"><code>function barrierHit(rect, blast) {
   for (const b of barriers) {
     if (!hit(rect, b)) continue;
     const c0 = Math.max(0, Math.floor((rect.x - b.x) / b.cell));
@@ -114,7 +114,7 @@
 </nav></main></div>
 <footer class="site-footer"><div class="container footer-inner">
   <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
-  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../game.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
 </div></footer>
 </body>
 </html>

@@ -19,7 +19,7 @@
     <a class="brand" href="../index.html"><img class="brand-mark" src="../../assets/icons/icon-192.png" width="36" height="36" alt="">ASTRO DEFENDER</a>
     <nav class="header-links" aria-label="サイトメニュー">
       <a href="../source.html#chapters">解説一覧</a>
-      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="../../game.html">ゲームをプレイ</a>
       <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
       <a href="../source.en.html" lang="en" hreflang="en">English</a>
     </nav>
@@ -71,9 +71,9 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 20 ゲームロジックのテスト</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 20 · 全23項目</p><h1>ゲームロジックのテスト</h1><p class="lead">ブラウザ部分を置き換え、本番のJavaScriptに対してルールを検証します。</p><p class="source-ref">主な参照先：tests/helpers/game.cjs / node:test / vm</p></header>
 <h2 id="section-1">本体からスクリプトを取り出して実行する</h2>
-<figure class="code-block"><figcaption><span>tests/helpers/game.cjs · L5–6</span><a href="https://github.com/hnakada123/astro-defender/blob/main/tests/helpers/game.cjs#L5-L6">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="tests/helpers/game.cjs · L5–6"><code>const html = readFileSync(join(__dirname, &quot;..&quot;, &quot;..&quot;, &quot;index.html&quot;), &quot;utf8&quot;);
+<figure class="code-block"><figcaption><span>tests/helpers/game.cjs · L5–6</span><a href="https://github.com/hnakada123/astro-defender/blob/main/tests/helpers/game.cjs#L5-L6">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="tests/helpers/game.cjs · L5–6"><code>const html = readFileSync(join(__dirname, &quot;..&quot;, &quot;..&quot;, &quot;game.html&quot;), &quot;utf8&quot;);
 const source = html.match(/&lt;script&gt;([\s\S]*?)&lt;\/script&gt;/)[1];</code></pre></figure>
-<p>テスト用にゲームを別実装するのではなく、<code>index.html</code> の script 内を読み込んで Node.js の <code>vm</code> で実行します。Canvas、DOM、音声、時刻、フレームの予約などは簡単な代用品へ置き換えます。ゲームのルールを担う関数は本番のものです。</p>
+<p>テスト用にゲームを別実装するのではなく、<code>game.html</code> の script 内を読み込んで Node.js の <code>vm</code> で実行します。Canvas、DOM、音声、時刻、フレームの予約などは簡単な代用品へ置き換えます。ゲームのルールを担う関数は本番のものです。</p>
 <h2 id="section-2">状態を用意し、操作して、結果を調べる</h2>
 <figure class="code-block"><figcaption><span>tests/arcade-features.test.cjs · L50–65</span><a href="https://github.com/hnakada123/astro-defender/blob/main/tests/arcade-features.test.cjs#L50-L65">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="tests/arcade-features.test.cjs · L50–65"><code>test(&quot;a bomb clears bullets, destroys nearby enemies, preserves distant enemies and cover, and grants invulnerability&quot;, () =&gt; {
   const run = game();
@@ -106,7 +106,7 @@ const source = html.match(/&lt;script&gt;([\s\S]*?)&lt;\/script&gt;/)[1];</code>
 </nav></main></div>
 <footer class="site-footer"><div class="container footer-inner">
   <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
-  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../game.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
 </div></footer>
 </body>
 </html>

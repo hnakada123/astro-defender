@@ -19,7 +19,7 @@
     <a class="brand" href="../index.html"><img class="brand-mark" src="../../assets/icons/icon-192.png" width="36" height="36" alt="">ASTRO DEFENDER</a>
     <nav class="header-links" aria-label="サイトメニュー">
       <a href="../source.html#chapters">解説一覧</a>
-      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="../../game.html">ゲームをプレイ</a>
       <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
       <a href="../source.en.html" lang="en" hreflang="en">English</a>
     </nav>
@@ -73,7 +73,7 @@
 <h2 id="section-1">音を作り、音量を通して出力する</h2>
 <ol class="flow"><li><strong>発振器</strong><small><code>OscillatorNode</code> が波形を作る</small></li><li><strong>音量</strong><small><code>GainNode</code> が減衰を付ける</small></li><li><strong>出力</strong><small><code>destination</code> へ接続</small></li></ol>
 <p><code>ac()</code> は初めて必要になったときに AudioContext を作り、中断中なら再開します。クリックやキー入力の入口で呼ぶ構成です。既存の音源ファイルを再生するのではなく、波形と音量の変化から効果音を作ります。</p>
-<figure class="code-block"><figcaption><span>index.html · L193–206</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L193-L206">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L193–206"><code>function beep({ f0 = 440, f1 = f0, dur = 0.1, type = &quot;square&quot;, vol = 0.12, delay = 0 }) {
+<figure class="code-block"><figcaption><span>game.html · L193–206</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L193-L206">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L193–206"><code>function beep({ f0 = 440, f1 = f0, dur = 0.1, type = &quot;square&quot;, vol = 0.12, delay = 0 }) {
   if (muted) return;
   try {
     const a = ac(), t = a.currentTime + delay;
@@ -91,7 +91,7 @@
 <h2 id="section-2">爆発はノイズとフィルター</h2>
 <p><code>ensureNoise()</code> は1秒分のホワイトノイズを一度作って共有します。<code>boom()</code> はそのバッファを再生し、ローパスフィルターで高い音を削り、音量を減衰させます。発射するたびにノイズ全体を作り直さないことが負荷の削減につながります。</p>
 <h2 id="section-3">BGMはオーディオの時計で予約する</h2>
-<figure class="code-block"><figcaption><span>index.html · L328–336</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L328-L336">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L328–336"><code>function musicTick() {
+<figure class="code-block"><figcaption><span>game.html · L328–336</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L328-L336">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L328–336"><code>function musicTick() {
   if (!actx) return;
   while (music.next &lt; actx.currentTime + 0.16) {
     if (music.next &lt; actx.currentTime) music.next = actx.currentTime + 0.05;
@@ -112,7 +112,7 @@
 </nav></main></div>
 <footer class="site-footer"><div class="container footer-inner">
   <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
-  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../game.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
 </div></footer>
 </body>
 </html>

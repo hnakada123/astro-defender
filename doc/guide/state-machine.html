@@ -19,7 +19,7 @@
     <a class="brand" href="../index.html"><img class="brand-mark" src="../../assets/icons/icon-192.png" width="36" height="36" alt="">ASTRO DEFENDER</a>
     <nav class="header-links" aria-label="サイトメニュー">
       <a href="../source.html#chapters">解説一覧</a>
-      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="../../game.html">ゲームをプレイ</a>
       <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
       <a href="../source.en.html" lang="en" hreflang="en">English</a>
     </nav>
@@ -71,16 +71,16 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 03 画面と状態遷移</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 03 · 全23項目</p><h1>画面と状態遷移</h1><p class="lead">タイトル、プレイ、ミス、クリア、強化選択、ゲームオーバーを状態で管理します。</p><p class="source-ref">主な参照先：state / stateT / setState / setPaused</p></header>
 <h2 id="section-1">画面名を1つの変数で表す</h2>
-<figure class="code-block"><figcaption><span>index.html · L649–651</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L649-L651">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L649–651"><code>let state = &quot;title&quot;;       // title | play | dying | clear | upgrade | gameover
+<figure class="code-block"><figcaption><span>game.html · L649–651</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L649-L651">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L649–651"><code>let state = &quot;title&quot;;       // title | play | dying | clear | upgrade | gameover
 let stateT = 0;
 let paused = false;</code></pre></figure>
 <div class="table-wrap" tabindex="0" role="region" aria-label="状態・起きること・次の状態"><table><thead><tr><th scope="col">状態</th><th scope="col">起きること</th><th scope="col">次の状態</th></tr></thead><tbody><tr><th scope="row"><code>title</code></th><td>開始入力を待つ</td><td><code>startGame()</code> で <code>play</code></td></tr><tr><th scope="row"><code>play</code></th><td>移動・射撃・衝突を処理</td><td>被弾で <code>dying</code>、全滅で <code>clear</code>、侵入で <code>gameover</code></td></tr><tr><th scope="row"><code>dying</code></th><td>ミスの演出を待つ</td><td>1.15秒を超えると残機に応じて復帰か終了</td></tr><tr><th scope="row"><code>clear</code></th><td>クリア演出を表示</td><td>1.6秒を超えると <code>upgrade</code></td></tr><tr><th scope="row"><code>upgrade</code></th><td>強化カードの選択を待つ</td><td>選択後に次のウェーブの <code>play</code></td></tr><tr><th scope="row"><code>gameover</code></th><td>結果を表示</td><td>0.6秒を超えてから開始入力で再挑戦</td></tr></tbody></table></div>
 <h2 id="section-2">状態の切り替えと経過時間</h2>
-<figure class="code-block"><figcaption><span>index.html · L686–689</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L686-L689">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L686–689"><code>function setState(s) {
+<figure class="code-block"><figcaption><span>game.html · L686–689</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L686-L689">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L686–689"><code>function setState(s) {
   state = s; stateT = 0;
   cvs.style.cursor = (s === &quot;play&quot; &amp;&amp; !paused) ? &quot;none&quot; : &quot;pointer&quot;;
 }</code></pre></figure>
-<figure class="code-block"><figcaption><span>index.html · L1558–1571</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L1558-L1571">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L1558–1571"><code>function update(dt) {
+<figure class="code-block"><figcaption><span>game.html · L1558–1571</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1558-L1571">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1558–1571"><code>function update(dt) {
   stateT += dt;
   updateCommon(dt);
   if (state === &quot;play&quot;) {
@@ -108,7 +108,7 @@ let paused = false;</code></pre></figure>
 </nav></main></div>
 <footer class="site-footer"><div class="container footer-inner">
   <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
-  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../game.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
 </div></footer>
 </body>
 </html>

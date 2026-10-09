@@ -2,14 +2,14 @@
 
 *[日本語版はこちら / Japanese version](README.md)*
 
-**▶ Play now: <https://hnakada123.github.io/astro-defender/>**
-**🎮 Game guide: <https://hnakada123.github.io/astro-defender/doc/index.en.html>**
+**▶ Play now: <https://hnakada123.github.io/astro-defender/game.html>**
+**🎮 Game guide: <https://hnakada123.github.io/astro-defender/>**
 **📖 Source code guide: <https://hnakada123.github.io/astro-defender/doc/source.en.html>** (beginner-friendly, 23 chapters)
 
 Current version: **v1.0.1** ([changelog](CHANGELOG.en.md))
 
 A neo-retro fixed-screen shooter you play in the browser with the mouse.
-In-game graphics and audio are generated from code, and the game runs from a single `index.html` file without external libraries.
+In-game graphics and audio are generated from code, and the game runs from a single `game.html` file without external libraries.
 Browser favicons and icon images are provided in `favicon.ico` and `assets/icons/`.
 
 Built on classic formation-shooter gameplay, with a modern arcade layer on top:
@@ -34,13 +34,13 @@ settings on the first visit, and the buttons under the play field switch it at a
 
 ## Running it
 
-Just open `index.html` in a browser (Chrome / Firefox / Edge, …).
+Just open `game.html` in a browser (Chrome / Firefox / Edge, …).
 
 To serve it over a local server instead:
 
 ```sh
 python3 -m http.server 8000
-# → open http://localhost:8000
+# → open http://localhost:8000/game.html
 ```
 
 ## Controls
@@ -110,7 +110,7 @@ python3 -m http.server 8000
 
 ## Source code guide
 
-A beginner-friendly guide walks through `index.html` in 23 chapters: the game loop, the state machine,
+A beginner-friendly guide walks through `game.html` in 23 chapters: the game loop, the state machine,
 sprite generation, collision detection, sound synthesis with Web Audio, and more, with line-numbered
 excerpts from the real source and interactive labs that run in the browser.
 
@@ -136,7 +136,7 @@ The current version is **v1.0.1**. It is also shown in the bottom-right corner o
 - Y (minor): new features, enemies or effects
 - Z (patch): bug fixes and small balance tweaks
 
-To bump the version, update the `VERSION` constant at the top of `index.html`, this README and `CHANGELOG.en.md`,
+To bump the version, update the `VERSION` constant at the top of `game.html`, this README and `CHANGELOG.en.md`,
 then run `git tag vX.Y.Z` and `git push --tags`.
 
 ## Rights

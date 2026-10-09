@@ -19,7 +19,7 @@
     <a class="brand" href="../index.html"><img class="brand-mark" src="../../assets/icons/icon-192.png" width="36" height="36" alt="">ASTRO DEFENDER</a>
     <nav class="header-links" aria-label="サイトメニュー">
       <a href="../source.html#chapters">解説一覧</a>
-      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="../../game.html">ゲームをプレイ</a>
       <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
       <a href="../source.en.html" lang="en" hreflang="en">English</a>
     </nav>
@@ -73,7 +73,7 @@
 <h2 id="section-1">通常の敵もボスもいなくなったらクリア</h2>
 <p><code>aliveN === 0 &amp;&amp; !boss</code> がクリア条件です。編隊から突入した敵も生存数に含むので、画面外へ飛び去っただけではクリアになりません。敵弾や自弾を消し、入力を解除して <code>clear</code> に移ります。ノーダメージなら <code>500 + wave * 100</code> 点を加えます。</p>
 <h2 id="section-2">上限に達した強化を除いて抽選する</h2>
-<figure class="code-block"><figcaption><span>index.html · L903–910</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L903-L910">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L903–910"><code>function openUpgrades() {
+<figure class="code-block"><figcaption><span>game.html · L903–910</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L903-L910">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L903–910"><code>function openUpgrades() {
   const pool = Object.keys(UPGRADE_DEFS).filter(k =&gt; !UPGRADE_DEFS[k].max || upgrades[k] &lt; UPGRADE_DEFS[k].max);
   upgradeChoices = [];
   while (upgradeChoices.length &lt; 3) upgradeChoices.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
@@ -84,7 +84,7 @@
 <p>ビーム・速度・回収には最大レベル5が設定されています。上限の候補を除いてから、配列から1つずつ取り出すため重複しません。レベルを持たない緊急整備・防衛補給・エネルギー補給が残るので、3つの恒久強化がすべて上限でも3択を作れます。</p>
 <figure class="shot"><img src="../img/upgrade.png" alt="ウェーブ間の強化画面。1・2・3キー、上下キーと決定、またはカードのクリックで選択する。" width="960" height="1280" loading="lazy"><figcaption>ウェーブ間の強化画面。1・2・3キー、上下キーと決定、またはカードのクリックで選択する。</figcaption></figure>
 <h2 id="section-3">選択を確定してからウェーブを進める</h2>
-<figure class="code-block"><figcaption><span>index.html · L912–928</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L912-L928">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L912–928"><code>function chooseUpgrade(index) {
+<figure class="code-block"><figcaption><span>game.html · L912–928</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L912-L928">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L912–928"><code>function chooseUpgrade(index) {
   if (state !== &quot;upgrade&quot; || paused || !upgradeChoices[index]) return false;
   const key = upgradeChoices[index];
   if (key in upgrades) upgrades[key]++;
@@ -112,7 +112,7 @@
 </nav></main></div>
 <footer class="site-footer"><div class="container footer-inner">
   <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
-  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../game.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
 </div></footer>
 </body>
 </html>

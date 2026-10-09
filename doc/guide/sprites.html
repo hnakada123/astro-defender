@@ -19,7 +19,7 @@
     <a class="brand" href="../index.html"><img class="brand-mark" src="../../assets/icons/icon-192.png" width="36" height="36" alt="">ASTRO DEFENDER</a>
     <nav class="header-links" aria-label="サイトメニュー">
       <a href="../source.html#chapters">解説一覧</a>
-      <a href="../../index.html">ゲームをプレイ</a>
+      <a href="../../game.html">ゲームをプレイ</a>
       <a href="https://github.com/hnakada123/astro-defender">GitHub</a>
       <a href="../source.en.html" lang="en" hreflang="en">English</a>
     </nav>
@@ -71,7 +71,7 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 05 文字列からドット絵を作る</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 05 · 全23項目</p><h1>文字列からドット絵を作る</h1><p class="lead">X と . の配列を画像に変換し、2コマのスプライトとして再利用します。</p><p class="source-ref">主な参照先：makeSprite / TYPES / withGlow / prerender</p></header>
 <h2 id="section-1">X のマスを塗るだけで画像になる</h2>
-<figure class="code-block"><figcaption><span>index.html · L348–358</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L348-L358">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L348–358"><code>function makeSprite(rows, color, scale = 2) {
+<figure class="code-block"><figcaption><span>game.html · L348–358</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L348-L358">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L348–358"><code>function makeSprite(rows, color, scale = 2) {
   const c = document.createElement(&quot;canvas&quot;);
   c.width = rows[0].length * scale;
   c.height = rows.length * scale;
@@ -91,7 +91,7 @@ XXXXXXXXX
 ..X...X..
 .X.....X.</textarea><label for="sprite-color">ドットの色</label><input id="sprite-color" type="color" value="#315c45"><canvas width="360" height="220" role="img" aria-label="入力したXの位置を塗ったドット絵">Xの位置を四角く塗って表示します。</canvas><output for="sprite-rows sprite-color" aria-live="polite"></output><noscript>操作にはJavaScriptが必要です。上のmakeSprite()で同じ仕組みを確認できます。</noscript></section><h2 id="section-2">データと描画処理を分ける</h2>
 <p>敵の <code>TYPES</code> には得点 <code>pts</code>、色 <code>color</code>、2コマ分の <code>frames</code> をまとめています。起動時に <code>frames</code> を画像へ変換し、戦闘中は <code>form.anim</code> でどちらを描くか選びます。文字列を毎フレーム解析する必要はありません。</p>
-<figure class="code-block"><figcaption><span>index.html · L430–441</span><a href="https://github.com/hnakada123/astro-defender/blob/main/index.html#L430-L441">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="index.html · L430–441"><code>  a: { // トゲ型エイリアン
+<figure class="code-block"><figcaption><span>game.html · L430–441</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L430-L441">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L430–441"><code>  a: { // トゲ型エイリアン
     pts: 30, color: &quot;#ff6ad5&quot;,
     frames: [[
       &quot;.X..XX..X.&quot;,
@@ -114,7 +114,7 @@ XXXXXXXXX
 </nav></main></div>
 <footer class="site-footer"><div class="container footer-inner">
   <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>
-  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../index.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
+  <p><a href="../source.html#chapters">解説一覧</a> · <a href="../../game.html">ゲーム</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a></p>
 </div></footer>
 </body>
 </html>

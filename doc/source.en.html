@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ASTRO DEFENDER Source Code Guide</title>
-<meta name="description" content="A beginner-friendly, chapter-by-chapter walkthrough of the index.html behind ASTRO DEFENDER, a neon arcade shooter that runs in the browser.">
+<meta name="description" content="A beginner-friendly, chapter-by-chapter walkthrough of the game.html behind ASTRO DEFENDER, a neon arcade shooter that runs in the browser.">
 <style>
 :root {
   --bg: #05060f; --bg2: #131a3d; --panel: #0a0d1f; --line: #33408a; --line2: #1e2650;
@@ -178,7 +178,7 @@ footer a { color: var(--muted); }
   <p class="kicker">SOURCE CODE GUIDE</p>
   <h1><span class="t1">ASTRO</span><span class="t2">DEFENDER</span></h1>
   <p class="sub">- SOURCE CODE GUIDE / NEON ARCADE EDITION -</p>
-  <p class="lead">A neon arcade shooter with no libraries and no assets: everything lives in a single <code>index.html</code>.
+  <p class="lead">A neon arcade shooter with no libraries and no assets: everything lives in a single <code>game.html</code>.
     This guide walks through that file in 22 chapters, written for people who have just started learning HTML, CSS and JavaScript.</p>
   <div class="chips">
     <span class="chip"><b>Vanilla JS</b> no framework</span>
@@ -188,8 +188,8 @@ footer a { color: var(--muted); }
     <span class="chip"><b>0 libraries</b> 0 images 0 audio files</span>
   </div>
   <div class="btns">
-    <a class="btn primary" href="../index.html">▶ Play the game</a>
-    <a class="btn" href="index.en.html">Game guide</a>
+    <a class="btn primary" href="../game.html">▶ Play the game</a>
+    <a class="btn" href="../index.html">Game guide</a>
     <a class="btn" href="https://github.com/hnakada123/astro-defender">Source on GitHub</a>
     <a class="btn" href="#s00">↓ Start reading</a>
   </div>
@@ -240,14 +240,14 @@ footer a { color: var(--muted); }
   <div class="box try"><span class="lbl">TRY IT</span><p>Hands-on exercises. The <strong>labs</strong> (green boxes) run right here in the page.</p></div>
 
   <h3>Reading the code blocks</h3>
-  <p>A code block labeled <span class="mono" style="color:var(--purple)">index.html</span> with a range like <span class="mono" style="color:var(--dim)">L345–355</span>
-    is a verbatim excerpt from the real source, and the numbers are the real line numbers. Open <code>index.html</code> in your editor and jump to those lines as you read.
+  <p>A code block labeled <span class="mono" style="color:var(--purple)">game.html</span> with a range like <span class="mono" style="color:var(--dim)">L345–355</span>
+    is a verbatim excerpt from the real source, and the numbers are the real line numbers. Open <code>game.html</code> in your editor and jump to those lines as you read.
     Blocks labeled <span class="mono" style="color:var(--purple)">example</span> are short snippets written just for this guide.</p>
 
   <h3>What you need</h3>
   <ol>
     <li>Get the repository: <code>git clone https://github.com/hnakada123/astro-defender.git</code>, or use “Code → Download ZIP” on GitHub.</li>
-    <li>Open <code>index.html</code> in a browser (Chrome, Firefox, Edge, …). No server needed.</li>
+    <li>Open <code>game.html</code> in a browser (Chrome, Firefox, Edge, …). No server needed.</li>
     <li>Open the same file in a text editor (VS Code or similar).</li>
   </ol>
   <div class="box try"><span class="lbl">TRY IT — peek inside with the developer tools</span>
@@ -259,16 +259,16 @@ footer a { color: var(--muted); }
 <!-- ===================================================== 01 -->
 <section class="sec" id="s01">
   <h2><span class="num">01</span>The big picture — one file</h2>
-  <p class="tagline">index.html has three layers: CSS for the look, a little HTML for the skeleton, and JavaScript for the game itself.</p>
+  <p class="tagline">game.html has three layers: CSS for the look, a little HTML for the skeleton, and JavaScript for the game itself.</p>
 
   <figure class="shot narrow">
-    <span class="frame"><img src="img/en/page.png" alt="index.html opened in a browser: the game screen in the middle, laser, bomb and language buttons below it, and the control hints" loading="lazy"></span>
+    <span class="frame"><img src="img/en/page.png" alt="game.html opened in a browser: the game screen in the middle, laser, bomb and language buttons below it, and the control hints" loading="lazy"></span>
     <figcaption>The whole page. The frame, buttons and hints are HTML and CSS; the screen inside is JavaScript</figcaption>
   </figure>
 
   <h3>Only three pieces of HTML</h3>
   <p>The page needs just a <code>&lt;canvas&gt;</code> for the screen, a row of buttons under it, and a paragraph for the control hints.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L45–54</span><span class="ttl">the skeleton of the page</span></div><pre><code><span class="ln">45</span>&lt;div <span class="t-k">class</span>=<span class="t-s">"frame"</span>&gt;&lt;canvas id=<span class="t-s">"game"</span> width=<span class="t-s">"480"</span> height=<span class="t-s">"640"</span>&gt;&lt;/canvas&gt;&lt;/div&gt;
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L45–54</span><span class="ttl">the skeleton of the page</span></div><pre><code><span class="ln">45</span>&lt;div <span class="t-k">class</span>=<span class="t-s">"frame"</span>&gt;&lt;canvas id=<span class="t-s">"game"</span> width=<span class="t-s">"480"</span> height=<span class="t-s">"640"</span>&gt;&lt;/canvas&gt;&lt;/div&gt;
 <span class="ln">46</span>&lt;div <span class="t-k">class</span>=<span class="t-s">"actions"</span>&gt;
 <span class="ln">47</span>  &lt;button id=<span class="t-s">"laserButton"</span> type=<span class="t-s">"button"</span> disabled&gt;Z 合体レーザー <span class="t-n">0</span>%&lt;/button&gt;
 <span class="ln">48</span>  &lt;button id=<span class="t-s">"bombButton"</span> type=<span class="t-s">"button"</span> disabled&gt;X ボム ×<span class="t-n">2</span>&lt;/button&gt;
@@ -288,7 +288,7 @@ footer a { color: var(--muted); }
   <h3>CSS builds the arcade cabinet</h3>
   <p>The screen is a fixed 480 × 640, but CSS scales it to fit the window. The important line is <code>image-rendering: pixelated</code>:
     without it the browser would blur the enlarged pixels, and the retro look would be lost.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L21–32</span><span class="ttl">scaling the canvas and the CRT scanlines</span></div><pre><code><span class="ln">21</span>  canvas {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L21–32</span><span class="ttl">scaling the canvas and the CRT scanlines</span></div><pre><code><span class="ln">21</span>  canvas {
 <span class="ln">22</span>    width: min(92vw, max(240px, calc(75dvh - 150px))); aspect-ratio: 3 / 4;
 <span class="ln">23</span>    image-rendering: pixelated; background: #04050c; border-radius: 6px;
 <span class="ln">24</span>    touch-action: none; user-select: none;
@@ -368,7 +368,7 @@ footer a { color: var(--muted); }
   <h2><span class="num">02</span>The game loop — a heartbeat at 60 Hz</h2>
   <p class="tagline">The last thirty or so lines of the file drive the entire game.</p>
 
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L2075–2104</span><span class="ttl">the whole main loop</span></div><pre><code><span class="ln">2075</span><span class="t-k">let</span> last = performance.<span class="t-f">now</span>();
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L2075–2104</span><span class="ttl">the whole main loop</span></div><pre><code><span class="ln">2075</span><span class="t-k">let</span> last = performance.<span class="t-f">now</span>();
 <span class="ln">2076</span><span class="t-k">let</span> rafId = <span class="t-n">0</span>; <span class="t-c">// 予約中の requestAnimationFrame。0 ならループは止まっている</span>
 <span class="ln">2077</span><span class="t-k">const</span> <span class="t-u">IDLE_FRAME_MS</span> = <span class="t-n">1000</span> / <span class="t-n">30</span>; <span class="t-c">// タイトルとゲームオーバーは動きが少ないので 30fps に抑える</span>
 <span class="ln">2078</span>
@@ -441,7 +441,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <h3>update comes in two layers</h3>
   <p><code>update</code> first advances the things that move on every screen (stars, particles, the animated score) in <code>updateCommon</code>, then branches on <code>state</code>:
     <code>updatePlay</code> during play, timed screen changes otherwise. That <code>state</code> variable is the subject of the next chapter.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1558–1571</span><span class="ttl">dispatching on the current state</span></div><pre><code><span class="ln">1558</span><span class="t-k">function</span> <span class="t-f">update</span>(dt) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1558–1571</span><span class="ttl">dispatching on the current state</span></div><pre><code><span class="ln">1558</span><span class="t-k">function</span> <span class="t-f">update</span>(dt) {
 <span class="ln">1559</span>  stateT += dt;
 <span class="ln">1560</span>  <span class="t-f">updateCommon</span>(dt);
 <span class="ln">1561</span>  <span class="t-k">if</span> (state === <span class="t-s">"play"</span>) {
@@ -462,7 +462,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <h2><span class="num">03</span>States — which screen are we on?</h2>
   <p class="tagline">Title, playing, dying… one variable names the current screen, and the code branches on it.</p>
 
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L649–651</span><span class="ttl">the three variables that describe the screen</span></div><pre><code><span class="ln">649</span><span class="t-k">let</span> state = <span class="t-s">"title"</span>;       <span class="t-c">// title | play | dying | clear | upgrade | gameover</span>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L649–651</span><span class="ttl">the three variables that describe the screen</span></div><pre><code><span class="ln">649</span><span class="t-k">let</span> state = <span class="t-s">"title"</span>;       <span class="t-c">// title | play | dying | clear | upgrade | gameover</span>
 <span class="ln">650</span><span class="t-k">let</span> stateT = <span class="t-n">0</span>;
 <span class="ln">651</span><span class="t-k">let</span> paused = <span class="t-k">false</span>;</code></pre></div>
   <div class="tbl-wrap"><table>
@@ -500,7 +500,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   </svg></div>
 
   <h3>All changes go through setState()</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L686–689</span></div><pre><code><span class="ln">686</span><span class="t-k">function</span> <span class="t-f">setState</span>(s) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L686–689</span></div><pre><code><span class="ln">686</span><span class="t-k">function</span> <span class="t-f">setState</span>(s) {
 <span class="ln">687</span>  state = s; stateT = <span class="t-n">0</span>;
 <span class="ln">688</span>  cvs.style.cursor = (s === <span class="t-s">"play"</span> &amp;&amp; !paused) ? <span class="t-s">"none"</span> : <span class="t-s">"pointer"</span>;
 <span class="ln">689</span>}</code></pre></div>
@@ -526,7 +526,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <h2><span class="num">04</span>Drawing on the canvas — coordinates and text</h2>
   <p class="tagline">A canvas is a sheet of paper that paints when you tell it to. Paint cannot be moved, so every frame repaints everything.</p>
 
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L62–64</span><span class="ttl">getting hold of the canvas</span></div><pre><code><span class="ln">62</span><span class="t-k">const</span> W = <span class="t-n">480</span>, H = <span class="t-n">640</span>;
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L62–64</span><span class="ttl">getting hold of the canvas</span></div><pre><code><span class="ln">62</span><span class="t-k">const</span> W = <span class="t-n">480</span>, H = <span class="t-n">640</span>;
 <span class="ln">63</span><span class="t-k">const</span> cvs = document.<span class="t-f">getElementById</span>(<span class="t-s">"game"</span>);
 <span class="ln">64</span><span class="t-k">const</span> ctx = cvs.<span class="t-f">getContext</span>(<span class="t-s">"2d"</span>, { alpha: <span class="t-k">false</span> }); <span class="t-c">// 毎フレーム全面を塗るので不透明にし、ページとの合成コストを下げる</span></code></pre></div>
   <p><code>ctx</code>, the “context”, is the toolbox for drawing on the canvas: <code>ctx.fillRect(x, y, w, h)</code> fills a rectangle,
@@ -560,7 +560,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 
   <h3>drawText, the shared text helper</h3>
   <p>Writing text on a canvas means setting the font, colour and alignment every time before calling <code>fillText</code>. That is tedious, so it is wrapped in one function.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L171–179</span></div><pre><code><span class="ln">171</span><span class="t-k">function</span> <span class="t-f">drawTextOn</span>(g, s, x, y, o = {}) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L171–179</span></div><pre><code><span class="ln">171</span><span class="t-k">function</span> <span class="t-f">drawTextOn</span>(g, s, x, y, o = {}) {
 <span class="ln">172</span>  g.font = <span class="t-s">`${o.weight || 700} ${o.size || 13}px 'Courier New', ui-monospace, monospace`</span>;
 <span class="ln">173</span>  g.fillStyle = o.color || <span class="t-s">"#cfd8ff"</span>;
 <span class="ln">174</span>  g.textAlign = o.align || <span class="t-s">"center"</span>;
@@ -576,7 +576,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 
   <h3>Converting mouse coordinates to canvas coordinates</h3>
   <p>The canvas is scaled by CSS, so the mouse position on screen (in pixels) does not match the internal coordinates (480 wide). The fix is a ratio.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1072–1075</span></div><pre><code><span class="ln">1072</span><span class="t-k">function</span> <span class="t-f">canvasX</span>(e) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1072–1075</span></div><pre><code><span class="ln">1072</span><span class="t-k">function</span> <span class="t-f">canvasX</span>(e) {
 <span class="ln">1073</span>  <span class="t-k">const</span> r = cvs.<span class="t-f">getBoundingClientRect</span>();
 <span class="ln">1074</span>  <span class="t-k">return</span> ((e.clientX - r.left) * W) / r.width;
 <span class="ln">1075</span>}</code></pre></div>
@@ -585,7 +585,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 
   <h3>Draw order is stacking order</h3>
   <p>Whatever is drawn later ends up on top. <code>draw()</code> goes background → game → HUD → overlays (pause, game over).</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L2053–2071</span></div><pre><code><span class="ln">2053</span><span class="t-k">function</span> <span class="t-f">draw</span>(t) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L2053–2071</span></div><pre><code><span class="ln">2053</span><span class="t-k">function</span> <span class="t-f">draw</span>(t) {
 <span class="ln">2054</span>  <span class="t-f">refreshActionButtons</span>();
 <span class="ln">2055</span>  ctx.fillStyle = <span class="t-s">"#04050c"</span>;
 <span class="ln">2056</span>  ctx.<span class="t-f">fillRect</span>(<span class="t-n">0</span>, <span class="t-n">0</span>, W, H);
@@ -616,7 +616,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <p class="tagline">There is not a single image file. Aliens and ship alike are built at start-up from strings of X and dots.</p>
 
   <h3>makeSprite — paint only the X cells</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L348–358</span></div><pre><code><span class="ln">348</span><span class="t-k">function</span> <span class="t-f">makeSprite</span>(rows, color, scale = <span class="t-n">2</span>) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L348–358</span></div><pre><code><span class="ln">348</span><span class="t-k">function</span> <span class="t-f">makeSprite</span>(rows, color, scale = <span class="t-n">2</span>) {
 <span class="ln">349</span>  <span class="t-k">const</span> c = document.<span class="t-f">createElement</span>(<span class="t-s">"canvas"</span>);
 <span class="ln">350</span>  c.width = rows[<span class="t-n">0</span>].length * scale;
 <span class="ln">351</span>  c.height = rows.length * scale;
@@ -634,7 +634,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
       you can paste it into another canvas with <code>ctx.drawImage(thatCanvas, x, y)</code> as if it were an image. Using it as an “image factory” is a classic technique.</p></div>
 
   <h3>Alien designs are two-frame animations</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L430–450</span><span class="ttl">TYPES.a — points, colour, and two frames of pixel art</span></div><pre><code><span class="ln">430</span>  a: { <span class="t-c">// トゲ型エイリアン</span>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L430–450</span><span class="ttl">TYPES.a — points, colour, and two frames of pixel art</span></div><pre><code><span class="ln">430</span>  a: { <span class="t-c">// トゲ型エイリアン</span>
 <span class="ln">431</span>    pts: <span class="t-n">30</span>, color: <span class="t-s">"#ff6ad5"</span>,
 <span class="ln">432</span>    frames: [[
 <span class="ln">433</span>      <span class="t-s">".X..XX..X."</span>,
@@ -658,7 +658,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <p><code>frames</code> holds two pictures whose legs differ slightly. Every time the formation steps, <code>form.anim</code> flips between 0 and 1, and <code>ty.img[form.anim]</code>
     picks the frame to draw. That alone makes the aliens look like they are crawling.</p>
   <p>A short loop right after the definition builds the image and the glow for all three alien types ahead of time.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L497–503</span><span class="ttl">strings → images → glowing images, in one pass</span></div><pre><code><span class="ln">497</span><span class="t-k">for</span> (<span class="t-k">const</span> k <span class="t-k">in</span> <span class="t-u">TYPES</span>) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L497–503</span><span class="ttl">strings → images → glowing images, in one pass</span></div><pre><code><span class="ln">497</span><span class="t-k">for</span> (<span class="t-k">const</span> k <span class="t-k">in</span> <span class="t-u">TYPES</span>) {
 <span class="ln">498</span>  <span class="t-k">const</span> t = <span class="t-u">TYPES</span>[k];
 <span class="ln">499</span>  t.img = t.frames.<span class="t-f">map</span>(f =&gt; <span class="t-f">makeSprite</span>(f, t.color));
 <span class="ln">500</span>  t.glow = t.img.<span class="t-f">map</span>(im =&gt; <span class="t-f">withGlow</span>(im, <span class="t-n">3</span>, <span class="t-n">0.8</span>));
@@ -690,7 +690,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 
   <h3>Neon glow is a blurred copy</h3>
   <p>To make something glow, draw a <strong>blurred</strong> copy underneath and the sharp original on top. <code>withGlow</code> produces the blurred version.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L365–382</span></div><pre><code><span class="ln">365</span><span class="t-k">function</span> <span class="t-f">withGlow</span>(img, blur = <span class="t-n">3</span>, alpha = <span class="t-n">0.85</span>) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L365–382</span></div><pre><code><span class="ln">365</span><span class="t-k">function</span> <span class="t-f">withGlow</span>(img, blur = <span class="t-n">3</span>, alpha = <span class="t-n">0.85</span>) {
 <span class="ln">366</span>  <span class="t-k">const</span> pad = blur * <span class="t-n">3</span>;
 <span class="ln">367</span>  <span class="t-k">const</span> c = document.<span class="t-f">createElement</span>(<span class="t-s">"canvas"</span>);
 <span class="ln">368</span>  c.width = img.width + pad * <span class="t-n">2</span>;
@@ -714,7 +714,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
     <li>When <code>CAN_FILTER</code> is false (old browsers) the image is drawn nine times, slightly offset and semi-transparent, as a poor man’s blur.</li>
   </ul>
   <p>The glow around bullets and capsules is a radial gradient image from <code>glowDot</code>: opaque in the middle, fading to transparent at the edge.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L384–395</span></div><pre><code><span class="ln">384</span><span class="t-k">function</span> <span class="t-f">glowDot</span>(hex, r) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L384–395</span></div><pre><code><span class="ln">384</span><span class="t-k">function</span> <span class="t-f">glowDot</span>(hex, r) {
 <span class="ln">385</span>  <span class="t-k">const</span> c = document.<span class="t-f">createElement</span>(<span class="t-s">"canvas"</span>);
 <span class="ln">386</span>  c.width = c.height = r * <span class="t-n">2</span>;
 <span class="ln">387</span>  <span class="t-k">const</span> g = c.<span class="t-f">getContext</span>(<span class="t-s">"2d"</span>);
@@ -729,7 +729,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <div class="box point"><span class="lbl">KEY IDEA — do expensive work once, at start-up</span>
     <p>Blurs and gradients are too slow to compute every frame. So they are rendered into images before the game starts (<strong>pre-rendering</strong>) and only <code>drawImage</code>d during play.
       Every upper-case constant such as <code>SHIP_GLOW</code>, <code>P_GLOW</code> or <code>NEBULAE</code> is one of these ready-made images.</p></div>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L505–515</span><span class="ttl">the ship is 13 × 8 pixels, with a glow version too</span></div><pre><code><span class="ln">505</span><span class="t-k">const</span> <span class="t-u">SHIP_IMG</span> = <span class="t-f">makeSprite</span>([
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L505–515</span><span class="ttl">the ship is 13 × 8 pixels, with a glow version too</span></div><pre><code><span class="ln">505</span><span class="t-k">const</span> <span class="t-u">SHIP_IMG</span> = <span class="t-f">makeSprite</span>([
 <span class="ln">506</span>  <span class="t-s">"......X......"</span>,
 <span class="ln">507</span>  <span class="t-s">"......X......"</span>,
 <span class="ln">508</span>  <span class="t-s">".....XXX....."</span>,
@@ -742,7 +742,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 <span class="ln">515</span><span class="t-k">const</span> <span class="t-u">SHIP_GLOW</span> = <span class="t-f">withGlow</span>(<span class="t-u">SHIP_IMG</span>, <span class="t-n">4</span>, <span class="t-n">0.9</span>);</code></pre></div>
   <h3>The pre-rendering helper — prerender</h3>
   <p>“Create an off-screen canvas, draw on it, return it” is wrapped in one function, <code>prerender</code>. What to draw is passed in as the <code>paint</code> function.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L409–415</span><span class="ttl">the shared helper for ready-made images</span></div><pre><code><span class="ln">409</span><span class="t-c">// shadowBlur 付きの描画は毎フレーム行うと重いので、形が変わらないものは一度だけ画像にしておく。</span>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L409–415</span><span class="ttl">the shared helper for ready-made images</span></div><pre><code><span class="ln">409</span><span class="t-c">// shadowBlur 付きの描画は毎フレーム行うと重いので、形が変わらないものは一度だけ画像にしておく。</span>
 <span class="ln">410</span><span class="t-k">function</span> <span class="t-f">prerender</span>(w, h, paint, opts) {
 <span class="ln">411</span>  <span class="t-k">const</span> c = document.<span class="t-f">createElement</span>(<span class="t-s">"canvas"</span>);
 <span class="ln">412</span>  c.width = w; c.height = h;
@@ -751,7 +751,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 <span class="ln">415</span>}</code></pre></div>
   <p>Even heavier than a blur is <code>shadowBlur</code>, the canvas feature that surrounds a shape with a blurred glow. Used every frame it re-blurs on every draw,
     so anything whose shape never changes is turned into an image at start-up with this helper. The title logo is the prime example: it becomes two images, <code>TITLE_GLOW</code> (the glow only) and <code>TITLE_TEXT</code> (the letters only).</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L549–566</span><span class="ttl">the title logo as two ready-made images</span></div><pre><code><span class="ln">549</span><span class="t-c">// タイトルロゴ: 光彩層と文字層に分け、光彩層の透明度を揺らして脈動させる。</span>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L549–566</span><span class="ttl">the title logo as two ready-made images</span></div><pre><code><span class="ln">549</span><span class="t-c">// タイトルロゴ: 光彩層と文字層に分け、光彩層の透明度を揺らして脈動させる。</span>
 <span class="ln">550</span><span class="t-k">const</span> <span class="t-u">TITLE_LOGO_Y</span> = <span class="t-n">80</span>; <span class="t-c">// ロゴ画像を置くキャンバス上の y</span>
 <span class="ln">551</span><span class="t-k">function</span> <span class="t-f">paintTitleLogo</span>(g, glow) {
 <span class="ln">552</span>  <span class="t-k">const</span> y = -<span class="t-u">TITLE_LOGO_Y</span>;
@@ -769,7 +769,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 <span class="ln">564</span>  <span class="t-k">try</span> { g.letterSpacing = <span class="t-s">"3px"</span>; } <span class="t-k">catch</span> (e) {}
 <span class="ln">565</span>  <span class="t-f">drawTextOn</span>(g, <span class="t-s">"- NEON ARCADE EDITION -"</span>, W / <span class="t-n">2</span>, <span class="t-n">222</span> - <span class="t-u">TITLE_LOGO_Y</span>, { size: <span class="t-n">11</span>, color: <span class="t-s">"#ff6ad5"</span> });
 <span class="ln">566</span>});</code></pre></div>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1971–1974</span><span class="ttl">inside drawTitle(): the glow pulses by varying its alpha</span></div><pre><code><span class="ln">1971</span>  ctx.globalAlpha = <span class="t-n">0.7</span> + <span class="t-n">0.3</span> * Math.<span class="t-f">sin</span>(t * <span class="t-n">2</span>); <span class="t-c">// 光彩の脈動</span>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1971–1974</span><span class="ttl">inside drawTitle(): the glow pulses by varying its alpha</span></div><pre><code><span class="ln">1971</span>  ctx.globalAlpha = <span class="t-n">0.7</span> + <span class="t-n">0.3</span> * Math.<span class="t-f">sin</span>(t * <span class="t-n">2</span>); <span class="t-c">// 光彩の脈動</span>
 <span class="ln">1972</span>  ctx.<span class="t-f">drawImage</span>(<span class="t-u">TITLE_GLOW</span>, <span class="t-n">0</span>, <span class="t-u">TITLE_LOGO_Y</span>);
 <span class="ln">1973</span>  ctx.globalAlpha = <span class="t-n">1</span>;
 <span class="ln">1974</span>  ctx.<span class="t-f">drawImage</span>(<span class="t-u">TITLE_TEXT</span>, <span class="t-n">0</span>, <span class="t-u">TITLE_LOGO_Y</span>);</code></pre></div>
@@ -783,7 +783,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <h2><span class="num">06</span>Collision detection — overlapping rectangles</h2>
   <p class="tagline">A bullet hitting an alien, a capsule being picked up, an enemy touching the ship: one line of code decides all of it.</p>
 
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L72–72</span><span class="ttl">AABB (axis-aligned bounding box) overlap test</span></div><pre><code><span class="ln">72</span><span class="t-k">const</span> hit = (a, b) =&gt; a.x &lt; b.x + b.w &amp;&amp; a.x + a.w &gt; b.x &amp;&amp; a.y &lt; b.y + b.h &amp;&amp; a.y + a.h &gt; b.y;</code></pre></div>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L72–72</span><span class="ttl">AABB (axis-aligned bounding box) overlap test</span></div><pre><code><span class="ln">72</span><span class="t-k">const</span> hit = (a, b) =&gt; a.x &lt; b.x + b.w &amp;&amp; a.x + a.w &gt; b.x &amp;&amp; a.y &lt; b.y + b.h &amp;&amp; a.y + a.h &gt; b.y;</code></pre></div>
   <p><code>a</code> and <code>b</code> are objects with <code>{ x, y, w, h }</code> (top-left corner, width, height). The rectangles overlap only when all four conditions hold.
     Put the other way round: <strong>if even one of them fails, the rectangles are apart</strong>.</p>
 
@@ -824,8 +824,8 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 
   <h3>Hit boxes are computed on demand</h3>
   <p>The only thing stored about the player’s position is <code>player.x</code>, the centre. The rectangle used for collisions is built by a function whenever it is needed.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L703–703</span></div><pre><code><span class="ln">703</span><span class="t-k">function</span> <span class="t-f">playerRect</span>() { <span class="t-k">return</span> { x: player.x - <span class="t-n">13</span>, y: <span class="t-u">PLAYER_Y</span>, w: <span class="t-n">26</span>, h: <span class="t-n">16</span> }; }</code></pre></div>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L711–721</span></div><pre><code><span class="ln">711</span><span class="t-c">// 毎フレーム何百回も呼ぶ当たり判定では SCRATCH に書き込んで使い回し、オブジェクト生成(GC 負荷)を避ける。</span>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L703–703</span></div><pre><code><span class="ln">703</span><span class="t-k">function</span> <span class="t-f">playerRect</span>() { <span class="t-k">return</span> { x: player.x - <span class="t-n">13</span>, y: <span class="t-u">PLAYER_Y</span>, w: <span class="t-n">26</span>, h: <span class="t-n">16</span> }; }</code></pre></div>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L711–721</span></div><pre><code><span class="ln">711</span><span class="t-c">// 毎フレーム何百回も呼ぶ当たり判定では SCRATCH に書き込んで使い回し、オブジェクト生成(GC 負荷)を避ける。</span>
 <span class="ln">712</span><span class="t-c">// SCRATCH の中身は次の alienRectInto 呼び出しで上書きされるので、保持せずその場で使い切ること。</span>
 <span class="ln">713</span><span class="t-k">const</span> <span class="t-u">SCRATCH</span> = { x: <span class="t-n">0</span>, y: <span class="t-n">0</span>, w: <span class="t-n">0</span>, h: <span class="t-n">0</span> };
 <span class="ln">714</span><span class="t-k">function</span> <span class="t-f">alienRectInto</span>(a, out) {
@@ -848,7 +848,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 
   <h3>When you need a circle</h3>
   <p>The bomb affects everything within 240 pixels of the ship — a circle. For that, take the distance between two points with <code>Math.hypot(dx, dy)</code> and compare it with the radius.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L875–875</span><span class="ttl">one line inside activateBomb()</span></div><pre><code><span class="ln">875</span>    <span class="t-k">if</span> (Math.<span class="t-f">hypot</span>(r.x + r.w / <span class="t-n">2</span> - player.x, r.y + r.h / <span class="t-n">2</span> - <span class="t-u">PLAYER_Y</span>) &lt;= <span class="t-u">BOMB_RADIUS</span>) <span class="t-f">killAlien</span>(a, r);</code></pre></div>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L875–875</span><span class="ttl">one line inside activateBomb()</span></div><pre><code><span class="ln">875</span>    <span class="t-k">if</span> (Math.<span class="t-f">hypot</span>(r.x + r.w / <span class="t-n">2</span> - player.x, r.y + r.h / <span class="t-n">2</span> - <span class="t-u">PLAYER_Y</span>) &lt;= <span class="t-u">BOMB_RADIUS</span>) <span class="t-f">killAlien</span>(a, r);</code></pre></div>
 </section>
 
 <!-- ===================================================== 07 -->
@@ -856,10 +856,10 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <h2><span class="num">07</span>The enemy formation — 50 aliens as one block</h2>
   <p class="tagline">No alien stores its own coordinates. Each one knows only its row and column; the formation knows where its top-left corner is.</p>
 
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L620–622</span><span class="ttl">constants that shape the formation</span></div><pre><code><span class="ln">620</span><span class="t-k">const</span> <span class="t-u">ROWS</span> = <span class="t-n">5</span>, <span class="t-u">COLS</span> = <span class="t-n">10</span>, <span class="t-u">CELL_W</span> = <span class="t-n">36</span>, <span class="t-u">CELL_H</span> = <span class="t-n">30</span>, <span class="t-u">DROP</span> = <span class="t-n">14</span>;
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L620–622</span><span class="ttl">constants that shape the formation</span></div><pre><code><span class="ln">620</span><span class="t-k">const</span> <span class="t-u">ROWS</span> = <span class="t-n">5</span>, <span class="t-u">COLS</span> = <span class="t-n">10</span>, <span class="t-u">CELL_W</span> = <span class="t-n">36</span>, <span class="t-u">CELL_H</span> = <span class="t-n">30</span>, <span class="t-u">DROP</span> = <span class="t-n">14</span>;
 <span class="ln">621</span><span class="t-k">const</span> <span class="t-u">ROW_TYPE</span> = [<span class="t-s">"a"</span>, <span class="t-s">"b"</span>, <span class="t-s">"b"</span>, <span class="t-s">"c"</span>, <span class="t-s">"c"</span>];
 <span class="ln">622</span><span class="t-k">const</span> <span class="t-u">TOTAL</span> = <span class="t-u">ROWS</span> * <span class="t-u">COLS</span>;</code></pre></div>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L662–663</span><span class="ttl">the alien array and the formation’s shared state</span></div><pre><code><span class="ln">662</span><span class="t-k">let</span> aliens = [], aliveN = <span class="t-n">0</span>;
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L662–663</span><span class="ttl">the alien array and the formation’s shared state</span></div><pre><code><span class="ln">662</span><span class="t-k">let</span> aliens = [], aliveN = <span class="t-n">0</span>;
 <span class="ln">663</span><span class="t-k">const</span> form = { ox: <span class="t-n">60</span>, oy: <span class="t-n">96</span>, dir: <span class="t-n">1</span>, anim: <span class="t-n">0</span>, animT: <span class="t-n">0</span> };</code></pre></div>
   <p>A single alien is just <code>{ r: row, c: column, type: kind, alive: true/false }</code>. Its position is the formation’s top-left corner <code>form.ox, form.oy</code>
     plus column × 36 pixels and row × 30 pixels (that is what <code>alienRect</code> computed in the previous chapter).</p>
@@ -883,7 +883,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 
   <h3>Building a wave — makeWave</h3>
   <p>This function resets everything at the start of a wave. A double loop lays out 50 aliens, and the row number decides the type (<code>ROW_TYPE</code>).</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L744–765</span></div><pre><code><span class="ln">744</span><span class="t-k">function</span> <span class="t-f">makeWave</span>() {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L744–765</span></div><pre><code><span class="ln">744</span><span class="t-k">function</span> <span class="t-f">makeWave</span>() {
 <span class="ln">745</span>  aliens = [];
 <span class="ln">746</span>  boss = <span class="t-k">null</span>;
 <span class="ln">747</span>  <span class="t-k">if</span> (wave % <span class="t-n">5</span> === <span class="t-n">0</span>) <span class="t-f">makeBoss</span>();
@@ -911,7 +911,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
       When you add a new kind of object (a new bullet type, say), remember to reset it here as well.</p></div>
 
   <h3>Moving the formation — bounce at the edges and step down</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1397–1411</span><span class="ttl">the formation part of updatePlay()</span></div><pre><code><span class="ln">1397</span>  <span class="t-c">// --- 編隊移動 ---</span>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1397–1411</span><span class="ttl">the formation part of updatePlay()</span></div><pre><code><span class="ln">1397</span>  <span class="t-c">// --- 編隊移動 ---</span>
 <span class="ln">1398</span>  <span class="t-k">if</span> (aliens.<span class="t-f">some</span>(a =&gt; a.alive &amp;&amp; !a.flight)) {
 <span class="ln">1399</span>    form.ox += form.dir * <span class="t-f">formSpeed</span>() * dt;
 <span class="ln">1400</span>    <span class="t-k">const</span> b = <span class="t-f">formBounds</span>();
@@ -934,7 +934,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   </ol>
 
   <h3>Fewer aliens, faster formation</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1235–1241</span></div><pre><code><span class="ln">1235</span><span class="t-k">function</span> <span class="t-f">formSpeed</span>() {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1235–1241</span></div><pre><code><span class="ln">1235</span><span class="t-k">function</span> <span class="t-f">formSpeed</span>() {
 <span class="ln">1236</span>  <span class="t-k">const</span> r = aliveN / <span class="t-u">TOTAL</span>;
 <span class="ln">1237</span>  <span class="t-k">let</span> s = <span class="t-n">16</span> + (wave - <span class="t-n">1</span>) * <span class="t-n">7</span> + <span class="t-n">130</span> * Math.<span class="t-f">pow</span>(<span class="t-n">1</span> - r, <span class="t-n">1.7</span>);
 <span class="ln">1238</span>  <span class="t-k">if</span> (aliveN &lt;= <span class="t-n">3</span>) s += <span class="t-n">55</span>;
@@ -965,7 +965,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 
   <h3>Only the bottom alien of each column shoots</h3>
   <p>As in a real formation, the aliens at the back cannot fire past the ones in front. For each column the code finds the lowest living alien (largest <code>r</code>) and picks one of those at random.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1427–1449</span><span class="ttl">the enemy-fire part of updatePlay()</span></div><pre><code><span class="ln">1427</span>  <span class="t-c">// --- 敵の射撃 ---</span>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1427–1449</span><span class="ttl">the enemy-fire part of updatePlay()</span></div><pre><code><span class="ln">1427</span>  <span class="t-c">// --- 敵の射撃 ---</span>
 <span class="ln">1428</span>  fireT -= dt;
 <span class="ln">1429</span>  <span class="t-k">const</span> maxEB = Math.<span class="t-f">min</span>(<span class="t-n">7</span>, <span class="t-n">2</span> + wave);
 <span class="ln">1430</span>  <span class="t-k">if</span> (fireT &lt;= <span class="t-n">0</span> &amp;&amp; bannerT &lt;= <span class="t-n">0</span> &amp;&amp; aliveN &gt; <span class="t-n">0</span>) {
@@ -991,7 +991,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <p>The firing interval <code>fireT</code> gets shorter as waves progress and as aliens die. There is also a cap <code>maxEB</code> on how many enemy bullets can be on screen, so it never becomes an unfair bullet hell.</p>
 
   <h3>Invasion means game over</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1413–1424</span><span class="ttl">if the formation reaches the ship’s height, the game ends at once</span></div><pre><code><span class="ln">1413</span>    <span class="t-c">// 侵入チェック</span>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1413–1424</span><span class="ttl">if the formation reaches the ship’s height, the game ends at once</span></div><pre><code><span class="ln">1413</span>    <span class="t-c">// 侵入チェック</span>
 <span class="ln">1414</span>    <span class="t-k">const</span> prect = <span class="t-f">playerRect</span>();
 <span class="ln">1415</span>    <span class="t-k">for</span> (<span class="t-k">const</span> a <span class="t-k">of</span> aliens) {
 <span class="ln">1416</span>      <span class="t-k">if</span> (!a.alive || a.flight) <span class="t-k">continue</span>;
@@ -1011,7 +1011,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <p class="tagline">Input handlers only write variables. Actually moving the ship is updatePlay’s job.</p>
 
   <h3>Pointer events remember a target x</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1093–1110</span><span class="ttl">pointer events cover mouse, touch and pen at once</span></div><pre><code><span class="ln">1093</span>window.<span class="t-f">addEventListener</span>(<span class="t-s">"pointermove"</span>, e =&gt; {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1093–1110</span><span class="ttl">pointer events cover mouse, touch and pen at once</span></div><pre><code><span class="ln">1093</span>window.<span class="t-f">addEventListener</span>(<span class="t-s">"pointermove"</span>, e =&gt; {
 <span class="ln">1094</span>  <span class="t-k">if</span> (e.target !== cvs) <span class="t-k">return</span>;
 <span class="ln">1095</span>  <span class="t-k">if</span> (state === <span class="t-s">"upgrade"</span>) { <span class="t-k">const</span> i = <span class="t-f">upgradeAtPointer</span>(e); <span class="t-k">if</span> (i &gt;= <span class="t-n">0</span>) upgradeIndex = i; <span class="t-k">return</span>; }
 <span class="ln">1096</span>  mouseX = <span class="t-f">clamp</span>(<span class="t-f">canvasX</span>(e), <span class="t-n">0</span>, W);
@@ -1037,7 +1037,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
       That also makes it easy to enforce a speed limit such as “at most 340 pixels per second”.</p></div>
 
   <h3>The player part of updatePlay</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1353–1363</span><span class="ttl">mouse following, keyboard movement, and timers counting down</span></div><pre><code><span class="ln">1353</span>  <span class="t-c">// --- 自機 ---</span>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1353–1363</span><span class="ttl">mouse following, keyboard movement, and timers counting down</span></div><pre><code><span class="ln">1353</span>  <span class="t-c">// --- 自機 ---</span>
 <span class="ln">1354</span>  <span class="t-k">const</span> speed = <span class="t-n">340</span> * (<span class="t-n">1</span> + upgrades.speed * <span class="t-n">0.15</span>);
 <span class="ln">1355</span>  <span class="t-k">if</span> (inputMode === <span class="t-s">"mouse"</span>) {
 <span class="ln">1356</span>    <span class="t-k">const</span> target = <span class="t-f">clampPlayerX</span>(mouseX);
@@ -1053,7 +1053,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
     <li>In keyboard mode, <code>(right ? 1 : 0) - (left ? 1 : 0)</code> produces -1, 0 or +1, which is multiplied by the speed. Pressing both keys gives 0, so the ship stops — for free.</li>
     <li><code>player.cool</code> (fire cooldown), <code>player.inv</code> (invulnerability) and the power-up timers are all decreased by <code>dt</code> every frame, with <code>Math.max(0, ...)</code> keeping them from going negative.</li>
   </ul>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L705–709</span></div><pre><code><span class="ln">705</span><span class="t-k">function</span> <span class="t-f">clampPlayerX</span>(x) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L705–709</span></div><pre><code><span class="ln">705</span><span class="t-k">function</span> <span class="t-f">clampPlayerX</span>(x) {
 <span class="ln">706</span>  <span class="t-c">// 連結砲も画面内に収める。当たり判定は自機本体のみ。</span>
 <span class="ln">707</span>  <span class="t-k">const</span> margin = active.beam &gt; <span class="t-n">0</span> ? Math.<span class="t-f">abs</span>(<span class="t-u">BEAM_OFFSETS</span>[active.beam - <span class="t-n">1</span>]) + <span class="t-n">8</span> : <span class="t-n">20</span>;
 <span class="ln">708</span>  <span class="t-k">return</span> <span class="t-f">clamp</span>(x, margin, W - margin);
@@ -1061,7 +1061,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <p>The screen-edge clamp also widens its <code>margin</code> so that linked beam cannons on either side of the ship never leave the screen.</p>
 
   <h3>Shooting — cooldown and bullet cap</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1365–1385</span><span class="ttl">when a shot may be fired, and what happens when it is</span></div><pre><code><span class="ln">1365</span>  <span class="t-k">const</span> cd = active.rapid &gt; <span class="t-n">0</span> ? <span class="t-n">0.12</span> : <span class="t-n">0.27</span>;
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1365–1385</span><span class="ttl">when a shot may be fired, and what happens when it is</span></div><pre><code><span class="ln">1365</span>  <span class="t-k">const</span> cd = active.rapid &gt; <span class="t-n">0</span> ? <span class="t-n">0.12</span> : <span class="t-n">0.27</span>;
 <span class="ln">1366</span>  <span class="t-k">const</span> maxB = (active.rapid &gt; <span class="t-n">0</span> || active.wide &gt; <span class="t-n">0</span>) ? <span class="t-n">12</span> : <span class="t-n">3</span>;
 <span class="ln">1367</span>  <span class="t-c">// ビームは通常弾の上限に数えず、共通のクールダウンで同時発射する。</span>
 <span class="ln">1368</span>  <span class="t-k">const</span> normalBulletCount = pBullets.<span class="t-f">reduce</span>((n, p) =&gt; n + (p.beam ? <span class="t-n">0</span> : <span class="t-n">1</span>), <span class="t-n">0</span>);
@@ -1086,7 +1086,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
     <code>mk</code> is a tiny helper that adds one bullet; during a 3-way shot it adds two more with a sideways velocity <code>vx</code>.</p>
 
   <h3>Keyboard</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1145–1172</span><span class="ttl">key handling; the bindings change on the upgrade screen</span></div><pre><code><span class="ln">1145</span>window.<span class="t-f">addEventListener</span>(<span class="t-s">"keydown"</span>, e =&gt; {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1145–1172</span><span class="ttl">key handling; the bindings change on the upgrade screen</span></div><pre><code><span class="ln">1145</span>window.<span class="t-f">addEventListener</span>(<span class="t-s">"keydown"</span>, e =&gt; {
 <span class="ln">1146</span>  <span class="t-k">const</span> k = e.key.<span class="t-f">toLowerCase</span>();
 <span class="ln">1147</span>  <span class="t-k">if</span> ([<span class="t-s">" "</span>, <span class="t-s">"enter"</span>, <span class="t-s">"arrowleft"</span>, <span class="t-s">"arrowright"</span>, <span class="t-s">"arrowup"</span>, <span class="t-s">"arrowdown"</span>].<span class="t-f">includes</span>(k)) e.<span class="t-f">preventDefault</span>();
 <span class="ln">1148</span>  <span class="t-k">if</span> (e.repeat) <span class="t-k">return</span>;
@@ -1121,7 +1121,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   </ul>
 
   <h3>Auto-pause when you leave the tab</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1180–1188</span><span class="ttl">when the window loses focus</span></div><pre><code><span class="ln">1180</span>window.<span class="t-f">addEventListener</span>(<span class="t-s">"blur"</span>, () =&gt; { <span class="t-k">if</span> (state === <span class="t-s">"play"</span>) <span class="t-f">setPaused</span>(<span class="t-k">true</span>); });
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1180–1188</span><span class="ttl">when the window loses focus</span></div><pre><code><span class="ln">1180</span>window.<span class="t-f">addEventListener</span>(<span class="t-s">"blur"</span>, () =&gt; { <span class="t-k">if</span> (state === <span class="t-s">"play"</span>) <span class="t-f">setPaused</span>(<span class="t-k">true</span>); });
 <span class="ln">1181</span>document.<span class="t-f">addEventListener</span>(<span class="t-s">"visibilitychange"</span>, () =&gt; {
 <span class="ln">1182</span>  <span class="t-k">if</span> (document.hidden) {
 <span class="ln">1183</span>    <span class="t-k">if</span> (state === <span class="t-s">"play"</span>) <span class="t-f">setPaused</span>(<span class="t-k">true</span>);
@@ -1140,7 +1140,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 
   <figure class="shot narrow"><span class="frame"><img src="img/play.png" alt="Gameplay: cyan player bullets, yellow enemy bullets, capsules, the saucer and kill effects" loading="lazy"></span><figcaption>Cyan are player bullets (pBullets), yellow are enemy bullets (eBullets). Both are plain arrays</figcaption></figure>
 
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1489–1524</span><span class="ttl">processing one player bullet</span></div><pre><code><span class="ln">1489</span>  <span class="t-c">// --- 自弾 ---</span>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1489–1524</span><span class="ttl">processing one player bullet</span></div><pre><code><span class="ln">1489</span>  <span class="t-c">// --- 自弾 ---</span>
 <span class="ln">1490</span>  <span class="t-k">for</span> (<span class="t-k">let</span> i = pBullets.length - <span class="t-n">1</span>; i &gt;= <span class="t-n">0</span>; i--) {
 <span class="ln">1491</span>    <span class="t-k">const</span> p = pBullets[i];
 <span class="ln">1492</span>    p.y -= <span class="t-n">470</span> * dt;
@@ -1190,7 +1190,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
     Particles and rings differ in one respect: they are removed with <code>removeAt</code> (move the last element into the gap, then <code>pop</code>) rather than <code>splice</code>, because <code>splice</code> shifts every later element down, and that adds up with hundreds of particles (<a href="#s17">chapter 17</a>).</p>
 
   <h3>Enemy bullets and getting hit</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1526–1539</span><span class="ttl">enemy bullets; a hit on the ship calls damagePlayer()</span></div><pre><code><span class="ln">1526</span>  <span class="t-c">// --- 敵弾 ---</span>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1526–1539</span><span class="ttl">enemy bullets; a hit on the ship calls damagePlayer()</span></div><pre><code><span class="ln">1526</span>  <span class="t-c">// --- 敵弾 ---</span>
 <span class="ln">1527</span>  <span class="t-k">const</span> prect = <span class="t-f">playerRect</span>();
 <span class="ln">1528</span>  <span class="t-k">for</span> (<span class="t-k">let</span> i = eBullets.length - <span class="t-n">1</span>; i &gt;= <span class="t-n">0</span>; i--) {
 <span class="ln">1529</span>    <span class="t-k">const</span> b = eBullets[i];
@@ -1205,7 +1205,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 <span class="ln">1538</span>    <span class="t-k">if</span> (state !== <span class="t-s">"play"</span>) <span class="t-k">return</span>;
 <span class="ln">1539</span>  }</code></pre></div>
   <p>The hit test includes <code>player.inv &lt;= 0</code>, “no invulnerability left”. Right after respawning or using a bomb, the ship cannot be hit for a while.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1297–1309</span></div><pre><code><span class="ln">1297</span><span class="t-k">function</span> <span class="t-f">damagePlayer</span>() {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1297–1309</span></div><pre><code><span class="ln">1297</span><span class="t-k">function</span> <span class="t-f">damagePlayer</span>() {
 <span class="ln">1298</span>  waveNoDamage = <span class="t-k">false</span>;
 <span class="ln">1299</span>  <span class="t-f">resetCombo</span>();
 <span class="ln">1300</span>  <span class="t-k">if</span> (active.shield &gt; <span class="t-n">0</span>) {
@@ -1218,7 +1218,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 <span class="ln">1307</span>  }
 <span class="ln">1308</span>  <span class="t-f">hitPlayer</span>();
 <span class="ln">1309</span>}</code></pre></div>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1281–1295</span></div><pre><code><span class="ln">1281</span><span class="t-k">function</span> <span class="t-f">hitPlayer</span>() {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1281–1295</span></div><pre><code><span class="ln">1281</span><span class="t-k">function</span> <span class="t-f">hitPlayer</span>() {
 <span class="ln">1282</span>  lives--;
 <span class="ln">1283</span>  <span class="t-k">const</span> pr = <span class="t-f">playerRect</span>();
 <span class="ln">1284</span>  <span class="t-f">spawnBurst</span>(pr.x + <span class="t-n">13</span>, pr.y + <span class="t-n">8</span>, <span class="t-s">"#c8f7ff"</span>, <span class="t-n">30</span>, <span class="t-n">170</span>);
@@ -1237,7 +1237,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
     This is also where a miss removes the linked beam cannons (<code>active.beam</code>).</p>
   <div class="box"><span class="lbl">BEGINNER NOTE — the invulnerability flicker</span>
     <p>The flicker after respawning comes from this single line in the draw code. <code>Math.floor(t * 12) % 2</code> alternates between 0 and 1 twelve times a second; skipping the draw on even values makes the ship blink.</p>
-    <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1936–1936</span><span class="ttl">inside drawGame()</span></div><pre><code><span class="ln">1936</span>  <span class="t-k">if</span> (player.alive &amp;&amp; !(player.inv &gt; <span class="t-n">0</span> &amp;&amp; Math.<span class="t-f">floor</span>(t * <span class="t-n">12</span>) % <span class="t-n">2</span> === <span class="t-n">0</span>)) {</code></pre></div>
+    <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1936–1936</span><span class="ttl">inside drawGame()</span></div><pre><code><span class="ln">1936</span>  <span class="t-k">if</span> (player.alive &amp;&amp; !(player.inv &gt; <span class="t-n">0</span> &amp;&amp; Math.<span class="t-f">floor</span>(t * <span class="t-n">12</span>) % <span class="t-n">2</span> === <span class="t-n">0</span>)) {</code></pre></div>
   </div>
 </section>
 
@@ -1249,7 +1249,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <figure class="shot plain"><span class="frame"><img src="img/barriers.png" alt="Four green barriers with bullet damage" loading="lazy"></span><figcaption>Barriers after taking fire. One cell is 4 × 4 pixels</figcaption></figure>
 
   <h3>Building the shape</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L723–742</span></div><pre><code><span class="ln">723</span><span class="t-k">function</span> <span class="t-f">makeBarriers</span>() {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L723–742</span></div><pre><code><span class="ln">723</span><span class="t-k">function</span> <span class="t-f">makeBarriers</span>() {
 <span class="ln">724</span>  barriers = [];
 <span class="ln">725</span>  <span class="t-k">const</span> cols = <span class="t-n">14</span>, rows = <span class="t-n">10</span>, cell = <span class="t-n">4</span>, bw = cols * cell;
 <span class="ln">726</span>  <span class="t-k">for</span> (<span class="t-k">let</span> i = <span class="t-n">0</span>; i &lt; <span class="t-n">4</span>; i++) {
@@ -1285,7 +1285,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   </div>
 
   <h3>Finding the cell that was hit</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1192–1215</span></div><pre><code><span class="ln">1192</span><span class="t-k">function</span> <span class="t-f">barrierHit</span>(rect, blast) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1192–1215</span></div><pre><code><span class="ln">1192</span><span class="t-k">function</span> <span class="t-f">barrierHit</span>(rect, blast) {
 <span class="ln">1193</span>  <span class="t-k">for</span> (<span class="t-k">const</span> b <span class="t-k">of</span> barriers) {
 <span class="ln">1194</span>    <span class="t-k">if</span> (!<span class="t-f">hit</span>(rect, b)) <span class="t-k">continue</span>;
 <span class="ln">1195</span>    <span class="t-k">const</span> c0 = Math.<span class="t-f">max</span>(<span class="t-n">0</span>, Math.<span class="t-f">floor</span>((rect.x - b.x) / b.cell));
@@ -1326,7 +1326,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <figure class="shot plain"><span class="frame"><img src="img/hud.png" alt="The HUD: score, combo multiplier, hi-score, wave, laser gauge, bombs" loading="lazy"></span><figcaption>The HUD at the top of the screen. From the left: score, combo multiplier (the bar below it is the time left), hi-score, wave, laser gauge, bombs</figcaption></figure>
 
   <h3>killAlien — nine things that happen on a kill</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1254–1267</span></div><pre><code><span class="ln">1254</span><span class="t-k">function</span> <span class="t-f">killAlien</span>(a, r) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1254–1267</span></div><pre><code><span class="ln">1254</span><span class="t-k">function</span> <span class="t-f">killAlien</span>(a, r) {
 <span class="ln">1255</span>  <span class="t-k">if</span> (!a.alive) <span class="t-k">return</span>;
 <span class="ln">1256</span>  a.alive = <span class="t-k">false</span>; aliveN--;
 <span class="ln">1257</span>  <span class="t-f">gainCharge</span>(<span class="t-n">6</span>);
@@ -1356,7 +1356,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
       When you build a game, make it work in one line first, then add the touches one at a time.</p></div>
 
   <h3>The combo multiplier</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L807–816</span></div><pre><code><span class="ln">807</span><span class="t-k">function</span> <span class="t-f">bumpCombo</span>() {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L807–816</span></div><pre><code><span class="ln">807</span><span class="t-k">function</span> <span class="t-f">bumpCombo</span>() {
 <span class="ln">808</span>  combo.n++; combo.t = <span class="t-u">COMBO_WINDOW</span>;
 <span class="ln">809</span>  <span class="t-k">const</span> m = Math.<span class="t-f">min</span>(<span class="t-n">8</span>, <span class="t-n">1</span> + Math.<span class="t-f">floor</span>(combo.n / <span class="t-n">4</span>));
 <span class="ln">810</span>  <span class="t-k">if</span> (m &gt; combo.mult) {
@@ -1374,7 +1374,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   </table></div>
 
   <h3>Adding points and extra lives</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L781–792</span></div><pre><code><span class="ln">781</span><span class="t-k">function</span> <span class="t-f">addScore</span>(n) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L781–792</span></div><pre><code><span class="ln">781</span><span class="t-k">function</span> <span class="t-f">addScore</span>(n) {
 <span class="ln">782</span>  score += n;
 <span class="ln">783</span>  <span class="t-k">if</span> (score &gt; hi) { hi = score; newRecord = <span class="t-k">true</span>; }
 <span class="ln">784</span>  <span class="t-k">while</span> (score &gt;= nextLife) {
@@ -1389,15 +1389,15 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <p><code>nextLife</code>, the score at which the next life is awarded, advances in steps of 5000. It is a <code>while</code> loop so that a huge single award (a boss kill, say) can cross two thresholds at once. Lives are capped at five.</p>
 
   <h3>Saving the hi-score</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L655–656</span><span class="ttl">loaded at start-up</span></div><pre><code><span class="ln">655</span><span class="t-k">let</span> hi = <span class="t-n">0</span>;
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L655–656</span><span class="ttl">loaded at start-up</span></div><pre><code><span class="ln">655</span><span class="t-k">let</span> hi = <span class="t-n">0</span>;
 <span class="ln">656</span><span class="t-k">try</span> { hi = +(localStorage.<span class="t-f">getItem</span>(<span class="t-u">HI_KEY</span>) || <span class="t-n">0</span>) || <span class="t-n">0</span>; } <span class="t-k">catch</span> (e) {}</code></pre></div>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L779–779</span></div><pre><code><span class="ln">779</span><span class="t-k">function</span> <span class="t-f">saveHi</span>() { <span class="t-k">try</span> { localStorage.<span class="t-f">setItem</span>(<span class="t-u">HI_KEY</span>, <span class="t-f">String</span>(hi)); } <span class="t-k">catch</span> (e) {} }</code></pre></div>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L779–779</span></div><pre><code><span class="ln">779</span><span class="t-k">function</span> <span class="t-f">saveHi</span>() { <span class="t-k">try</span> { localStorage.<span class="t-f">setItem</span>(<span class="t-u">HI_KEY</span>, <span class="t-f">String</span>(hi)); } <span class="t-k">catch</span> (e) {} }</code></pre></div>
   <div class="box"><span class="lbl">BEGINNER NOTE — localStorage</span>
     <p>A small key–value store that persists in the browser. It <strong>only stores strings</strong>, hence <code>String(hi)</code> when writing and the unary <code>+</code> when reading.
       It may be unavailable (private browsing, for example), so every access is wrapped in <code>try { } catch (e) { }</code> and failure is silently ignored.</p></div>
 
   <h3>The score that rolls up</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1341–1342</span><span class="ttl">inside updateCommon()</span></div><pre><code><span class="ln">1341</span>  scoreShown += (score - scoreShown) * Math.<span class="t-f">min</span>(<span class="t-n">1</span>, dt * <span class="t-n">12</span>);
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1341–1342</span><span class="ttl">inside updateCommon()</span></div><pre><code><span class="ln">1341</span>  scoreShown += (score - scoreShown) * Math.<span class="t-f">min</span>(<span class="t-n">1</span>, dt * <span class="t-n">12</span>);
 <span class="ln">1342</span>  <span class="t-k">if</span> (Math.<span class="t-f">abs</span>(score - scoreShown) &lt; <span class="t-n">1</span>) scoreShown = score;</code></pre></div>
   <p>The HUD shows <code>scoreShown</code>, not the real <code>score</code>. Every frame it closes 12 × dt of the gap, so a big award makes the digits spin and catch up.
     Once the gap is under one point the values are snapped together, so it never chases forever.</p>
@@ -1408,7 +1408,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <h2><span class="num">12</span>Power-ups — capsules and durations</h2>
   <p class="tagline">Four capsule types: how they are defined, how they fall, how they are picked up, and how they expire.</p>
 
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L641–647</span><span class="ttl">the capsule table; dur is the duration in seconds (0 = no time limit)</span></div><pre><code><span class="ln">641</span><span class="t-k">const</span> <span class="t-u">PU_DEFS</span> = {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L641–647</span><span class="ttl">the capsule table; dur is the duration in seconds (0 = no time limit)</span></div><pre><code><span class="ln">641</span><span class="t-k">const</span> <span class="t-u">PU_DEFS</span> = {
 <span class="ln">642</span>  wide: { label: <span class="t-s">"W"</span>, color: <span class="t-s">"#61e8ff"</span>, dur: <span class="t-n">8</span>, name: <span class="t-s">"3-WAY!"</span> },
 <span class="ln">643</span>  rapid: { label: <span class="t-s">"R"</span>, color: <span class="t-s">"#ffe066"</span>, dur: <span class="t-n">8</span>, name: <span class="t-s">"RAPID!"</span> },
 <span class="ln">644</span>  shield: { label: <span class="t-s">"S"</span>, color: <span class="t-s">"#7dff7a"</span>, dur: <span class="t-n">0</span>, name: <span class="t-s">"SHIELD!"</span> },
@@ -1426,13 +1426,13 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   </table></div>
 
   <h3>Drop, pick up, apply</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L818–822</span></div><pre><code><span class="ln">818</span><span class="t-k">function</span> <span class="t-f">maybeDrop</span>(x, y) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L818–822</span></div><pre><code><span class="ln">818</span><span class="t-k">function</span> <span class="t-f">maybeDrop</span>(x, y) {
 <span class="ln">819</span>  <span class="t-k">if</span> (Math.<span class="t-f">random</span>() &gt; <span class="t-n">0.08</span> || powerups.length &gt;= <span class="t-n">2</span>) <span class="t-k">return</span>;
 <span class="ln">820</span>  <span class="t-k">const</span> ks = Object.<span class="t-f">keys</span>(<span class="t-u">PU_DEFS</span>);
 <span class="ln">821</span>  powerups.<span class="t-f">push</span>({ x, y, type: ks[(Math.<span class="t-f">random</span>() * ks.length) | <span class="t-n">0</span>], ph: Math.<span class="t-f">random</span>() * <span class="t-n">6.28</span> });
 <span class="ln">822</span>}</code></pre></div>
   <p>If <code>Math.random() &gt; 0.08</code> nothing happens — so a capsule drops 8 % of the time, and never while two are already on screen. The type is chosen evenly among the four.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L824–838</span></div><pre><code><span class="ln">824</span><span class="t-k">function</span> <span class="t-f">applyPU</span>(type) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L824–838</span></div><pre><code><span class="ln">824</span><span class="t-k">function</span> <span class="t-f">applyPU</span>(type) {
 <span class="ln">825</span>  <span class="t-k">const</span> d = <span class="t-u">PU_DEFS</span>[type];
 <span class="ln">826</span>  <span class="t-k">let</span> name = d.name;
 <span class="ln">827</span>  <span class="t-k">if</span> (type === <span class="t-s">"shield"</span>) active.shield = <span class="t-n">1</span>;
@@ -1451,7 +1451,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
     The timed ones count down in <code>updatePlay</code> and simply stop working at zero. No separate “switch it off” code is needed — that is the beauty of the design.</p>
 
   <h3>Falling capsules and the magnet field</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1468–1485</span><span class="ttl">falling, magnetic pull, and pickup</span></div><pre><code><span class="ln">1468</span>  <span class="t-c">// --- パワーアップカプセル ---</span>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1468–1485</span><span class="ttl">falling, magnetic pull, and pickup</span></div><pre><code><span class="ln">1468</span>  <span class="t-c">// --- パワーアップカプセル ---</span>
 <span class="ln">1469</span>  <span class="t-k">const</span> prInf = { x: player.x - <span class="t-n">17</span>, y: <span class="t-u">PLAYER_Y</span> - <span class="t-n">4</span>, w: <span class="t-n">34</span>, h: <span class="t-n">24</span> };
 <span class="ln">1470</span>  <span class="t-k">for</span> (<span class="t-k">let</span> i = powerups.length - <span class="t-n">1</span>; i &gt;= <span class="t-n">0</span>; i--) {
 <span class="ln">1471</span>    <span class="t-k">const</span> u = powerups[i];
@@ -1473,10 +1473,10 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
     multiplying that by the pull amount <code>pull</code> moves the capsule. This “move towards a point” calculation shows up in almost every game.</p>
 
   <h3>Linked beam cannons</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L630–630</span><span class="ttl">cannon positions as x offsets from the ship’s centre</span></div><pre><code><span class="ln">630</span><span class="t-k">const</span> <span class="t-u">BEAM_OFFSETS</span> = [-<span class="t-n">24</span>, <span class="t-n">24</span>, -<span class="t-n">42</span>, <span class="t-n">42</span>];</code></pre></div>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L630–630</span><span class="ttl">cannon positions as x offsets from the ship’s centre</span></div><pre><code><span class="ln">630</span><span class="t-k">const</span> <span class="t-u">BEAM_OFFSETS</span> = [-<span class="t-n">24</span>, <span class="t-n">24</span>, -<span class="t-n">42</span>, <span class="t-n">42</span>];</code></pre></div>
   <p>The first two cannons sit just beside the ship, the third and fourth further out. With <code>active.beam</code> at 2 the first two entries are used; at 4, all of them.
     The draw code connects ship and cannons with short lines to show that they are linked.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1939–1949</span><span class="ttl">inside drawGame(): the connecting lines and the cannons</span></div><pre><code><span class="ln">1939</span>    <span class="t-k">for</span> (<span class="t-k">let</span> i = <span class="t-n">0</span>; i &lt; active.beam; i++) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1939–1949</span><span class="ttl">inside drawGame(): the connecting lines and the cannons</span></div><pre><code><span class="ln">1939</span>    <span class="t-k">for</span> (<span class="t-k">let</span> i = <span class="t-n">0</span>; i &lt; active.beam; i++) {
 <span class="ln">1940</span>      <span class="t-k">const</span> offset = <span class="t-u">BEAM_OFFSETS</span>[i];
 <span class="ln">1941</span>      <span class="t-k">const</span> inner = i &lt; <span class="t-n">2</span> ? Math.<span class="t-f">sign</span>(offset) * <span class="t-n">10</span> : <span class="t-u">BEAM_OFFSETS</span>[i - <span class="t-n">2</span>];
 <span class="ln">1942</span>      ctx.<span class="t-f">beginPath</span>();
@@ -1500,7 +1500,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
     <figure class="shot"><span class="frame"><img src="img/bomb.png" alt="A bomb going off: the screen flashes yellow and a shockwave ring expands" loading="lazy"></span><figcaption>A bomb. The screen flashes yellow and a ring expands</figcaption></figure>
   </div>
 
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L671–671</span><span class="ttl">state for the specials</span></div><pre><code><span class="ln">671</span><span class="t-k">const</span> special = { charge: <span class="t-n">0</span>, laserT: <span class="t-n">0</span>, laserW: <span class="t-n">0</span>, laserDps: <span class="t-n">0</span>, bombs: <span class="t-n">2</span>, bombT: <span class="t-n">0</span> };</code></pre></div>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L671–671</span><span class="ttl">state for the specials</span></div><pre><code><span class="ln">671</span><span class="t-k">const</span> special = { charge: <span class="t-n">0</span>, laserT: <span class="t-n">0</span>, laserW: <span class="t-n">0</span>, laserDps: <span class="t-n">0</span>, bombs: <span class="t-n">2</span>, bombT: <span class="t-n">0</span> };</code></pre></div>
   <ul>
     <li><code>charge</code> — the laser gauge (0–100)</li>
     <li><code>laserT</code> — seconds of laser left; the beam exists while this is above zero</li>
@@ -1509,7 +1509,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   </ul>
 
   <h3>Charging the gauge</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L842–850</span></div><pre><code><span class="ln">842</span><span class="t-k">function</span> <span class="t-f">gainCharge</span>(n) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L842–850</span></div><pre><code><span class="ln">842</span><span class="t-k">function</span> <span class="t-f">gainCharge</span>(n) {
 <span class="ln">843</span>  <span class="t-k">if</span> (special.laserT &gt; <span class="t-n">0</span>) <span class="t-k">return</span>; <span class="t-c">// レーザー自身の撃破では再充電しない。</span>
 <span class="ln">844</span>  <span class="t-k">const</span> before = special.charge;
 <span class="ln">845</span>  special.charge = Math.<span class="t-f">min</span>(<span class="t-u">LASER_MAX</span>, special.charge + n);
@@ -1522,12 +1522,12 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
     Kills made by the laser itself do not recharge it (<code>laserT &gt; 0</code> returns early), so it cannot be fired continuously.</p>
 
   <h3>The rules live in one place</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L852–852</span></div><pre><code><span class="ln">852</span><span class="t-k">function</span> <span class="t-f">canUseSpecial</span>() { <span class="t-k">return</span> state === <span class="t-s">"play"</span> &amp;&amp; !paused &amp;&amp; player.alive &amp;&amp; bannerT &lt;= <span class="t-n">0</span>; }</code></pre></div>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L852–852</span></div><pre><code><span class="ln">852</span><span class="t-k">function</span> <span class="t-f">canUseSpecial</span>() { <span class="t-k">return</span> state === <span class="t-s">"play"</span> &amp;&amp; !paused &amp;&amp; player.alive &amp;&amp; bannerT &lt;= <span class="t-n">0</span>; }</code></pre></div>
   <p>“Playing, not paused, alive, and the wave banner is gone.” Laser and bomb, whether triggered from the keyboard, the HTML buttons or a right click, always go through this function.
     With the rule in one place, a change such as “not during the upgrade screen” is a one-line edit.</p>
 
   <h3>The laser is a tall thin rectangle</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L854–863</span></div><pre><code><span class="ln">854</span><span class="t-k">function</span> <span class="t-f">activateLaser</span>() {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L854–863</span></div><pre><code><span class="ln">854</span><span class="t-k">function</span> <span class="t-f">activateLaser</span>() {
 <span class="ln">855</span>  <span class="t-k">if</span> (!<span class="t-f">canUseSpecial</span>() || special.charge &lt; <span class="t-u">LASER_MAX</span> || special.laserT &gt; <span class="t-n">0</span>) <span class="t-k">return</span> <span class="t-k">false</span>;
 <span class="ln">856</span>  special.charge = <span class="t-n">0</span>;
 <span class="ln">857</span>  special.laserT = <span class="t-n">1.2</span>;
@@ -1537,7 +1537,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 <span class="ln">861</span>  <span class="t-f">beep</span>({ f0: <span class="t-n">180</span>, f1: <span class="t-n">1800</span>, dur: <span class="t-n">0.7</span>, type: <span class="t-s">"sawtooth"</span>, vol: <span class="t-n">0.1</span> });
 <span class="ln">862</span>  <span class="t-k">return</span> <span class="t-k">true</span>;
 <span class="ln">863</span>}</code></pre></div>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L884–901</span></div><pre><code><span class="ln">884</span><span class="t-k">function</span> <span class="t-f">updateLaser</span>(dt) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L884–901</span></div><pre><code><span class="ln">884</span><span class="t-k">function</span> <span class="t-f">updateLaser</span>(dt) {
 <span class="ln">885</span>  <span class="t-k">if</span> (special.laserT &lt;= <span class="t-n">0</span>) <span class="t-k">return</span>;
 <span class="ln">886</span>  <span class="t-k">const</span> duration = Math.<span class="t-f">min</span>(dt, special.laserT);
 <span class="ln">887</span>  <span class="t-k">const</span> beam = { x: player.x - special.laserW / <span class="t-n">2</span>, y: <span class="t-n">58</span>, w: special.laserW, h: <span class="t-u">PLAYER_Y</span> - <span class="t-n">58</span> };
@@ -1557,7 +1557,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 <span class="ln">901</span>}</code></pre></div>
   <p>The laser’s hit box is a <strong>tall thin rectangle</strong> <code>beam</code> from just above the ship to the top of the screen. Every frame it is tested with <code>hit</code> against aliens, enemy bullets, the saucer and each boss part.
     Boss damage is “damage per second × seconds this frame”, so the total is the same at any frame rate.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1856–1873</span></div><pre><code><span class="ln">1856</span><span class="t-k">function</span> <span class="t-f">drawSpecials</span>(t) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1856–1873</span></div><pre><code><span class="ln">1856</span><span class="t-k">function</span> <span class="t-f">drawSpecials</span>(t) {
 <span class="ln">1857</span>  <span class="t-k">if</span> (special.bombT &gt; <span class="t-n">0</span>) {
 <span class="ln">1858</span>    ctx.fillStyle = <span class="t-s">`rgba(255,224,102,${special.bombT * 0.22})`</span>;
 <span class="ln">1859</span>    ctx.<span class="t-f">fillRect</span>(<span class="t-n">0</span>, <span class="t-n">58</span>, W, <span class="t-u">GROUND_Y</span> - <span class="t-n">58</span>);
@@ -1577,7 +1577,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 <span class="ln">1873</span>}</code></pre></div>
   <p>The beam is three layers: a translucent purple halo, a denser purple body, and a white core. <code>shadowBlur</code> softens the edges and <code>"lighter"</code> (additive blending, <a href="#s17">chapter 17</a>) makes the background look burnt bright.
     Applying <code>shadowBlur</code> to a rectangle as tall as the screen every frame is expensive, though, so <code>laserStrip</code> pre-renders a short column once per width (<code>prerender</code>, <a href="#s05">chapter 05</a>) and <code>drawLaserColumn</code> stretches it into place.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L586–610</span><span class="ttl">a glowing column, pre-rendered once and pasted in three pieces</span></div><pre><code><span class="ln">586</span><span class="t-c">// 合体レーザーの光彩付きの柱。幅ごとに一度だけ短い柱を描いておき、上下の端(光彩のはみ出し)はそのまま、</span>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L586–610</span><span class="ttl">a glowing column, pre-rendered once and pasted in three pieces</span></div><pre><code><span class="ln">586</span><span class="t-c">// 合体レーザーの光彩付きの柱。幅ごとに一度だけ短い柱を描いておき、上下の端(光彩のはみ出し)はそのまま、</span>
 <span class="ln">587</span><span class="t-c">// 中央の帯だけを縦に引き伸ばして任意の長さにする。</span>
 <span class="ln">588</span><span class="t-k">const</span> <span class="t-u">LASER_BLUR</span> = <span class="t-n">20</span>, <span class="t-u">LASER_CAP</span> = <span class="t-n">70</span>, <span class="t-u">LASER_BAND</span> = <span class="t-n">20</span>, laserStrips = <span class="t-k">new</span> <span class="t-f">Map</span>();
 <span class="ln">589</span><span class="t-k">function</span> <span class="t-f">laserStrip</span>(width) {
@@ -1606,7 +1606,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
     so the beam looks right at any length. The width depends only on the number of linked cannons and the beam upgrade level, a dozen or so values, so the <code>Map</code> cache never has to redraw one.</p>
 
   <h3>The bomb — a circular area attack</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L865–882</span></div><pre><code><span class="ln">865</span><span class="t-k">function</span> <span class="t-f">activateBomb</span>() {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L865–882</span></div><pre><code><span class="ln">865</span><span class="t-k">function</span> <span class="t-f">activateBomb</span>() {
 <span class="ln">866</span>  <span class="t-k">if</span> (!<span class="t-f">canUseSpecial</span>() || special.bombs &lt;= <span class="t-n">0</span> || special.bombT &gt; <span class="t-n">0</span>) <span class="t-k">return</span> <span class="t-k">false</span>;
 <span class="ln">867</span>  special.bombs--; special.bombT = <span class="t-n">0.65</span>;
 <span class="ln">868</span>  player.inv = Math.<span class="t-f">max</span>(player.inv, <span class="t-n">1.6</span>);
@@ -1628,9 +1628,9 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
     It also grants 1.6 seconds of invulnerability, which makes it the panic button.</p>
 
   <h3>Wiring the HTML buttons</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1113–1114</span><span class="ttl">the buttons just call the same functions</span></div><pre><code><span class="ln">1113</span>laserButton.<span class="t-f">addEventListener</span>(<span class="t-s">"click"</span>, () =&gt; { <span class="t-f">ac</span>(); <span class="t-f">activateLaser</span>(); });
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1113–1114</span><span class="ttl">the buttons just call the same functions</span></div><pre><code><span class="ln">1113</span>laserButton.<span class="t-f">addEventListener</span>(<span class="t-s">"click"</span>, () =&gt; { <span class="t-f">ac</span>(); <span class="t-f">activateLaser</span>(); });
 <span class="ln">1114</span>bombButton.<span class="t-f">addEventListener</span>(<span class="t-s">"click"</span>, () =&gt; { <span class="t-f">ac</span>(); <span class="t-f">activateBomb</span>(); });</code></pre></div>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L2034–2051</span></div><pre><code><span class="ln">2034</span><span class="t-k">function</span> <span class="t-f">refreshActionButtons</span>() {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L2034–2051</span></div><pre><code><span class="ln">2034</span><span class="t-k">function</span> <span class="t-f">refreshActionButtons</span>() {
 <span class="ln">2035</span>  <span class="t-k">const</span> usable = <span class="t-f">canUseSpecial</span>();
 <span class="ln">2036</span>  <span class="t-k">const</span> laserOn = usable &amp;&amp; special.charge &gt;= <span class="t-u">LASER_MAX</span> &amp;&amp; special.laserT &lt;= <span class="t-n">0</span>;
 <span class="ln">2037</span>  <span class="t-k">const</span> bombOn = usable &amp;&amp; special.bombs &gt; <span class="t-n">0</span> &amp;&amp; special.bombT &lt;= <span class="t-n">0</span>;
@@ -1650,7 +1650,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 <span class="ln">2051</span>}</code></pre></div>
   <p><code>refreshActionButtons</code> runs at the start of every <code>draw()</code> and keeps the buttons’ enabled state and labels (“READY!”, the bomb count) in sync.
     It writes to the HTML <strong>only when something changed</strong>, though: <code>shownButtons</code> remembers what was written last time, and identical content is skipped.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L67–68</span><span class="ttl">what the buttons currently show</span></div><pre><code><span class="ln">67</span><span class="t-c">// ボタンに直前に書いた内容。同じなら DOM に書き込まない(毎フレームの textContent 更新はレイアウト再計算を招く)。</span>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L67–68</span><span class="ttl">what the buttons currently show</span></div><pre><code><span class="ln">67</span><span class="t-c">// ボタンに直前に書いた内容。同じなら DOM に書き込まない(毎フレームの textContent 更新はレイアウト再計算を招く)。</span>
 <span class="ln">68</span><span class="t-k">const</span> shownButtons = { laserOn: <span class="t-k">null</span>, gauge: <span class="t-k">null</span>, bombOn: <span class="t-k">null</span>, bombs: <span class="t-k">null</span>, lang: <span class="t-k">null</span> };</code></pre></div>
   <div class="box"><span class="lbl">BEGINNER NOTE — DOM writes are expensive</span>
     <p>Assigning <code>textContent</code> or <code>disabled</code>, even with the same value, tells the browser that the page layout may have changed and queues a recalculation.
@@ -1669,7 +1669,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   </div>
 
   <h3>Detecting a clear</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1541–1555</span><span class="ttl">the end of updatePlay()</span></div><pre><code><span class="ln">1541</span>  <span class="t-c">// --- ウェーブクリア ---</span>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1541–1555</span><span class="ttl">the end of updatePlay()</span></div><pre><code><span class="ln">1541</span>  <span class="t-c">// --- ウェーブクリア ---</span>
 <span class="ln">1542</span>  <span class="t-k">if</span> (aliveN === <span class="t-n">0</span> &amp;&amp; !boss) {
 <span class="ln">1543</span>    <span class="t-f">saucerSoundStop</span>();
 <span class="ln">1544</span>    pBullets = []; eBullets = []; powerups = [];
@@ -1688,7 +1688,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
     <code>waveNoDamage</code> starts each wave as <code>true</code> and becomes <code>false</code> on a hit; if it survives, you get the perfect bonus.</p>
 
   <h3>Three picks without duplicates</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L632–639</span><span class="ttl">six upgrades; the ones with max have a level cap</span></div><pre><code><span class="ln">632</span><span class="t-k">const</span> <span class="t-u">UPGRADE_DEFS</span> = {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L632–639</span><span class="ttl">six upgrades; the ones with max have a level cap</span></div><pre><code><span class="ln">632</span><span class="t-k">const</span> <span class="t-u">UPGRADE_DEFS</span> = {
 <span class="ln">633</span>  beam: { color: <span class="t-u">BEAM_COLOR</span>, max: <span class="t-n">5</span> },
 <span class="ln">634</span>  speed: { color: <span class="t-s">"#61e8ff"</span>, max: <span class="t-n">5</span> },
 <span class="ln">635</span>  magnet: { color: <span class="t-s">"#7dff7a"</span>, max: <span class="t-n">5</span> },
@@ -1696,7 +1696,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 <span class="ln">637</span>  supply: { color: <span class="t-s">"#ffe066"</span> },
 <span class="ln">638</span>  charge: { color: <span class="t-s">"#ff6ad5"</span> },
 <span class="ln">639</span>};</code></pre></div>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L903–910</span></div><pre><code><span class="ln">903</span><span class="t-k">function</span> <span class="t-f">openUpgrades</span>() {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L903–910</span></div><pre><code><span class="ln">903</span><span class="t-k">function</span> <span class="t-f">openUpgrades</span>() {
 <span class="ln">904</span>  <span class="t-k">const</span> pool = Object.<span class="t-f">keys</span>(<span class="t-u">UPGRADE_DEFS</span>).<span class="t-f">filter</span>(k =&gt; !<span class="t-u">UPGRADE_DEFS</span>[k].max || upgrades[k] &lt; <span class="t-u">UPGRADE_DEFS</span>[k].max);
 <span class="ln">905</span>  upgradeChoices = [];
 <span class="ln">906</span>  <span class="t-k">while</span> (upgradeChoices.length &lt; <span class="t-n">3</span>) upgradeChoices.<span class="t-f">push</span>(pool.<span class="t-f">splice</span>(Math.<span class="t-f">floor</span>(Math.<span class="t-f">random</span>() * pool.length), <span class="t-n">1</span>)[<span class="t-n">0</span>]);
@@ -1711,7 +1711,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 <span class="t-c">// pool now has 5 entries, so picked can never come up again</span></code></pre></div>
 
   <h3>Choosing and moving on</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L912–928</span></div><pre><code><span class="ln">912</span><span class="t-k">function</span> <span class="t-f">chooseUpgrade</span>(index) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L912–928</span></div><pre><code><span class="ln">912</span><span class="t-k">function</span> <span class="t-f">chooseUpgrade</span>(index) {
 <span class="ln">913</span>  <span class="t-k">if</span> (state !== <span class="t-s">"upgrade"</span> || paused || !upgradeChoices[index]) <span class="t-k">return</span> <span class="t-k">false</span>;
 <span class="ln">914</span>  <span class="t-k">const</span> key = upgradeChoices[index];
 <span class="ln">915</span>  <span class="t-k">if</span> (key <span class="t-k">in</span> upgrades) upgrades[key]++;
@@ -1732,8 +1732,8 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
     Finally <code>wave++</code>, <code>makeWave()</code> and <code>setState("play")</code> return you to combat.</p>
 
   <h3>Clicking a card is a collision test</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L930–930</span></div><pre><code><span class="ln">930</span><span class="t-k">function</span> <span class="t-f">upgradeCardRect</span>(index) { <span class="t-k">return</span> { x: <span class="t-n">34</span>, y: <span class="t-n">242</span> + index * <span class="t-n">88</span>, w: W - <span class="t-n">68</span>, h: <span class="t-n">76</span> }; }</code></pre></div>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L995–999</span></div><pre><code><span class="ln"> 995</span><span class="t-k">function</span> <span class="t-f">upgradeAtPointer</span>(e) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L930–930</span></div><pre><code><span class="ln">930</span><span class="t-k">function</span> <span class="t-f">upgradeCardRect</span>(index) { <span class="t-k">return</span> { x: <span class="t-n">34</span>, y: <span class="t-n">242</span> + index * <span class="t-n">88</span>, w: W - <span class="t-n">68</span>, h: <span class="t-n">76</span> }; }</code></pre></div>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L995–999</span></div><pre><code><span class="ln"> 995</span><span class="t-k">function</span> <span class="t-f">upgradeAtPointer</span>(e) {
 <span class="ln"> 996</span>  <span class="t-k">const</span> r = cvs.<span class="t-f">getBoundingClientRect</span>();
 <span class="ln"> 997</span>  <span class="t-k">const</span> point = { x: <span class="t-f">canvasX</span>(e), y: (e.clientY - r.top) * H / r.height, w: <span class="t-n">1</span>, h: <span class="t-n">1</span> };
 <span class="ln"> 998</span>  <span class="t-k">return</span> upgradeChoices.<span class="t-f">findIndex</span>((_, i) =&gt; <span class="t-f">hit</span>(point, <span class="t-f">upgradeCardRect</span>(i)));
@@ -1753,7 +1753,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   </div>
 
   <h3>An object with three parts</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L934–944</span></div><pre><code><span class="ln">934</span><span class="t-k">function</span> <span class="t-f">makeBoss</span>() {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L934–944</span></div><pre><code><span class="ln">934</span><span class="t-k">function</span> <span class="t-f">makeBoss</span>() {
 <span class="ln">935</span>  <span class="t-k">const</span> level = wave / <span class="t-n">5</span>;
 <span class="ln">936</span>  boss = {
 <span class="ln">937</span>    x: W / <span class="t-n">2</span>, y: <span class="t-n">112</span>, t: <span class="t-n">0</span>, attackT: <span class="t-n">2</span>, warning: <span class="t-n">0</span>, laserT: <span class="t-n">0</span>, targetX: W / <span class="t-n">2</span>,
@@ -1766,8 +1766,8 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 <span class="ln">944</span>}</code></pre></div>
   <p>The boss has a <code>parts</code> array: turret, turret, core. Each part has <code>hp</code>, <code>max</code>, and <code>flash</code> for the white flash on hit.
     <code>level = wave / 5</code>, so on wave 5 the turrets have 18 HP and the core 56; on wave 10 it is 22 and 72 — a gradual increase.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L950–950</span></div><pre><code><span class="ln">950</span><span class="t-k">function</span> <span class="t-f">coreExposed</span>() { <span class="t-k">return</span> boss &amp;&amp; boss.parts.<span class="t-f">slice</span>(<span class="t-n">0</span>, <span class="t-n">2</span>).<span class="t-f">every</span>(p =&gt; p.hp &lt;= <span class="t-n">0</span>); }</code></pre></div>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L952–969</span></div><pre><code><span class="ln">952</span><span class="t-k">function</span> <span class="t-f">damageBossPart</span>(part, amount, source = <span class="t-s">"shot"</span>) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L950–950</span></div><pre><code><span class="ln">950</span><span class="t-k">function</span> <span class="t-f">coreExposed</span>() { <span class="t-k">return</span> boss &amp;&amp; boss.parts.<span class="t-f">slice</span>(<span class="t-n">0</span>, <span class="t-n">2</span>).<span class="t-f">every</span>(p =&gt; p.hp &lt;= <span class="t-n">0</span>); }</code></pre></div>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L952–969</span></div><pre><code><span class="ln">952</span><span class="t-k">function</span> <span class="t-f">damageBossPart</span>(part, amount, source = <span class="t-s">"shot"</span>) {
 <span class="ln">953</span>  <span class="t-k">if</span> (!boss || part.hp &lt;= <span class="t-n">0</span> || amount &lt;= <span class="t-n">0</span>) <span class="t-k">return</span>;
 <span class="ln">954</span>  <span class="t-k">if</span> (part.kind === <span class="t-s">"core"</span> &amp;&amp; !<span class="t-f">coreExposed</span>()) <span class="t-k">return</span>;
 <span class="ln">955</span>  <span class="t-k">const</span> r = <span class="t-f">bossPartRect</span>(part), damage = Math.<span class="t-f">min</span>(part.hp, amount);
@@ -1789,7 +1789,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
     Destroying the core sets <code>boss = null</code>, which satisfies the <code>!boss</code> part of the clear check in the previous chapter.</p>
 
   <h3>The attack pattern is a small state machine</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L979–1007</span></div><pre><code><span class="ln">979</span><span class="t-k">function</span> <span class="t-f">updateBoss</span>(dt) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L979–1007</span></div><pre><code><span class="ln">979</span><span class="t-k">function</span> <span class="t-f">updateBoss</span>(dt) {
 <span class="ln">980</span>  <span class="t-k">if</span> (!boss || bannerT &gt; <span class="t-n">0</span>) <span class="t-k">return</span>;
 <span class="ln">981</span>  boss.t += dt;
 <span class="ln">982</span>  boss.parts.<span class="t-f">forEach</span>(p =&gt; p.flash = Math.<span class="t-f">max</span>(<span class="t-n">0</span>, p.flash - dt));
@@ -1832,7 +1832,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
     so <strong>if you see the warning and move away, you always dodge</strong>. The promise not to be unfair is written right into the code.</p>
 
   <h3>Drawing the telegraph</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1811–1825</span><span class="ttl">inside drawBoss(): dashed while warning, solid with a white core while firing</span></div><pre><code><span class="ln">1811</span>  <span class="t-k">if</span> (boss.warning &gt; <span class="t-n">0</span> || boss.laserT &gt; <span class="t-n">0</span>) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1811–1825</span><span class="ttl">inside drawBoss(): dashed while warning, solid with a white core while firing</span></div><pre><code><span class="ln">1811</span>  <span class="t-k">if</span> (boss.warning &gt; <span class="t-n">0</span> || boss.laserT &gt; <span class="t-n">0</span>) {
 <span class="ln">1812</span>    <span class="t-k">const</span> x = boss.targetX, y = boss.y + <span class="t-n">40</span>;
 <span class="ln">1813</span>    ctx.fillStyle = boss.laserT &gt; <span class="t-n">0</span> ? <span class="t-s">"#ff4d6dbb"</span> : <span class="t-s">"#ff4d6d22"</span>;
 <span class="ln">1814</span>    ctx.<span class="t-f">fillRect</span>(x - <span class="t-n">18</span>, y, <span class="t-n">36</span>, <span class="t-u">GROUND_Y</span> - y);
@@ -1850,7 +1850,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <p><code>ctx.setLineDash(DASH_WARNING)</code>, that is <code>[8, 6]</code>, means “8 on, 6 off”. Remember to reset with <code>DASH_NONE</code> (an empty array) afterwards, or every later line becomes dashed too.
     The arrays are constants so that no new array is created every frame.</p>
   <p>The hull is simply <code>BOSS_HULL</code>, pre-rendered with <code>prerender</code> (<a href="#s05">chapter 05</a>) complete with its pink <code>shadowBlur</code> glow. Only the moving parts, the turrets and the core, are drawn every frame.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1826–1828</span><span class="ttl">inside drawBoss(): the hull is a ready-made image</span></div><pre><code><span class="ln">1826</span>  ctx.<span class="t-f">drawImage</span>(<span class="t-u">BOSS_HULL</span>, boss.x - <span class="t-n">80</span> - <span class="t-u">BOSS_HULL_PAD</span>, boss.y - <span class="t-n">8</span> - <span class="t-u">BOSS_HULL_PAD</span>);
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1826–1828</span><span class="ttl">inside drawBoss(): the hull is a ready-made image</span></div><pre><code><span class="ln">1826</span>  ctx.<span class="t-f">drawImage</span>(<span class="t-u">BOSS_HULL</span>, boss.x - <span class="t-n">80</span> - <span class="t-u">BOSS_HULL_PAD</span>, boss.y - <span class="t-n">8</span> - <span class="t-u">BOSS_HULL_PAD</span>);
 <span class="ln">1827</span>  ctx.<span class="t-f">save</span>();
 <span class="ln">1828</span>  ctx.<span class="t-f">translate</span>(boss.x, boss.y);</code></pre></div>
 </section>
@@ -1863,7 +1863,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <figure class="shot narrow"><span class="frame"><img src="img/flight.png" alt="One alien in the formation is marked with a ! while another dives towards the bottom of the screen" loading="lazy"></span><figcaption>A yellow box with “!” is telegraphing; an orange box is in flight</figcaption></figure>
 
   <h3>Attaching a flight to an alien</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1011–1015</span></div><pre><code><span class="ln">1011</span><span class="t-k">function</span> <span class="t-f">launchFlight</span>(a, mode) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1011–1015</span></div><pre><code><span class="ln">1011</span><span class="t-k">function</span> <span class="t-f">launchFlight</span>(a, mode) {
 <span class="ln">1012</span>  <span class="t-k">const</span> r = <span class="t-f">alienRect</span>(a);
 <span class="ln">1013</span>  a.flight = { x: r.x, y: r.y, startX: r.x, t: <span class="t-n">0</span>, warning: <span class="t-n">0.65</span>, mode, phase: <span class="t-s">"exit"</span>,
 <span class="ln">1014</span>    vx: <span class="t-f">clamp</span>((player.x - r.x) * <span class="t-n">0.5</span>, -<span class="t-n">90</span>, <span class="t-n">90</span>), side: r.x &lt; W / <span class="t-n">2</span> ? -<span class="t-n">1</span> : <span class="t-n">1</span> };
@@ -1873,7 +1873,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
     Because drawing and collisions both go through <code>alienRect</code>, <strong>attaching or removing a flight is all it takes to switch between formation and solo behaviour</strong>.</p>
 
   <h3>Three ways to fly</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1017–1048</span></div><pre><code><span class="ln">1017</span><span class="t-k">function</span> <span class="t-f">updateFlights</span>(dt) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1017–1048</span></div><pre><code><span class="ln">1017</span><span class="t-k">function</span> <span class="t-f">updateFlights</span>(dt) {
 <span class="ln">1018</span>  <span class="t-k">if</span> (wave &lt; <span class="t-n">2</span> || boss || bannerT &gt; <span class="t-n">0</span>) <span class="t-k">return</span>;
 <span class="ln">1019</span>  flightT -= dt;
 <span class="ln">1020</span>  <span class="t-k">if</span> (flightT &lt;= <span class="t-n">0</span>) {
@@ -1938,7 +1938,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <p class="tagline">Particles, shockwaves, floating text, additive blending, screen shake. Behind the flash, each one is a few lines.</p>
 
   <h3>Three kinds of throwaway objects</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1052–1060</span></div><pre><code><span class="ln">1052</span><span class="t-k">function</span> <span class="t-f">spawnBurst</span>(x, y, color, n = <span class="t-n">12</span>, sp = <span class="t-n">110</span>) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1052–1060</span></div><pre><code><span class="ln">1052</span><span class="t-k">function</span> <span class="t-f">spawnBurst</span>(x, y, color, n = <span class="t-n">12</span>, sp = <span class="t-n">110</span>) {
 <span class="ln">1053</span>  <span class="t-k">for</span> (<span class="t-k">let</span> i = <span class="t-n">0</span>; i &lt; n; i++) {
 <span class="ln">1054</span>    <span class="t-k">const</span> a = Math.<span class="t-f">random</span>() * Math.PI * <span class="t-n">2</span>, v = sp * <span class="t-f">rand</span>(<span class="t-n">0.35</span>, <span class="t-n">1</span>);
 <span class="ln">1055</span>    particles.<span class="t-f">push</span>({
@@ -1947,15 +1947,15 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 <span class="ln">1058</span>    });
 <span class="ln">1059</span>  }
 <span class="ln">1060</span>}</code></pre></div>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1062–1064</span></div><pre><code><span class="ln">1062</span><span class="t-k">function</span> <span class="t-f">spawnRing</span>(x, y, color, vr = <span class="t-n">150</span>, life = <span class="t-n">0.35</span>) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1062–1064</span></div><pre><code><span class="ln">1062</span><span class="t-k">function</span> <span class="t-f">spawnRing</span>(x, y, color, vr = <span class="t-n">150</span>, life = <span class="t-n">0.35</span>) {
 <span class="ln">1063</span>  rings.<span class="t-f">push</span>({ x, y, r: <span class="t-n">3</span>, vr, life, max: life, color });
 <span class="ln">1064</span>}</code></pre></div>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1066–1068</span></div><pre><code><span class="ln">1066</span><span class="t-k">function</span> <span class="t-f">popup</span>(x, y, txt, color, size = <span class="t-n">12</span>) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1066–1068</span></div><pre><code><span class="ln">1066</span><span class="t-k">function</span> <span class="t-f">popup</span>(x, y, txt, color, size = <span class="t-n">12</span>) {
 <span class="ln">1067</span>  popups.<span class="t-f">push</span>({ x, y, txt, color, size, life: <span class="t-n">1</span> });
 <span class="ln">1068</span>}</code></pre></div>
   <p>A particle gets a random angle <code>a</code> and speed <code>v</code>, split into x and y velocities with <code>cos</code> / <code>sin</code>.
     Each object has a <code>life</code> that counts down every frame; at zero it is removed from its array.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1311–1347</span></div><pre><code><span class="ln">1311</span><span class="t-c">// 末尾の要素と入れ替えて削除する。splice の詰め直し(O(n))を避ける。</span>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1311–1347</span></div><pre><code><span class="ln">1311</span><span class="t-c">// 末尾の要素と入れ替えて削除する。splice の詰め直し(O(n))を避ける。</span>
 <span class="ln">1312</span><span class="t-c">// パーティクルとリングは加算合成で描くので順序が変わっても見た目は同じ。</span>
 <span class="ln">1313</span><span class="t-k">function</span> <span class="t-f">removeAt</span>(arr, i) {
 <span class="ln">1314</span>  <span class="t-k">const</span> last = arr.<span class="t-f">pop</span>();
@@ -1998,7 +1998,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
     The order changes, but particles and rings are drawn additively (next section), where order makes no visible difference.</p>
 
   <h3>Light is layered with additive blending</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1668–1679</span><span class="ttl">the start of the function that draws all the glow layers</span></div><pre><code><span class="ln">1668</span><span class="t-k">function</span> <span class="t-f">drawGlowPass</span>(t) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1668–1679</span><span class="ttl">the start of the function that draws all the glow layers</span></div><pre><code><span class="ln">1668</span><span class="t-k">function</span> <span class="t-f">drawGlowPass</span>(t) {
 <span class="ln">1669</span>  ctx.globalCompositeOperation = <span class="t-s">"lighter"</span>;
 <span class="ln">1670</span>
 <span class="ln">1671</span>  <span class="t-f">refreshFormLayer</span>();
@@ -2021,7 +2021,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <h3>The formation is drawn as one image</h3>
   <p>Drawing fifty aliens one by one costs up to a hundred <code>drawImage</code> calls per frame (glow plus body). Since the formation moves as a block,
     the bodies and the glows are each drawn once into an off-screen canvas, and every frame just pastes those two images at <code>form.ox, form.oy</code>.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1624–1666</span><span class="ttl">the formation layer, redrawn only when the roster changes</span></div><pre><code><span class="ln">1624</span><span class="t-c">/* 編隊レイヤー: 編隊は一体で動くので、スプライトと光彩をそれぞれ 1 枚の画像にまとめておき、</span>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1624–1666</span><span class="ttl">the formation layer, redrawn only when the roster changes</span></div><pre><code><span class="ln">1624</span><span class="t-c">/* 編隊レイヤー: 編隊は一体で動くので、スプライトと光彩をそれぞれ 1 枚の画像にまとめておき、</span>
 <span class="ln">1625</span>   生存状況かアニメ番号が変わった時だけ描き直す。毎フレームの drawImage が最大 <span class="t-n">100</span> 回 → <span class="t-n">2</span> 回になる。 */
 <span class="ln">1626</span><span class="t-k">const</span> <span class="t-u">FORM_PAD</span> = <span class="t-n">12</span>; <span class="t-c">// 光彩のはみ出し分(withGlow の pad = 9 より大きく)</span>
 <span class="ln">1627</span><span class="t-k">const</span> <span class="t-u">FORM_W</span> = <span class="t-u">COLS</span> * <span class="t-u">CELL_W</span> + <span class="t-u">FORM_PAD</span> * <span class="t-n">2</span>, <span class="t-u">FORM_H</span> = <span class="t-u">ROWS</span> * <span class="t-u">CELL_H</span> + <span class="t-u">FORM_PAD</span> * <span class="t-n">2</span>;
@@ -2067,7 +2067,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <p><code>formationKey()</code> packs the animation frame and “which aliens are alive and in formation” into one integer, a <strong>fingerprint</strong> of what the layer should show. If it matches the previous one, nothing needs redrawing.
     A kill or a step of the walk animation changes the number, and only then does <code>refreshFormLayer</code> repaint the two canvases.
     <code>blitFormLayer</code> copies just the bounding box of the survivors, so the fewer aliens remain, the cheaper it gets. Flying aliens leave the block, so they are still drawn individually.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1899–1907</span><span class="ttl">inside drawGame(): paste the body layer, then draw the flyers one by one</span></div><pre><code><span class="ln">1899</span>  <span class="t-f">blitFormLayer</span>(formLayer.sprite);
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1899–1907</span><span class="ttl">inside drawGame(): paste the body layer, then draw the flyers one by one</span></div><pre><code><span class="ln">1899</span>  <span class="t-f">blitFormLayer</span>(formLayer.sprite);
 <span class="ln">1900</span>  <span class="t-k">for</span> (<span class="t-k">const</span> a <span class="t-k">of</span> aliens) {
 <span class="ln">1901</span>    <span class="t-k">if</span> (!a.alive || !a.flight) <span class="t-k">continue</span>;
 <span class="ln">1902</span>    <span class="t-k">const</span> ty = <span class="t-u">TYPES</span>[a.type], f = a.flight, warn = f.warning &gt; <span class="t-n">0</span>;
@@ -2078,19 +2078,19 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 <span class="ln">1907</span>  }</code></pre></div>
 
   <h3>Shake and hit stop</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L2059–2059</span><span class="ttl">inside draw(): a random offset while shake is non-zero</span></div><pre><code><span class="ln">2059</span>  <span class="t-k">if</span> (shake &gt; <span class="t-n">0</span>) ctx.<span class="t-f">translate</span>(<span class="t-f">rand</span>(-<span class="t-n">1</span>, <span class="t-n">1</span>) * shake * <span class="t-n">10</span>, <span class="t-f">rand</span>(-<span class="t-n">1</span>, <span class="t-n">1</span>) * shake * <span class="t-n">10</span>);</code></pre></div>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1350–1350</span><span class="ttl">the first line of updatePlay(): hit stop</span></div><pre><code><span class="ln">1350</span>  <span class="t-k">if</span> (freezeT &gt; <span class="t-n">0</span>) { freezeT -= dt; <span class="t-k">return</span>; } <span class="t-c">// キル時の一瞬のヒットストップ</span></code></pre></div>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L2059–2059</span><span class="ttl">inside draw(): a random offset while shake is non-zero</span></div><pre><code><span class="ln">2059</span>  <span class="t-k">if</span> (shake &gt; <span class="t-n">0</span>) ctx.<span class="t-f">translate</span>(<span class="t-f">rand</span>(-<span class="t-n">1</span>, <span class="t-n">1</span>) * shake * <span class="t-n">10</span>, <span class="t-f">rand</span>(-<span class="t-n">1</span>, <span class="t-n">1</span>) * shake * <span class="t-n">10</span>);</code></pre></div>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1350–1350</span><span class="ttl">the first line of updatePlay(): hit stop</span></div><pre><code><span class="ln">1350</span>  <span class="t-k">if</span> (freezeT &gt; <span class="t-n">0</span>) { freezeT -= dt; <span class="t-k">return</span>; } <span class="t-c">// キル時の一瞬のヒットストップ</span></code></pre></div>
   <p><code>shake</code> is set to 0.5 on a hit, 0.35 for a bomb and so on, and <code>updateCommon</code> reduces it by 1.2 per second.
     <code>freezeT</code> is set to 0.025 s on every kill; while it is positive, <code>updatePlay</code> is skipped entirely. The screen is still drawn, so time appears to stop.
     Both are a few lines, and both contribute enormously to how the game feels.</p>
 
   <h3>Background — three layers of stars and nebulae</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L676–680</span><span class="ttl">far, middle and near layers: the closer, the faster, bigger and brighter</span></div><pre><code><span class="ln">676</span><span class="t-k">const</span> starLayers = [<span class="t-n">0</span>, <span class="t-n">1</span>, <span class="t-n">2</span>].<span class="t-f">map</span>(l =&gt; Array.<span class="t-k">from</span>({ length: [<span class="t-n">36</span>, <span class="t-n">26</span>, <span class="t-n">14</span>][l] }, () =&gt; ({
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L676–680</span><span class="ttl">far, middle and near layers: the closer, the faster, bigger and brighter</span></div><pre><code><span class="ln">676</span><span class="t-k">const</span> starLayers = [<span class="t-n">0</span>, <span class="t-n">1</span>, <span class="t-n">2</span>].<span class="t-f">map</span>(l =&gt; Array.<span class="t-k">from</span>({ length: [<span class="t-n">36</span>, <span class="t-n">26</span>, <span class="t-n">14</span>][l] }, () =&gt; ({
 <span class="ln">677</span>  x: Math.<span class="t-f">random</span>() * W, y: Math.<span class="t-f">random</span>() * H,
 <span class="ln">678</span>  sp: [<span class="t-n">6</span>, <span class="t-n">14</span>, <span class="t-n">26</span>][l], size: l === <span class="t-n">2</span> ? <span class="t-n">2</span> : <span class="t-n">1</span>,
 <span class="ln">679</span>  tw: Math.<span class="t-f">random</span>() * <span class="t-n">6.28</span>,
 <span class="ln">680</span>})));</code></pre></div>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1575–1610</span></div><pre><code><span class="ln">1575</span><span class="t-c">// 星雲はごくゆっくりしか動かないので、15fps で描き直した 1 枚の画像を毎フレーム貼る</span>
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1575–1610</span></div><pre><code><span class="ln">1575</span><span class="t-c">// 星雲はごくゆっくりしか動かないので、15fps で描き直した 1 枚の画像を毎フレーム貼る</span>
 <span class="ln">1576</span><span class="t-c">// (半透明の加算合成 3 回 → 不透明なコピー 1 回)。</span>
 <span class="ln">1577</span><span class="t-k">const</span> <span class="t-u">SKY_INTERVAL</span> = <span class="t-n">1</span> / <span class="t-n">15</span>;
 <span class="ln">1578</span><span class="t-k">const</span> sky = { img: <span class="t-k">null</span>, g: <span class="t-k">null</span>, t: -Infinity };
@@ -2150,7 +2150,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   </svg></div>
   <p>You wire “nodes” together like a modular synthesizer. The top row is the bleep (<code>beep</code>), the bottom row is the explosion (<code>boom</code>).</p>
 
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L187–191</span></div><pre><code><span class="ln">187</span><span class="t-k">function</span> <span class="t-f">ac</span>() {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L187–191</span></div><pre><code><span class="ln">187</span><span class="t-k">function</span> <span class="t-f">ac</span>() {
 <span class="ln">188</span>  <span class="t-k">if</span> (!actx) actx = <span class="t-k">new</span> (window.AudioContext || window.webkitAudioContext)();
 <span class="ln">189</span>  <span class="t-k">if</span> (actx.state === <span class="t-s">"suspended"</span>) actx.<span class="t-f">resume</span>();
 <span class="ln">190</span>  <span class="t-k">return</span> actx;
@@ -2160,7 +2160,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
       That is why <code>ac()</code> is called at the start of the <code>pointerdown</code> and <code>keydown</code> handlers.</p></div>
 
   <h3>beep — the building block of every bleep</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L193–206</span></div><pre><code><span class="ln">193</span><span class="t-k">function</span> <span class="t-f">beep</span>({ f0 = <span class="t-n">440</span>, f1 = f0, dur = <span class="t-n">0.1</span>, type = <span class="t-s">"square"</span>, vol = <span class="t-n">0.12</span>, delay = <span class="t-n">0</span> }) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L193–206</span></div><pre><code><span class="ln">193</span><span class="t-k">function</span> <span class="t-f">beep</span>({ f0 = <span class="t-n">440</span>, f1 = f0, dur = <span class="t-n">0.1</span>, type = <span class="t-s">"square"</span>, vol = <span class="t-n">0.12</span>, delay = <span class="t-n">0</span> }) {
 <span class="ln">194</span>  <span class="t-k">if</span> (muted) <span class="t-k">return</span>;
 <span class="ln">195</span>  <span class="t-k">try</span> {
 <span class="ln">196</span>    <span class="t-k">const</span> a = <span class="t-f">ac</span>(), t = a.currentTime + delay;
@@ -2181,7 +2181,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   </ul>
 
   <h3>boom — an explosion made of noise</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L208–221</span></div><pre><code><span class="ln">208</span><span class="t-k">function</span> <span class="t-f">boom</span>(dur = <span class="t-n">0.35</span>, vol = <span class="t-n">0.25</span>, fc = <span class="t-n">700</span>) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L208–221</span></div><pre><code><span class="ln">208</span><span class="t-k">function</span> <span class="t-f">boom</span>(dur = <span class="t-n">0.35</span>, vol = <span class="t-n">0.25</span>, fc = <span class="t-n">700</span>) {
 <span class="ln">209</span>  <span class="t-k">if</span> (muted) <span class="t-k">return</span>;
 <span class="ln">210</span>  <span class="t-k">try</span> {
 <span class="ln">211</span>    <span class="t-c">// 共有ノイズバッファを再生し、減衰はゲインで付ける(以前は呼ぶたびに乱数でバッファを作っていた)。</span>
@@ -2198,7 +2198,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <p>White noise is an empty audio buffer from <code>createBuffer</code> filled with <code>Math.random()</code> values between -1 and 1. <code>ensureNoise</code> builds one second of it, once, and the sound effects share it with the music.
     <code>boom</code> plays that buffer, ramps <code>gain</code> from <code>vol</code> down to 0 with <code>linearRampToValueAtTime</code> so the sound fades over time, and a lowpass filter muffles it into a “boom”.
     Because no buffer is generated per explosion, a long combo of overlapping hits costs nothing extra.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L273–282</span><span class="ttl">the noise buffer shared by the effects and the music</span></div><pre><code><span class="ln">273</span><span class="t-k">let</span> noiseBuf = <span class="t-k">null</span>;
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L273–282</span><span class="ttl">the noise buffer shared by the effects and the music</span></div><pre><code><span class="ln">273</span><span class="t-k">let</span> noiseBuf = <span class="t-k">null</span>;
 <span class="ln">274</span>
 <span class="ln">275</span><span class="t-k">function</span> <span class="t-f">ensureNoise</span>(a) { <span class="t-c">// 効果音と BGM で共有する 1 秒分のホワイトノイズ</span>
 <span class="ln">276</span>  <span class="t-k">if</span> (noiseBuf) <span class="t-k">return</span> noiseBuf;
@@ -2210,7 +2210,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 <span class="ln">282</span>}</code></pre></div>
 
   <h3>The sound-effect table</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L250–265</span><span class="ttl">every effect is a combination of beep and boom</span></div><pre><code><span class="ln">250</span><span class="t-k">const</span> sfx = {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L250–265</span><span class="ttl">every effect is a combination of beep and boom</span></div><pre><code><span class="ln">250</span><span class="t-k">const</span> sfx = {
 <span class="ln">251</span>  shoot: () =&gt; <span class="t-f">beep</span>({ f0: <span class="t-n">900</span>, f1: <span class="t-n">240</span>, dur: <span class="t-n">0.09</span>, type: <span class="t-s">"square"</span>, vol: <span class="t-n">0.09</span> }),
 <span class="ln">252</span>  beam: () =&gt; <span class="t-f">beep</span>({ f0: <span class="t-n">1500</span>, f1: <span class="t-n">360</span>, dur: <span class="t-n">0.13</span>, type: <span class="t-s">"triangle"</span>, vol: <span class="t-n">0.08</span> }),
 <span class="ln">253</span>  alien: () =&gt; { <span class="t-f">boom</span>(<span class="t-n">0.14</span>, <span class="t-n">0.15</span>, <span class="t-n">1300</span>); <span class="t-f">beep</span>({ f0: <span class="t-n">320</span>, f1: <span class="t-n">60</span>, dur: <span class="t-n">0.1</span>, type: <span class="t-s">"sawtooth"</span>, vol: <span class="t-n">0.08</span> }); },
@@ -2247,11 +2247,11 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   </div>
 
   <h3>Music — a 32-step sequencer</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L269–272</span><span class="ttl">tempo and pitches; CHORDS is the bass, LEADS the melody</span></div><pre><code><span class="ln">269</span><span class="t-k">const</span> music = { timer: <span class="t-k">null</span>, next: <span class="t-n">0</span>, step: <span class="t-n">0</span> };
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L269–272</span><span class="ttl">tempo and pitches; CHORDS is the bass, LEADS the melody</span></div><pre><code><span class="ln">269</span><span class="t-k">const</span> music = { timer: <span class="t-k">null</span>, next: <span class="t-n">0</span>, step: <span class="t-n">0</span> };
 <span class="ln">270</span><span class="t-k">const</span> <span class="t-u">BPM</span> = <span class="t-n">112</span>, <span class="t-u">MSTEP</span> = <span class="t-n">60</span> / <span class="t-u">BPM</span> / <span class="t-n">2</span>; <span class="t-c">// 8分音符</span>
 <span class="ln">271</span><span class="t-k">const</span> <span class="t-u">CHORDS</span> = [<span class="t-n">110</span>, <span class="t-n">87.31</span>, <span class="t-n">130.81</span>, <span class="t-n">98</span>];      <span class="t-c">// A2 F2 C3 G2</span>
 <span class="ln">272</span><span class="t-k">const</span> <span class="t-u">LEADS</span> = [<span class="t-n">440</span>, <span class="t-n">349.23</span>, <span class="t-n">523.25</span>, <span class="t-n">392</span>];</code></pre></div>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L316–326</span></div><pre><code><span class="ln">316</span><span class="t-k">function</span> <span class="t-f">scheduleStep</span>(i, t) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L316–326</span></div><pre><code><span class="ln">316</span><span class="t-k">function</span> <span class="t-f">scheduleStep</span>(i, t) {
 <span class="ln">317</span>  <span class="t-k">const</span> bar = (i &gt;&gt; <span class="t-n">3</span>) &amp; <span class="t-n">3</span>;
 <span class="ln">318</span>  <span class="t-k">const</span> inPlay = state === <span class="t-s">"play"</span> || state === <span class="t-s">"dying"</span> || state === <span class="t-s">"clear"</span>;
 <span class="ln">319</span>  <span class="t-f">mnote</span>(<span class="t-s">"sawtooth"</span>, <span class="t-u">CHORDS</span>[bar] * (i % <span class="t-n">2</span> ? <span class="t-n">2</span> : <span class="t-n">1</span>), <span class="t-k">null</span>, t, <span class="t-u">MSTEP</span> * <span class="t-n">0.9</span>, <span class="t-n">0.04</span>, <span class="t-n">520</span>);
@@ -2264,7 +2264,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 <span class="ln">326</span>}</code></pre></div>
   <p>One step is an eighth note. As <code>i</code> runs from 0 to 31, <code>(i &gt;&gt; 3) &amp; 3</code> (divide by 8, then modulo 4) selects one of four bars of chords.
     The bass plays on every step (an octave up on odd steps), the kick on every fourth, and during play a hi-hat, snare and lead join in to raise the energy.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L328–336</span></div><pre><code><span class="ln">328</span><span class="t-k">function</span> <span class="t-f">musicTick</span>() {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L328–336</span></div><pre><code><span class="ln">328</span><span class="t-k">function</span> <span class="t-f">musicTick</span>() {
 <span class="ln">329</span>  <span class="t-k">if</span> (!actx) <span class="t-k">return</span>;
 <span class="ln">330</span>  <span class="t-k">while</span> (music.next &lt; actx.currentTime + <span class="t-n">0.16</span>) {
 <span class="ln">331</span>    <span class="t-k">if</span> (music.next &lt; actx.currentTime) music.next = actx.currentTime + <span class="t-n">0.05</span>;
@@ -2273,7 +2273,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 <span class="ln">334</span>    music.next += <span class="t-u">MSTEP</span>;
 <span class="ln">335</span>  }
 <span class="ln">336</span>}</code></pre></div>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L337–341</span></div><pre><code><span class="ln">337</span><span class="t-k">function</span> <span class="t-f">musicStart</span>() {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L337–341</span></div><pre><code><span class="ln">337</span><span class="t-k">function</span> <span class="t-f">musicStart</span>() {
 <span class="ln">338</span>  <span class="t-k">if</span> (music.timer || muted || !actx) <span class="t-k">return</span>;
 <span class="ln">339</span>  music.next = actx.currentTime + <span class="t-n">0.06</span>;
 <span class="ln">340</span>  music.timer = <span class="t-f">setInterval</span>(musicTick, <span class="t-n">50</span>);
@@ -2284,7 +2284,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
       Web Audio plays them at exactly the right moment regardless of timer jitter. This is the standard recipe for music in Web Audio.</p></div>
 
   <h3>Bonus — the saucer’s warble</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L224–239</span></div><pre><code><span class="ln">224</span><span class="t-k">function</span> <span class="t-f">saucerSoundStart</span>() {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L224–239</span></div><pre><code><span class="ln">224</span><span class="t-k">function</span> <span class="t-f">saucerSoundStart</span>() {
 <span class="ln">225</span>  <span class="t-k">if</span> (muted || saucerOsc) <span class="t-k">return</span>;
 <span class="ln">226</span>  <span class="t-k">try</span> {
 <span class="ln">227</span>    <span class="t-k">const</span> a = <span class="t-f">ac</span>();
@@ -2309,7 +2309,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <h2><span class="num">19</span>Japanese / English switching</h2>
   <p class="tagline">Keep every string in one table and look it up right before display: the simplest reliable approach to localization.</p>
 
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L81–90</span><span class="ttl">the start of the string table; ja and en share the same keys</span></div><pre><code><span class="ln">81</span><span class="t-k">const</span> <span class="t-u">STRINGS</span> = {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L81–90</span><span class="ttl">the start of the string table; ja and en share the same keys</span></div><pre><code><span class="ln">81</span><span class="t-k">const</span> <span class="t-u">STRINGS</span> = {
 <span class="ln">82</span>  ja: {
 <span class="ln">83</span>    hint: [
 <span class="ln">84</span>      <span class="t-s">"マウス移動: 自機を操作 ／ クリック（長押しで連射）: ショット ／ 落ちてくるカプセルでパワーアップ"</span>,
@@ -2320,14 +2320,14 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
 <span class="ln">89</span>    laserBtn: gauge =&gt; <span class="t-s">`Z 合体レーザー ${gauge}`</span>,
 <span class="ln">90</span>    bombBtn: n =&gt; <span class="t-s">`X ボム ×${n}`</span>,</code></pre></div>
   <p><code>STRINGS.ja</code> and <code>STRINGS.en</code> hold the same keys. Strings that embed a number, such as “LINK LASER 64%”, are stored as <strong>functions</strong> and called with arguments at display time.</p>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L164–167</span></div><pre><code><span class="ln">164</span><span class="t-k">function</span> <span class="t-f">T</span>(key, ...args) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L164–167</span></div><pre><code><span class="ln">164</span><span class="t-k">function</span> <span class="t-f">T</span>(key, ...args) {
 <span class="ln">165</span>  <span class="t-k">const</span> v = <span class="t-u">STRINGS</span>[lang][key];
 <span class="ln">166</span>  <span class="t-k">return</span> <span class="t-k">typeof</span> v === <span class="t-s">"function"</span> ? <span class="t-f">v</span>(...args) : v;
 <span class="ln">167</span>}</code></pre></div>
   <p><code>T("titleStart")</code> returns the string as is; <code>T("laserBtn", "64%")</code> calls the function and returns its result. The caller never needs to know which kind it is.</p>
 
   <h3>Choosing the initial language</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L152–159</span></div><pre><code><span class="ln">152</span><span class="t-k">function</span> <span class="t-f">detectLang</span>() {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L152–159</span></div><pre><code><span class="ln">152</span><span class="t-k">function</span> <span class="t-f">detectLang</span>() {
 <span class="ln">153</span>  <span class="t-k">try</span> {
 <span class="ln">154</span>    <span class="t-k">const</span> saved = localStorage.<span class="t-f">getItem</span>(<span class="t-u">LANG_KEY</span>);
 <span class="ln">155</span>    <span class="t-k">if</span> (Object.<span class="t-f">hasOwn</span>(<span class="t-u">STRINGS</span>, saved)) <span class="t-k">return</span> saved;
@@ -2338,11 +2338,11 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <p>Priority: the previously saved choice → the browser’s language setting → English. <code>navigator.language</code> is a tag such as <code>"ja-JP"</code>, hence <code>startsWith("ja")</code>.</p>
 
   <h3>Applying a switch</h3>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L49–52</span><span class="ttl">the buttons in the HTML</span></div><pre><code><span class="ln">49</span>  &lt;div <span class="t-k">class</span>=<span class="t-s">"lang"</span> role=<span class="t-s">"group"</span> aria-label=<span class="t-s">"Language / 言語"</span>&gt;
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L49–52</span><span class="ttl">the buttons in the HTML</span></div><pre><code><span class="ln">49</span>  &lt;div <span class="t-k">class</span>=<span class="t-s">"lang"</span> role=<span class="t-s">"group"</span> aria-label=<span class="t-s">"Language / 言語"</span>&gt;
 <span class="ln">50</span>    &lt;button id=<span class="t-s">"langJa"</span> type=<span class="t-s">"button"</span> aria-pressed=<span class="t-s">"true"</span>&gt;日本語&lt;/button&gt;
 <span class="ln">51</span>    &lt;button id=<span class="t-s">"langEn"</span> type=<span class="t-s">"button"</span> aria-pressed=<span class="t-s">"false"</span>&gt;<span class="t-u">ENGLISH</span>&lt;/button&gt;
 <span class="ln">52</span>  &lt;/div&gt;</code></pre></div>
-  <div class="code"><div class="code-head"><span class="file">index.html</span><span class="lines">L1118–1129</span></div><pre><code><span class="ln">1118</span><span class="t-k">function</span> <span class="t-f">applyLang</span>(next) {
+  <div class="code"><div class="code-head"><span class="file">game.html</span><span class="lines">L1118–1129</span></div><pre><code><span class="ln">1118</span><span class="t-k">function</span> <span class="t-f">applyLang</span>(next) {
 <span class="ln">1119</span>  <span class="t-k">if</span> (next &amp;&amp; next !== lang) {
 <span class="ln">1120</span>    lang = next;
 <span class="ln">1121</span>    <span class="t-k">try</span> { localStorage.<span class="t-f">setItem</span>(<span class="t-u">LANG_KEY</span>, lang); } <span class="t-k">catch</span> (e) {}
@@ -2365,7 +2365,7 @@ x += <span class="t-n">300</span> * dt;</code></pre></div>
   <p class="tagline">The tests/ folder holds 26 automated tests that verify the rules using nothing but Node.js.</p>
 
   <h3>Running the production code in Node</h3>
-  <div class="code"><div class="code-head"><span class="file">tests/helpers/game.cjs</span><span class="lines">L5–6</span><span class="ttl">pull just the &lt;script&gt; body out of index.html</span></div><pre><code><span class="ln">5</span><span class="t-k">const</span> html = <span class="t-f">readFileSync</span>(<span class="t-f">join</span>(__dirname, <span class="t-s">".."</span>, <span class="t-s">".."</span>, <span class="t-s">"index.html"</span>), <span class="t-s">"utf8"</span>);
+  <div class="code"><div class="code-head"><span class="file">tests/helpers/game.cjs</span><span class="lines">L5–6</span><span class="ttl">pull just the &lt;script&gt; body out of game.html</span></div><pre><code><span class="ln">5</span><span class="t-k">const</span> html = <span class="t-f">readFileSync</span>(<span class="t-f">join</span>(__dirname, <span class="t-s">".."</span>, <span class="t-s">".."</span>, <span class="t-s">"game.html"</span>), <span class="t-s">"utf8"</span>);
 <span class="ln">6</span><span class="t-k">const</span> source = html.<span class="t-f">match</span>(/&lt;script&gt;([\s\S]*?)&lt;\/script&gt;/)[<span class="t-n">1</span>];</code></pre></div>
   <div class="code"><div class="code-head"><span class="file">tests/helpers/game.cjs</span><span class="lines">L24–33</span><span class="ttl">replace the browser pieces with stubs and run it</span></div><pre><code><span class="ln">24</span>  <span class="t-k">const</span> context = vm.<span class="t-f">createContext</span>({
 <span class="ln">25</span>    document: { getElementById: id =&gt; elements[id] || mainCanvas, createElement: canvas, addEventListener: listen,
@@ -2551,8 +2551,8 @@ bonus: { name: <span class="t-s">"TREASURY"</span>, detail: <span class="t-s">"S
 
 <footer>
   ASTRO DEFENDER — NEON ARCADE EDITION / SOURCE CODE GUIDE<br>
-  <a href="../index.html">▶ PLAY</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a> · licensed CC0 1.0, like the rest of the repository<br>
-  This guide describes index.html v1.0.1 as of 2026-09-07 (about 2,100 lines)
+  <a href="../game.html">▶ PLAY</a> · <a href="https://github.com/hnakada123/astro-defender">GitHub</a> · licensed CC0 1.0, like the rest of the repository<br>
+  This guide describes game.html v1.0.1 as of 2026-09-07 (about 2,100 lines)
 </footer>
 
 <script>
