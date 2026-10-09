@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - Each barrier is cached as an image and redrawn only when it erodes (about 400 fills per frame become 4 image draws)
   - The light lines from the linked cannons during the link laser are pre-rendered once per cannon count, removing the last per-frame `shadowBlur` drawing
   - When a bomb or the laser destroys many enemies at once, the kill sound plays at most once every 40ms, avoiding clipping and a burst of audio nodes
-  - On-screen particles are capped at 400 so mass kills don't spike the drawing cost
+  - On-screen particles are capped at 400 so mass kills don't spike the drawing cost. Explosion debris stops 24 short of the cap, so the ship's exhaust and muzzle flash never vanish against it
   - The full-screen clear each frame is skipped unless the screen is shaking (the opaque sky image already covers the canvas)
 - The source code guide (Japanese and English) now explains frame skipping on fast displays, barrier redraws, the kill-sound throttle, the particle cap and the pre-rendered laser lines, with every code excerpt’s line numbers updated
 

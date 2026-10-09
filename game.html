@@ -1225,10 +1225,11 @@ function updateFlights(dt) {
 /* ================= エフェクト ================= */
 
 // 画面内のパーティクルの上限。ボムで編隊をまとめて倒した時などに、描画が一度に重くなりすぎないようにする。
-const MAX_PARTICLES = 400;
+// 爆発の破片は上限の 24 個手前で止め、自機の噴射と発射炎(多くて 20 個ほど)が上限に当たって消えないようにする。
+const MAX_PARTICLES = 400, BURST_PARTICLES = MAX_PARTICLES - 24;
 
 function spawnBurst(x, y, color, n = 12, sp = 110) {
-  n = Math.min(n, MAX_PARTICLES - particles.length);
+  n = Math.min(n, BURST_PARTICLES - particles.length);
   for (let i = 0; i < n; i++) {
     const a = Math.random() * Math.PI * 2, v = sp * rand(0.35, 1);
     particles.push({
@@ -1584,14 +1585,14 @@ function updatePlay(dt) {
       spawnBurst(x, PLAYER_Y - 4, BEAM_COLOR, 3, 55);
     }
     player.cool = cd;
-    for (let i = 0; i < 3; i++) particles.push({
+    for (let i = 0; i < 3 && particles.length < MAX_PARTICLES; i++) particles.push({
       x: player.x + rand(-3, 3), y: PLAYER_Y - 8, vx: rand(-20, 20), vy: rand(-90, -40),
       life: 0.1, max: 0.1, color: "#7df9ff", size: 2,
     });
     sfx.shoot();
     if (active.beam > 0) sfx.beam();
   }
-  if (player.alive) {
+  if (player.alive && particles.length < MAX_PARTICLES) {
     particles.push({
       x: player.x + rand(-2, 2), y: PLAYER_Y + 15, vx: rand(-12, 12), vy: rand(50, 110),
       life: rand(0.08, 0.2), max: 0.2, color: Math.random() < 0.5 ? "#7df9ff" : "#ff9a5c", size: 2,

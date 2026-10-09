@@ -508,3 +508,14 @@ test("on-screen English text uses the dot font, while lines with Japanese fall b
   assert.equal(run("calls.some(c => c[0] === 'rect')"), false);
   assert.equal(run("calls.filter(c => c[0] === 'fillText').length"), 1);
 });
+
+test("particles never exceed the cap, while bursts leave room for the ship's exhaust and muzzle flash", () => {
+  const run = game();
+  run("for (let i = 0; i < 40; i++) spawnBurst(240, 300, '#ffffff', 16)");
+  assert.equal(run("particles.length"), run("BURST_PARTICLES"));
+  run("shooting = true; updatePlay(1 / 60)");
+  assert.ok(run("particles.length > BURST_PARTICLES"), "the exhaust and muzzle flash still appear after a mass kill");
+  // パーティクルを減らさずに撃ち続けても、上限を超えない。
+  run("var most = 0; for (let i = 0; i < 120; i++) { updatePlay(1 / 60); spawnBurst(240, 300, '#ffffff', 16); most = Math.max(most, particles.length); }");
+  assert.equal(run("most"), run("MAX_PARTICLES"));
+});
