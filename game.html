@@ -359,10 +359,22 @@ function saucerSoundStop() {
   saucerOsc = null;
 }
 
+// 前回から ms ミリ秒たっていなければ鳴らさない効果音にする。ボムやレーザーで同じ瞬間に何体も倒すと、
+// 同じ音が何十も重なって音が割れ、音声ノードも一度に大量に作られるため。
+function throttled(ms, play) {
+  let at = -Infinity;
+  return (...args) => {
+    const now = performance.now();
+    if (now - at < ms) return;
+    at = now;
+    play(...args);
+  };
+}
+
 const sfx = {
   shoot: () => beep({ f0: 900, f1: 240, dur: 0.09, type: "square", vol: 0.09 }),
   beam: () => beep({ f0: 1500, f1: 360, dur: 0.13, type: "triangle", vol: 0.08 }),
-  alien: () => { boom(0.14, 0.15, 1300); beep({ f0: 320, f1: 60, dur: 0.1, type: "sawtooth", vol: 0.08 }); },
+  alien: throttled(40, () => { boom(0.14, 0.15, 1300); beep({ f0: 320, f1: 60, dur: 0.1, type: "sawtooth", vol: 0.08 }); }),
   player: () => { boom(0.55, 0.3, 500); beep({ f0: 220, f1: 40, dur: 0.45, type: "sawtooth", vol: 0.14 }); },
   spark: () => beep({ f0: 1300, f1: 500, dur: 0.05, type: "square", vol: 0.06 }),
   saucerKill: () => [660, 880, 1150].forEach((f, i) => beep({ f0: f, dur: 0.09, type: "square", vol: 0.11, delay: i * 0.07 })),
@@ -723,6 +735,21 @@ function drawLaserColumn(strip, cx, top, bottom) {
   ctx.drawImage(strip, 0, LASER_CAP + LASER_BAND, w, LASER_CAP, x, bottom - cap, w, LASER_CAP);
 }
 
+// 照射中に連結砲から自機の砲口へ伸びる光の線。連結数(1〜4)ごとに一度だけ光彩付きで描いておく。
+// 原点は自機の中心 x・PLAYER_Y で、線は砲(y=-4)から砲口(y=-44)まで。光彩のはみ出し分を余白に取る。
+const LINK_REACH = 42, LINK_TOP = 44, LINK_PAD = LASER_BLUR * 2, linkWires = [];
+function linkWire(n) {
+  return linkWires[n] ??= prerender((LINK_REACH + LINK_PAD) * 2, LINK_TOP + LINK_PAD * 2, g => {
+    g.translate(LINK_REACH + LINK_PAD, LINK_TOP + LINK_PAD);
+    g.globalCompositeOperation = "lighter";
+    g.shadowColor = BEAM_COLOR; g.shadowBlur = LASER_BLUR;
+    g.strokeStyle = "#e5cdff"; g.lineWidth = 3;
+    for (let i = 0; i < n; i++) {
+      g.beginPath(); g.moveTo(BEAM_OFFSETS[i], -4); g.lineTo(0, -LINK_TOP); g.stroke();
+    }
+  });
+}
+
 const NEBULAE = [
   { img: makeNebula("#4b2d8f", 170), x: 90, y: 150, dx: 40, dy: 24, ph: 0 },
   { img: makeNebula("#0e5d84", 200), x: 380, y: 300, dx: 55, dy: 30, ph: 2.1 },
@@ -844,6 +871,10 @@ function alienRectInto(a, out) {
 }
 function alienRect(a) { return alienRectInto(a, { x: 0, y: 0, w: 0, h: 0 }); }
 
+// バリアは弾が当たった時しか形が変わらないので、1 つずつ画像にしておき、削れた時(dirty)だけ描き直す。
+// 毎フレーム 400 回ほどの fillRect が drawImage 4 回で済む。画像はウェーブをまたいで使い回す。
+const barrierImgs = [];
+
 function makeBarriers() {
   barriers = [];
   const cols = 14, rows = 10, cell = 4, bw = cols * cell;
@@ -861,7 +892,8 @@ function makeBarriers() {
       }
       g.push(line);
     }
-    barriers.push({ x, y, w: bw, h: rows * cell, cell, cols, rows, g });
+    const img = barrierImgs[i] ??= prerender(bw, rows * cell, () => {});
+    barriers.push({ x, y, w: bw, h: rows * cell, cell, cols, rows, g, img, dirty: true });
   }
 }
 
@@ -1192,7 +1224,11 @@ function updateFlights(dt) {
 
 /* ================= エフェクト ================= */
 
+// 画面内のパーティクルの上限。ボムで編隊をまとめて倒した時などに、描画が一度に重くなりすぎないようにする。
+const MAX_PARTICLES = 400;
+
 function spawnBurst(x, y, color, n = 12, sp = 110) {
+  n = Math.min(n, MAX_PARTICLES - particles.length);
   for (let i = 0; i < n; i++) {
     const a = Math.random() * Math.PI * 2, v = sp * rand(0.35, 1);
     particles.push({
@@ -1334,6 +1370,7 @@ function barrierHit(rect, blast) {
             if (Math.abs(dr) + Math.abs(dc) <= 1 || Math.random() < 0.55) b.g[rr][cc] = 0;
           }
         }
+        b.dirty = true;
         spawnBurst(b.x + c * b.cell + 2, b.y + r * b.cell + 2, "#3ef08c", 6, 70);
         return true;
       }
@@ -1353,7 +1390,7 @@ function erodeBarriers() {
       const r0 = Math.max(0, Math.floor((r.y - b.y) / b.cell));
       const r1 = Math.min(b.rows - 1, Math.floor((r.y + r.h - 0.01 - b.y) / b.cell));
       for (let rr = r0; rr <= r1; rr++)
-        for (let cc = c0; cc <= c1; cc++) b.g[rr][cc] = 0;
+        for (let cc = c0; cc <= c1; cc++) if (b.g[rr][cc]) { b.g[rr][cc] = 0; b.dirty = true; }
     }
   }
 }
@@ -1764,13 +1801,19 @@ function drawBackground(t) {
 
 function drawBarriers() {
   for (const b of barriers) {
-    for (let r = 0; r < b.rows; r++) {
-      for (let c = 0; c < b.cols; c++) {
-        if (!b.g[r][c]) continue;
-        ctx.fillStyle = (r + c) % 2 ? "#2fd47e" : "#3ef08c";
-        ctx.fillRect(b.x + c * b.cell, b.y + r * b.cell, b.cell, b.cell);
+    if (b.dirty) {
+      const g = b.img.getContext("2d");
+      g.clearRect(0, 0, b.w, b.h);
+      for (let r = 0; r < b.rows; r++) {
+        for (let c = 0; c < b.cols; c++) {
+          if (!b.g[r][c]) continue;
+          g.fillStyle = (r + c) % 2 ? "#2fd47e" : "#3ef08c";
+          g.fillRect(c * b.cell, r * b.cell, b.cell, b.cell);
+        }
       }
+      b.dirty = false;
     }
+    ctx.drawImage(b.img, b.x, b.y);
   }
 }
 
@@ -2015,16 +2058,10 @@ function drawSpecials(t) {
   }
   if (special.laserT <= 0 || !player.alive) return;
   const width = special.laserW, x = player.x, top = 58, strip = laserStrip(width);
-  ctx.save();
   ctx.globalCompositeOperation = "lighter";
   drawLaserColumn(strip, x, top, PLAYER_Y);
-  ctx.shadowColor = BEAM_COLOR; ctx.shadowBlur = LASER_BLUR;
-  ctx.strokeStyle = "#e5cdff"; ctx.lineWidth = 3;
-  for (let i = 0; i < active.beam; i++) {
-    ctx.beginPath(); ctx.moveTo(x + BEAM_OFFSETS[i], PLAYER_Y - 4);
-    ctx.lineTo(x, PLAYER_Y - 44); ctx.stroke();
-  }
-  ctx.restore();
+  if (active.beam > 0) ctx.drawImage(linkWire(active.beam), x - LINK_REACH - LINK_PAD, PLAYER_Y - LINK_TOP - LINK_PAD);
+  ctx.globalCompositeOperation = "source-over";
 }
 
 function drawGame(t) {
@@ -2189,8 +2226,11 @@ function refreshActionButtons() {
 
 function draw(t) {
   refreshActionButtons();
-  ctx.fillStyle = "#04050c";
-  ctx.fillRect(0, 0, W, H);
+  // 空の画像は不透明で全面を覆うので、下地を塗るのは画面を揺らして端がずれる時だけでよい。
+  if (shake > 0) {
+    ctx.fillStyle = "#04050c";
+    ctx.fillRect(0, 0, W, H);
+  }
 
   ctx.save();
   if (shake > 0) ctx.translate(rand(-1, 1) * shake * 10, rand(-1, 1) * shake * 10);
@@ -2211,11 +2251,22 @@ function draw(t) {
 
 let last = performance.now();
 let rafId = 0; // 予約中の requestAnimationFrame。0 ならループは止まっている
-const IDLE_FRAME_MS = 1000 / 30; // タイトルとゲームオーバーは動きが少ないので 30fps に抑える
+// 描画の目標間隔。プレイ中は 60fps、動きの少ないタイトルとゲームオーバーは 30fps に抑える。
+// 120Hz・144Hz などの画面では requestAnimationFrame がもっと頻繁に呼ばれるので、間引いて更新と描画の回数を減らす
+// (動きは経過時間 dt で進めるので、間引いても速さは変わらない)。
+const PLAY_FRAME_MS = 1000 / 60, IDLE_FRAME_MS = 1000 / 30;
+let vsyncMs = 1000 / 60, lastVsync = last; // 画面の更新間隔の推定値(rAF が呼ばれる間隔の移動平均)と、直前に呼ばれた時刻
 
 function frame(now) {
   rafId = 0;
-  if ((state === "title" || state === "gameover") && now - last < IDLE_FRAME_MS - 1) {
+  const gap = now - lastVsync;
+  lastVsync = now;
+  if (gap > 0 && gap < 50) vsyncMs += (gap - vsyncMs) * 0.1; // ポーズ明けなどの長い間隔は推定に使わない
+  // 目標間隔に収まる回数(60Hz のプレイ中は 1、120Hz なら 2)ごとに描く。90Hz や 100Hz は毎回描き、60fps を下回らせない。
+  // 判定には半回分の余裕を持たせ、呼ばれる時刻の揺れで描くはずの回を飛ばさないようにする。
+  const target = state === "title" || state === "gameover" ? IDLE_FRAME_MS : PLAY_FRAME_MS;
+  const every = Math.max(1, Math.floor(target / vsyncMs + 0.15));
+  if (now - last < (every - 0.5) * vsyncMs) {
     rafId = requestAnimationFrame(frame);
     return;
   }

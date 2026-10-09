@@ -12,6 +12,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Letters, digits and symbols on the game screen are now a 5 × 7 pixel font drawn for this game (they used to be Courier New, which looked rough on some systems). Lines that contain Japanese are drawn entirely in the system font so their characters match in size, preferring a clean monospace font for the Latin letters
 - The buttons and control hints below the screen also switched from Courier New to a clean monospace font
 - The source code guide (Japanese and English) now explains how the pixel font is built and drawn, with every code excerpt’s line numbers updated. Every screenshot that shows text was retaken
+- Further refactoring for lower browser load (visuals, controls and rules are unchanged)
+  - On 120Hz, 144Hz and similar displays, frames are skipped so play runs at about 60fps (the title and game-over screens at 30fps). 90Hz and 100Hz displays are not throttled
+  - Each barrier is cached as an image and redrawn only when it erodes (about 400 fills per frame become 4 image draws)
+  - The light lines from the linked cannons during the link laser are pre-rendered once per cannon count, removing the last per-frame `shadowBlur` drawing
+  - When a bomb or the laser destroys many enemies at once, the kill sound plays at most once every 40ms, avoiding clipping and a burst of audio nodes
+  - On-screen particles are capped at 400 so mass kills don't spike the drawing cost
+  - The full-screen clear each frame is skipped unless the screen is shaking (the opaque sky image already covers the canvas)
 
 ## [3.0.0] - 2026-10-09
 
