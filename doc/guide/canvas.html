@@ -69,27 +69,58 @@
 </nav></details>
 <main id="main" class="doc-main">
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 04 Canvas の座標と描画</nav>
-<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 04 · 全23項目</p><h1>Canvas の座標と描画</h1><p class="lead">内部座標と表示サイズの違い、文字描画、重ねる順序を確認します。</p><p class="source-ref">主な参照先：W / H / canvasX / drawTextOn / draw</p></header>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 04 · 全23項目</p><h1>Canvas の座標と描画</h1><p class="lead">内部座標と表示サイズの違い、文字描画、重ねる順序を確認します。</p><p class="source-ref">主な参照先：W / H / canvasX / dotScale / drawTextOn / draw</p></header>
 <h2 id="section-1">内部は480 × 640、見た目の大きさはCSS</h2>
-<figure class="code-block"><figcaption><span>game.html · L62–64</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L62-L64">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L62–64"><code>const W = 480, H = 640;
+<figure class="code-block"><figcaption><span>game.html · L64–66</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L64-L66">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L64–66"><code>const W = 480, H = 640;
 const cvs = document.getElementById(&quot;game&quot;);
 const ctx = cvs.getContext(&quot;2d&quot;, { alpha: false }); // 毎フレーム全面を塗るので不透明にし、ページとの合成コストを下げる</code></pre></figure>
 <p>Canvas の内部座標は左上が <code>(0, 0)</code>、右へ進むと x、下へ進むと y が増えます。CSS で画面を縮めても内部の480 × 640という寸法は変わりません。ゲーム中の速度や当たり判定は、この内部座標で計算します。</p>
 <h2 id="section-2">ポインターの座標を変換する</h2>
-<figure class="code-block"><figcaption><span>game.html · L1091–1094</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1091-L1094">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1091–1094"><code>function canvasX(e) {
+<figure class="code-block"><figcaption><span>game.html · L1215–1218</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1215-L1218">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1215–1218"><code>function canvasX(e) {
   const r = cvs.getBoundingClientRect();
   return ((e.clientX - r.left) * W) / r.width;
 }</code></pre></figure>
 <p>イベントの <code>clientX</code> から Canvas の表示位置を引き、表示幅に対する比率を求めて内部幅 <code>W</code> を掛けます。例えば表示幅が240 pxなら、左端から120 pxの位置は内部座標240になります。ポインターの移動とクリックのどちらでもこの関数で自機の目標位置 <code>mouseX</code> を求めます。ゲームで使うのは横方向だけなので、y方向の変換はありません。</p>
 <h2 id="section-3">文字も図形として描く</h2>
-<figure class="code-block"><figcaption><span>game.html · L157–163</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L157-L163">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L157–163"><code>function drawTextOn(g, s, x, y, o = {}) {
-  g.font = `${o.weight || 700} ${o.size || 13}px &#x27;Courier New&#x27;, ui-monospace, monospace`;
+<figure class="code-block"><figcaption><span>game.html · L253–289</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L253-L289">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L253–289"><code>// ドット 1 個を何 px で描くか。size 14 以上で 2 倍、24 以上で 3 倍…と整数倍にして、点の大きさをそろえる。
+function dotScale(size) { return Math.max(1, Math.floor((size + 6) / 10)); }
+
+// ドット文字にない文字(日本語など)を含む文は、行の中で大きさがそろうよう全体をシステムのフォントで描く。
+// 英字の字形が整った等幅フォントを OS ごとに選ぶ(CSS の --mono と同じ並び)。
+const SYSTEM_FONT = &#x27;ui-monospace, &quot;SF Mono&quot;, Menlo, Consolas, &quot;Cascadia Mono&quot;, &quot;JetBrains Mono&quot;, &quot;DejaVu Sans Mono&quot;, monospace&#x27;;
+
+// 文字を描く。英数字と記号だけの文はドット文字で描く。o.spacing は文字の間に足す間隔(px)。
+function drawTextOn(g, s, x, y, o = {}) {
+  s = String(s);
+  const size = o.size || 13, align = o.align || &quot;center&quot;;
   g.fillStyle = o.color || &quot;#cfd8ff&quot;;
-  g.textAlign = o.align || &quot;center&quot;;
-  g.textBaseline = &quot;alphabetic&quot;;
-  g.fillText(s, x, y);
+  let n = 0;
+  for (const ch of s) {
+    if (!GLYPHS.has(ch)) {
+      g.font = `${o.weight || 700} ${size}px ${SYSTEM_FONT}`;
+      g.textAlign = align;
+      g.textBaseline = &quot;alphabetic&quot;;
+      g.fillText(s, x, y);
+      return;
+    }
+    n++;
+  }
+  // 揃え方から左端を決める。最後の文字の右の空き 1 列は幅に含めない。
+  // 座標は整数にそろえ、点がにじまないようにする。
+  const k = dotScale(size), gap = o.spacing || 0, step = GLYPH_ADVANCE * k + gap;
+  const width = n * step - k - gap;
+  let cx = Math.round(align === &quot;left&quot; ? x : align === &quot;right&quot; ? x - width : x - width / 2);
+  const by = Math.round(y);
+  // 長方形を 1 本のパスにまとめて一度に塗る(光彩も文全体に 1 回だけかかる)。
+  g.beginPath();
+  for (const ch of s) {
+    for (const [gx, gy, gw] of GLYPHS.get(ch)) g.rect(cx + gx * k, by + (gy - GLYPH_H) * k, gw * k, k);
+    cx += step;
+  }
+  g.fill();
 }</code></pre></figure>
-<p>Canvas に描いた文字は DOM の文章とは別です。フォント、色、横方向の揃え、基準線を指定してから <code>fillText()</code> を呼びます。<code>drawText()</code> はこの関数へ本画面の <code>ctx</code> を渡す薄い窓口になっています。</p>
+<p>Canvas に描いた文字は DOM の文章とは別です。このゲームでは英数字と記号を、文字表から作ったドット文字（「<a href="sprites.html">05 文字列からドット絵を作る</a>」）の長方形として描きます。文字の大きさ <code>size</code> から <code>dotScale()</code> でドット1個の大きさを整数倍で決め、1文字6ドットぶんずつ右へ進めます。中央揃えや右揃えのために先に文全体の幅を計算し、左端と基準線の座標を整数にそろえるので、点がにじみません。長方形はすべて1本のパスに加えてから <code>fill()</code> で一度に塗ります。タイトルロゴのように光彩 (<code>shadowBlur</code>) を付けるときも、光彩が文全体に1回だけかかります。</p>
+<p>ドット文字にない文字、つまり日本語を含む文は、全体をシステムのフォント <code>SYSTEM_FONT</code> で <code>fillText()</code> により描きます。英字だけドット文字にすると、日本語より小さく見えて行の大きさがそろわないためです。<code>SYSTEM_FONT</code> は CSS と同じく、英字の字形が整った等幅フォントを OS ごとに選ぶ並びです。<code>drawText()</code> はこの関数へ本画面の <code>ctx</code> を渡す薄い窓口になっています。</p>
 <h2 id="section-4">後で描くものが手前になる</h2>
 <p><code>draw()</code> は画面を塗り直し、背景、ゲーム内の物体、HUD、画面中央の案内の順に重ねます。<code>ctx.save()</code> と <code>ctx.restore()</code> は座標変換などの描画設定を保存・復元するためのもので、ゲームの状態や画像そのものを保存する命令ではありません。</p>
 <aside class="exercise"><strong>確かめてみよう</strong><p>ゲーム画面のCSS幅を変えても、自機がポインターを追う位置が合うか確認してください。<code>canvasX()</code> が「見えている幅」と「内部の幅」をつないでいます。</p>

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <title>文字列からドット絵を作る | ASTRO DEFENDER ソースコード解説</title>
-  <meta name="description" content="X と . の配列を画像に変換し、2コマのスプライトとして再利用します。">
+  <meta name="description" content="X と . の配列を画像に変換し、2コマのスプライトとして再利用します。画面の英数字も同じ考え方のドット文字です。">
   <link rel="stylesheet" href="../guide.css">
   <script src="../guide.js" defer></script>
   <link rel="icon" href="../../favicon.ico" sizes="16x16 32x32 48x48">
@@ -69,9 +69,9 @@
 </nav></details>
 <main id="main" class="doc-main">
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 05 文字列からドット絵を作る</nav>
-<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 05 · 全23項目</p><h1>文字列からドット絵を作る</h1><p class="lead">X と . の配列を画像に変換し、2コマのスプライトとして再利用します。</p><p class="source-ref">主な参照先：makeSprite / TYPES / withGlow / prerender</p></header>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 05 · 全23項目</p><h1>文字列からドット絵を作る</h1><p class="lead">X と . の配列を画像に変換し、2コマのスプライトとして再利用します。画面の英数字も同じ考え方のドット文字です。</p><p class="source-ref">主な参照先：makeSprite / TYPES / withGlow / prerender / FONT_SHEETS / GLYPHS</p></header>
 <h2 id="section-1">X のマスを塗るだけで画像になる</h2>
-<figure class="code-block"><figcaption><span>game.html · L334–344</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L334-L344">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L334–344"><code>function makeSprite(rows, color, scale = 2) {
+<figure class="code-block"><figcaption><span>game.html · L460–470</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L460-L470">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L460–470"><code>function makeSprite(rows, color, scale = 2) {
   const c = document.createElement(&quot;canvas&quot;);
   c.width = rows[0].length * scale;
   c.height = rows.length * scale;
@@ -91,7 +91,7 @@ XXXXXXXXX
 ..X...X..
 .X.....X.</textarea><label for="sprite-color">ドットの色</label><input id="sprite-color" type="color" value="#315c45"><canvas width="360" height="220" role="img" aria-label="入力したXの位置を塗ったドット絵">Xの位置を四角く塗って表示します。</canvas><output for="sprite-rows sprite-color" aria-live="polite"></output><noscript>操作にはJavaScriptが必要です。上のmakeSprite()で同じ仕組みを確認できます。</noscript></section><h2 id="section-2">データと描画処理を分ける</h2>
 <p>敵の <code>TYPES</code> には得点 <code>pts</code>、色 <code>color</code>、2コマ分の <code>frames</code> をまとめています。起動時に <code>frames</code> を画像へ変換し、戦闘中は <code>form.anim</code> でどちらを描くか選びます。文字列を毎フレーム解析する必要はありません。</p>
-<figure class="code-block"><figcaption><span>game.html · L416–427</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L416-L427">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L416–427"><code>  a: { // トゲ型エイリアン
+<figure class="code-block"><figcaption><span>game.html · L542–553</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L542-L553">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L542–553"><code>  a: { // トゲ型エイリアン
     pts: 30, color: &quot;#ff6ad5&quot;,
     frames: [[
       &quot;.X..XX..X.&quot;,
@@ -105,7 +105,42 @@ XXXXXXXXX
     ], [</code></pre></figure>
 <h2 id="section-3">光彩も先に作る</h2>
 <p><code>withGlow()</code> は元画像をぼかした別画像を作ります。ぼかしが端で切れないよう余白 <code>pad</code> を持たせ、描くときにその分だけ位置を戻します。<code>prerender()</code> も同じ考え方で、タイトルやボスの船体など変わりにくい絵を一度だけ描いて使い回します。</p>
-<aside class="exercise"><strong>確かめてみよう</strong><p>足の位置だけが違う2枚の文字列を作ってみましょう。交互に表示するだけで、少ないデータから歩く動きを表せます。</p>
+<h2 id="section-4">文字もドット絵にする</h2>
+<figure class="code-block"><figcaption><span>game.html · L161–172</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L161-L172">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L161–172"><code>// 文字表: 各行に、同じ高さの点の並びを文字の順に横へ書き並べる。1 文字は 5 列で、文字どうしは空白 1 列で区切る。
+// 上から 7 行目の下がベースライン。g・j・p・q・y の下に伸びる部分だけ 8・9 行目を使う。
+const FONT_SHEETS = [
+  [&quot;ABCDEFGHIJKLM&quot;, [
+    &quot;.XXX. XXXX. .XXX. XXXX. XXXXX XXXXX .XXX. X...X .XXX. ..XXX X...X X.... X...X&quot;,
+    &quot;X...X X...X X...X X...X X.... X.... X...X X...X ..X.. ...X. X..X. X.... XX.XX&quot;,
+    &quot;X...X X...X X.... X...X X.... X.... X.... X...X ..X.. ...X. X.X.. X.... X.X.X&quot;,
+    &quot;XXXXX XXXX. X.... X...X XXXX. XXXX. X.XXX XXXXX ..X.. ...X. XX... X.... X.X.X&quot;,
+    &quot;X...X X...X X.... X...X X.... X.... X...X X...X ..X.. ...X. X.X.. X.... X...X&quot;,
+    &quot;X...X X...X X...X X...X X.... X.... X...X X...X ..X.. X..X. X..X. X.... X...X&quot;,
+    &quot;X...X XXXX. .XXX. XXXX. XXXXX X.... .XXXX X...X .XXX. .XX.. X...X XXXXX X...X&quot;,
+  ]],</code></pre></figure>
+<p>画面の英数字と記号も、本作で描いた5 × 7ドットの文字です。1文字ずつ配列を書く代わりに「文字表」として、同じ高さの点の並びを文字の順に横へ並べています。1文字は5列で、文字どうしは空白1列で区切ります。続けて N〜Z、小文字、数字（<code>×</code> と <code>♪</code> を含む）、記号の表があります。上から7行目の下がベースラインで、g・j・p・q・y の下に伸びる部分だけが8・9行目にはみ出します。</p>
+<figure class="code-block"><figcaption><span>game.html · L232–251</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L232-L251">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L232–251"><code>const GLYPH_W = 5, GLYPH_H = 7, GLYPH_ADVANCE = 6; // 1 文字の幅・ベースラインより上の高さ・次の文字までの間隔(ドット数)
+
+// 文字 → 横に続く点をまとめた長方形 [x, y, 幅] の一覧。描くときは長方形 1 つにつき 1 回で済む。
+const GLYPHS = new Map([[&quot; &quot;, []]]);
+for (const [chars, rows] of FONT_SHEETS) {
+  [...chars].forEach((ch, i) =&gt; {
+    const runs = [];
+    rows.forEach((row, y) =&gt; {
+      const bits = row.slice(i * (GLYPH_W + 1), i * (GLYPH_W + 1) + GLYPH_W);
+      for (let x = 0; x &lt; GLYPH_W; x++) {
+        if (bits[x] !== &quot;X&quot;) continue;
+        let w = 1;
+        while (bits[x + w] === &quot;X&quot;) w++;
+        runs.push([x, y, w]);
+        x += w - 1;
+      }
+    });
+    GLYPHS.set(ch, runs);
+  });
+}</code></pre></figure>
+<p>起動時に文字表を1文字ずつ切り出し、<code>GLYPHS</code> に「文字 → 長方形の一覧」として登録します。横に続く <code>X</code> は1つの長方形 <code>[x, y, 幅]</code> にまとめるので、例えば「E」は点が18個あっても長方形は7つで済みます。実際に描く処理は「<a href="canvas.html">04 Canvas の座標と描画</a>」の <code>drawTextOn()</code> です。</p>
+<aside class="exercise"><strong>確かめてみよう</strong><p>足の位置だけが違う2枚の文字列を作ってみましょう。交互に表示するだけで、少ないデータから歩く動きを表せます。文字表の「A」の5列を書き換えると、ゲーム中のすべての「A」の形が変わることも確かめてください。</p>
 </aside>
 </article>
 <nav class="page-nav" aria-label="前後の項目">

@@ -71,12 +71,12 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 08 自機の移動と入力</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 08 · 全23項目</p><h1>自機の移動と入力</h1><p class="lead">ポインターとキーボードを共通の状態にまとめ、移動速度と連射を制御します。</p><p class="source-ref">主な参照先：keys / mouseX / inputMode / releaseControls / updatePlay / LASER_MOVE</p></header>
 <h2 id="section-1">イベントでは操作を覚えておく</h2>
-<figure class="code-block"><figcaption><span>game.html · L1096–1098</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1096-L1098">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1096–1098"><code>function releaseControls() {
+<figure class="code-block"><figcaption><span>game.html · L1220–1222</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1220-L1222">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1220–1222"><code>function releaseControls() {
   shooting = false; keys.left = false; keys.right = false; keys.fire = false;
 }</code></pre></figure>
 <p>ポインター移動は目標位置 <code>mouseX</code>、左右キーは <code>keys.left</code> と <code>keys.right</code>、射撃は <code>shooting</code> または <code>keys.fire</code> に記録します。実際の移動と弾の生成は、毎フレームの <code>updatePlay()</code> が担当します。</p>
 <h2 id="section-2">どちらの入力も速度を通して動かす</h2>
-<figure class="code-block"><figcaption><span>game.html · L1391–1400</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1391-L1400">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1391–1400"><code>  // 合体レーザーの照射中は反動でマウス・キーボードとも LASER_MOVE まで遅くなる。
+<figure class="code-block"><figcaption><span>game.html · L1515–1524</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1515-L1524">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1515–1524"><code>  // 合体レーザーの照射中は反動でマウス・キーボードとも LASER_MOVE まで遅くなる。
   const lasing = special.laserT &gt; 0, speed = 340;
   if (inputMode === &quot;mouse&quot;) {
     const target = clampPlayerX(mouseX), step = (lasing ? LASER_MOVE : speed * 2) * dt;

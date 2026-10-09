@@ -73,7 +73,7 @@
 <h2 id="section-1">1枚の画像ではなく、マスの集まり</h2>
 <figure class="shot wide"><img src="../img/barriers.png" alt="4つのバリア。小さなマスが消えることで穴が開く。" width="960" height="140" loading="lazy"><figcaption>4つのバリア。小さなマスが消えることで穴が開く。</figcaption></figure>
 <p>バリアは14列 × 10行、1マス4 pxの格子です。<code>g[r][c]</code> が1なら存在し、0なら穴です。生成時に上の角と下中央を切り抜き、描画時は値が残っているマスだけを塗ります。</p>
-<figure class="code-block"><figcaption><span>game.html · L723–739</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L723-L739">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L723–739"><code>function makeBarriers() {
+<figure class="code-block"><figcaption><span>game.html · L847–863</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L847-L863">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L847–863"><code>function makeBarriers() {
   barriers = [];
   const cols = 14, rows = 10, cell = 4, bw = cols * cell;
   for (let i = 0; i &lt; 4; i++) {
@@ -91,7 +91,7 @@
       g.push(line);
     }</code></pre></figure>
 <h2 id="section-2">画面座標をマスの番号に変える</h2>
-<figure class="code-block"><figcaption><span>game.html · L1196–1205</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1196-L1205">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1196–1205"><code>function barrierHit(rect, blast) {
+<figure class="code-block"><figcaption><span>game.html · L1320–1329</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1320-L1329">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1320–1329"><code>function barrierHit(rect, blast) {
   for (const b of barriers) {
     if (!hit(rect, b)) continue;
     const c0 = Math.max(0, Math.floor((rect.x - b.x) / b.cell));
