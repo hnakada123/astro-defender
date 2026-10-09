@@ -71,7 +71,7 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 05 文字列からドット絵を作る</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 05 · 全23項目</p><h1>文字列からドット絵を作る</h1><p class="lead">X と . の配列を画像に変換し、2コマのスプライトとして再利用します。画面の英数字も同じ考え方のドット文字です。</p><p class="source-ref">主な参照先：makeSprite / TYPES / withGlow / prerender / FONT_SHEETS / GLYPHS</p></header>
 <h2 id="section-1">X のマスを塗るだけで画像になる</h2>
-<figure class="code-block"><figcaption><span>game.html · L476–486</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L476-L486">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L476–486"><code>function makeSprite(rows, color, scale = 2) {
+<figure class="code-block"><figcaption><span>game.html · L488–498</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L488-L498">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L488–498"><code>function makeSprite(rows, color, scale = 2) {
   const c = document.createElement(&quot;canvas&quot;);
   c.width = rows[0].length * scale;
   c.height = rows.length * scale;
@@ -91,7 +91,7 @@ XXXXXXXXX
 ..X...X..
 .X.....X.</textarea><label for="sprite-color">ドットの色</label><input id="sprite-color" type="color" value="#7dff7a"><canvas width="360" height="220" role="img" aria-label="入力したXの位置を塗ったドット絵">Xの位置を四角く塗って表示します。</canvas><output for="sprite-rows sprite-color" aria-live="polite"></output><noscript>操作にはJavaScriptが必要です。上のmakeSprite()で同じ仕組みを確認できます。</noscript></section><h2 id="section-2">データと描画処理を分ける</h2>
 <p>敵の <code>TYPES</code> には得点 <code>pts</code>、色 <code>color</code>、2コマ分の <code>frames</code> をまとめています。起動時に <code>frames</code> を画像へ変換し、戦闘中は <code>form.anim</code> でどちらを描くか選びます。文字列を毎フレーム解析する必要はありません。</p>
-<figure class="code-block"><figcaption><span>game.html · L558–569</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L558-L569">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L558–569"><code>  a: { // トゲ型エイリアン
+<figure class="code-block"><figcaption><span>game.html · L570–581</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L570-L581">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L570–581"><code>  a: { // トゲ型エイリアン
     pts: 30, color: &quot;#ff6ad5&quot;,
     frames: [[
       &quot;.X..XX..X.&quot;,
@@ -106,7 +106,7 @@ XXXXXXXXX
 <h2 id="section-3">光彩も先に作る</h2>
 <p><code>withGlow()</code> は元画像をぼかした別画像を作ります。ぼかしが端で切れないよう余白 <code>pad</code> を持たせ、描くときにその分だけ位置を戻します。<code>prerender()</code> も同じ考え方で、タイトルやボスの船体など変わりにくい絵を一度だけ描いて使い回します。</p>
 <h2 id="section-4">文字もドット絵にする</h2>
-<figure class="code-block"><figcaption><span>game.html · L165–176</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L165-L176">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L165–176"><code>// 文字表: 各行に、同じ高さの点の並びを文字の順に横へ書き並べる。1 文字は 5 列で、文字どうしは空白 1 列で区切る。
+<figure class="code-block"><figcaption><span>game.html · L177–188</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L177-L188">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L177–188"><code>// 文字表: 各行に、同じ高さの点の並びを文字の順に横へ書き並べる。1 文字は 5 列で、文字どうしは空白 1 列で区切る。
 // 上から 7 行目の下がベースライン。g・j・p・q・y の下に伸びる部分だけ 8・9 行目を使う。
 const FONT_SHEETS = [
   [&quot;ABCDEFGHIJKLM&quot;, [
@@ -119,7 +119,7 @@ const FONT_SHEETS = [
     &quot;X...X XXXX. .XXX. XXXX. XXXXX X.... .XXXX X...X .XXX. .XX.. X...X XXXXX X...X&quot;,
   ]],</code></pre></figure>
 <p>画面の英数字と記号も、本作で描いた5 × 7ドットの文字です。1文字ずつ配列を書く代わりに「文字表」として、同じ高さの点の並びを文字の順に横へ並べています。1文字は5列で、文字どうしは空白1列で区切ります。続けて N〜Z、小文字、数字（<code>×</code> と <code>♪</code> を含む）、記号の表があります。上から7行目の下がベースラインで、g・j・p・q・y の下に伸びる部分だけが8・9行目にはみ出します。</p>
-<figure class="code-block"><figcaption><span>game.html · L236–255</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L236-L255">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L236–255"><code>const GLYPH_W = 5, GLYPH_H = 7, GLYPH_ADVANCE = 6; // 1 文字の幅・ベースラインより上の高さ・次の文字までの間隔(ドット数)
+<figure class="code-block"><figcaption><span>game.html · L248–267</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L248-L267">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L248–267"><code>const GLYPH_W = 5, GLYPH_H = 7, GLYPH_ADVANCE = 6; // 1 文字の幅・ベースラインより上の高さ・次の文字までの間隔(ドット数)
 
 // 文字 → 横に続く点をまとめた長方形 [x, y, 幅] の一覧。描くときは長方形 1 つにつき 1 回で済む。
 const GLYPHS = new Map([[&quot; &quot;, []]]);

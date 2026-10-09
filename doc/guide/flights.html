@@ -71,7 +71,7 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 16 編隊から突入する敵</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 16 · 全23項目</p><h1>編隊から突入する敵</h1><p class="lead">敵に一時的な飛行状態を追加し、急降下・ジグザグ・横方向の突入を切り替えます。</p><p class="source-ref">主な参照先：launchFlight / updateFlights / alienRectInto / flightT / DIVER_SHOT_WAVE</p></header>
 <h2 id="section-1">同じ敵に飛行データを付け足す</h2>
-<figure class="code-block"><figcaption><span>game.html · L1183–1187</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1183-L1187">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1183–1187"><code>function launchFlight(a, mode) {
+<figure class="code-block"><figcaption><span>game.html · L1195–1199</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1195-L1199">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1195–1199"><code>function launchFlight(a, mode) {
   const r = alienRect(a);
   a.flight = { x: r.x, y: r.y, startX: r.x, t: 0, warning: 0.65, mode, phase: &quot;exit&quot;,
     vx: clamp((player.x - r.x) * 0.5, -90, 90), side: r.x &lt; W / 2 ? -1 : 1 };
@@ -80,7 +80,7 @@
 <h2 id="section-2">3種類の軌道</h2>
 <div class="table-wrap" tabindex="0" role="region" aria-label="モード・位置の更新"><table><thead><tr><th scope="col">モード</th><th scope="col">位置の更新</th></tr></thead><tbody><tr><th scope="row"><code>dive</code></th><td>下へ進みながら、開始時に決めた横速度を加える</td></tr><tr><th scope="row"><code>zigzag</code></th><td><code>Math.sin(f.t * 5) * 54</code> で左右に揺れながら降下</td></tr><tr><th scope="row"><code>flank</code></th><td>一度横へ退場し、自機の少し上の高さから横切る</td></tr></tbody></table></div>
 <p>突入はウェーブ2以降で、ボス戦と開始バナー中には発生しません。候補は生きていてまだ飛行していない敵です。同時に飛べる数と発生間隔はウェーブに応じて変化します。モードは3種類を順番に使います。</p>
-<figure class="code-block"><figcaption><span>game.html · L1204–1225</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1204-L1225">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1204–1225"><code>    const speed = Math.min(260, 155 + wave * 7);
+<figure class="code-block"><figcaption><span>game.html · L1216–1237</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1216-L1237">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1216–1237"><code>    const speed = Math.min(260, 155 + wave * 7);
     if (f.mode === &quot;flank&quot; &amp;&amp; f.phase === &quot;exit&quot;) {
       f.x += f.side * speed * dt;
       if (f.x &lt; -30 || f.x &gt; W + 30) {

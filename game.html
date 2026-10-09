@@ -41,6 +41,8 @@
   /* 紹介ページへのリンク。URL をそのまま見せるので日英で書き換えない */
   .site-link { margin-top: -4px; padding: 0 10px 8px; font-size: 12px; line-height: 1; letter-spacing: .06em; }
   .site-link a { padding: 6px 0; color: #7df9ff; text-underline-offset: 3px; }
+  #shareLink { margin-left: 16px; }
+  #shareLink svg { margin-right: 5px; vertical-align: -1px; }
   .lang { display: flex; gap: 6px; }
   .lang button { border: 1px solid #33408a; border-radius: 6px; padding: 5px 12px; background: #0d1024; color: #8fa0d8; font: bold 11px var(--mono); letter-spacing: .06em; cursor: pointer; touch-action: manipulation; }
   .lang button[aria-pressed="true"] { border-color: #7df9ff; background: #16213f; color: #eaffff; }
@@ -57,7 +59,10 @@
   </div>
 </div>
 <p class="hint" id="hint"></p>
-<p class="site-link"><a href="https://hnakada123.github.io/astro-defender/">hnakada123.github.io/astro-defender</a></p>
+<p class="site-link">
+  <a href="https://hnakada123.github.io/astro-defender/">hnakada123.github.io/astro-defender</a>
+  <a id="shareLink" href="https://x.com/intent/post?url=https%3A%2F%2Fhnakada123.github.io%2Fastro-defender%2Findex.html" target="_blank" rel="noopener noreferrer"><svg role="img" aria-label="X" viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span id="shareLabel">でポスト</span></a>
+</p>
 
 <script>
 "use strict";
@@ -141,6 +146,13 @@ const STRINGS = {
     retry: "CLICK TO PLAY AGAIN",
     resume: "PRESS P TO RESUME",
   },
+};
+
+// X への投稿リンクの文言と共有する URL。カード画像を出せる紹介ページを、表示中の言語で共有する。
+// 画面に描く文言ではない(ドット文字の字形がない文字も使う)ので STRINGS とは分けておく。
+const SHARE = {
+  ja: { label: "でポスト", text: "ブラウザで遊べるネオンアーケードシューティング「ASTRO DEFENDER」", url: "https://hnakada123.github.io/astro-defender/index.html" },
+  en: { label: "Post", text: "ASTRO DEFENDER — a neon arcade shooter you can play in your browser", url: "https://hnakada123.github.io/astro-defender/doc/index.en.html" },
 };
 
 function detectLang() {
@@ -1300,6 +1312,12 @@ function applyLang(next) {
   if (document.documentElement) document.documentElement.lang = lang;
   const hintEl = document.getElementById("hint");
   if (hintEl) hintEl.innerHTML = T("hint").join("<br>");
+  const shareEl = document.getElementById("shareLink");
+  if (shareEl) {
+    const share = SHARE[lang];
+    shareEl.href = `https://x.com/intent/post?text=${encodeURIComponent(share.text)}&url=${encodeURIComponent(share.url)}`;
+    document.getElementById("shareLabel").textContent = share.label;
+  }
   for (const code in langButtons) langButtons[code].setAttribute("aria-pressed", String(code === lang));
   refreshActionButtons();
   redrawIfPaused();

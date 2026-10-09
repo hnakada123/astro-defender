@@ -71,18 +71,18 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 04 Canvas の座標と描画</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 04 · 全23項目</p><h1>Canvas の座標と描画</h1><p class="lead">内部座標と表示サイズの違い、文字描画、重ねる順序を確認します。</p><p class="source-ref">主な参照先：W / H / canvasX / dotScale / drawTextOn / draw</p></header>
 <h2 id="section-1">内部は480 × 640、見た目の大きさはCSS</h2>
-<figure class="code-block"><figcaption><span>game.html · L68–70</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L68-L70">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L68–70"><code>const W = 480, H = 640;
+<figure class="code-block"><figcaption><span>game.html · L73–75</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L73-L75">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L73–75"><code>const W = 480, H = 640;
 const cvs = document.getElementById(&quot;game&quot;);
 const ctx = cvs.getContext(&quot;2d&quot;, { alpha: false }); // 毎フレーム全面を塗るので不透明にし、ページとの合成コストを下げる</code></pre></figure>
 <p>Canvas の内部座標は左上が <code>(0, 0)</code>、右へ進むと x、下へ進むと y が増えます。CSS で画面を縮めても内部の480 × 640という寸法は変わりません。ゲーム中の速度や当たり判定は、この内部座標で計算します。</p>
 <h2 id="section-2">ポインターの座標を変換する</h2>
-<figure class="code-block"><figcaption><span>game.html · L1256–1259</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1256-L1259">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1256–1259"><code>function canvasX(e) {
+<figure class="code-block"><figcaption><span>game.html · L1268–1271</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1268-L1271">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1268–1271"><code>function canvasX(e) {
   const r = cvs.getBoundingClientRect();
   return ((e.clientX - r.left) * W) / r.width;
 }</code></pre></figure>
 <p>イベントの <code>clientX</code> から Canvas の表示位置を引き、表示幅に対する比率を求めて内部幅 <code>W</code> を掛けます。例えば表示幅が240 pxなら、左端から120 pxの位置は内部座標240になります。ポインターの移動とクリックのどちらでもこの関数で自機の目標位置 <code>mouseX</code> を求めます。ゲームで使うのは横方向だけなので、y方向の変換はありません。</p>
 <h2 id="section-3">文字も図形として描く</h2>
-<figure class="code-block"><figcaption><span>game.html · L257–293</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L257-L293">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L257–293"><code>// ドット 1 個を何 px で描くか。size 14 以上で 2 倍、24 以上で 3 倍…と整数倍にして、点の大きさをそろえる。
+<figure class="code-block"><figcaption><span>game.html · L269–305</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L269-L305">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L269–305"><code>// ドット 1 個を何 px で描くか。size 14 以上で 2 倍、24 以上で 3 倍…と整数倍にして、点の大きさをそろえる。
 function dotScale(size) { return Math.max(1, Math.floor((size + 6) / 10)); }
 
 // ドット文字にない文字(日本語など)を含む文は、行の中で大きさがそろうよう全体をシステムのフォントで描く。
