@@ -2,16 +2,18 @@
 
 *[English version / 英語版はこちら](README.en.md)*
 
-**▶ 今すぐプレイ: <https://hnakada123.github.io/astro-defender/game.html>**
-**🎮 ゲーム紹介・遊び方（日本語）: <https://hnakada123.github.io/astro-defender/>**
-**🌐 Game guide (English): <https://hnakada123.github.io/astro-defender/doc/index.en.html>**
-**📖 ソースコード解説: <https://hnakada123.github.io/astro-defender/doc/source.html>**（初学者向け・全23章）
+| ページ | URL |
+| --- | --- |
+| ▶ **今すぐプレイ** | <https://hnakada123.github.io/astro-defender/game.html> |
+| 🎮 **ゲーム紹介・遊び方** | <https://hnakada123.github.io/astro-defender/> |
+| 📖 **ソースコード解説**（初学者向け・全23章） | <https://hnakada123.github.io/astro-defender/doc/source.html> |
+| 🌐 **Game guide (English)** | <https://hnakada123.github.io/astro-defender/doc/index.en.html> |
+| 🌐 **Source code guide (English)** | <https://hnakada123.github.io/astro-defender/doc/source.en.html> |
 
 現在のバージョン: **v3.0.0**（[更新履歴](CHANGELOG.md)）
 
 ブラウザだけで遊べる、マウス操作のネオレトロ風固定画面シューティングゲームです。
 ゲーム内の画像と音はコードから生成し、ゲーム本体は外部ライブラリなしで `game.html` 1 ファイルで動作します。
-ブラウザ用のfaviconとアイコン画像は `favicon.ico` と `assets/icons/` に用意しています。
 
 クラシックな編隊シューティングをベースに、ネオングロー演出・コンボ倍率・
 パワーアップ・シンセウェイブ風BGMを備えたモダンアーケード仕様です。
@@ -112,17 +114,34 @@ python3 -m http.server 8000
 ## ソースコード解説
 
 `game.html` の中身を初学者向けに 23 項目で読み解く解説ページを用意しています。
-日本語版は4つの分野に分けた項目一覧から、各項目の詳細ページへ移動できます。
+日本語版は4つの分野に分けた項目一覧から、各項目の詳細ページへ移動できます。英語版は全23章を1ページにまとめています。
 ゲームループ・状態遷移・スプライト生成・当たり判定・Web Audio による音の合成などを、
 実ソースの行番号つき抜粋、確認課題、ブラウザ上で触れる実験コーナーで説明しています。
 
 - 日本語: <https://hnakada123.github.io/astro-defender/doc/source.html>（[doc/source.html](doc/source.html)）
 - English: <https://hnakada123.github.io/astro-defender/doc/source.en.html>（[doc/source.en.html](doc/source.en.html)）
 
+## ファイル構成
+
+| パス | 内容 |
+| --- | --- |
+| `game.html` | ゲーム本体（HTML・CSS・JavaScript を1ファイルにまとめたもの） |
+| `index.html` | ゲーム紹介・遊び方のページ（公開サイトのトップ。`doc/index.html` も同じ内容） |
+| `doc/` | 英語のゲーム紹介（`index.en.html`）、ソースコード解説（`source.html`・`guide/`・`source.en.html`）、共通の CSS・JavaScript・画像 |
+| `favicon.ico`・`assets/icons/` | ブラウザ用のアイコン |
+| `assets/fonts/` | 紹介ページと解説ページのラベルに使う Silkscreen フォント |
+| `assets/social/` | X などで紹介ページを共有したときに出るカード画像（作り直し方は `generation.txt`） |
+| `screenshots/` | この README のスクリーンショット |
+| `promo/` | 紹介動画（v1.0.0、日本語・英語） |
+| `tests/` | ゲームロジックのテスト |
+
+紹介ページと解説ページの CSS・JavaScript を変えたときは、各ページで読み込みに付けている `?v=20261009-4` の番号も上げます。
+ブラウザに残った古いファイルが、新しいページと組み合わさって使われるのを防ぐためです。
+
 ## 開発用テスト
 
-Node.js の組み込みテスト機能で、連結砲・必殺技・ボス・突入する敵・入力・
-ミスやウェーブ遷移時の動作を確認できます（追加パッケージ不要）。
+Node.js の組み込みテスト機能で、連結砲・必殺技・ボス・突入する敵・後半の敵の攻撃・コンボと残機・入力・
+ドット文字・パーティクルの上限、ミスやウェーブ遷移時の動作を確認できます（追加パッケージ不要）。
 
 ```sh
 node --test tests/*.test.cjs

@@ -2,15 +2,18 @@
 
 *[日本語版はこちら / Japanese version](README.md)*
 
-**▶ Play now: <https://hnakada123.github.io/astro-defender/game.html>**
-**🎮 Game guide: <https://hnakada123.github.io/astro-defender/doc/index.en.html>**
-**📖 Source code guide: <https://hnakada123.github.io/astro-defender/doc/source.en.html>** (beginner-friendly, 23 chapters)
+| Page | URL |
+| --- | --- |
+| ▶ **Play now** | <https://hnakada123.github.io/astro-defender/game.html> |
+| 🎮 **Game guide** | <https://hnakada123.github.io/astro-defender/doc/index.en.html> |
+| 📖 **Source code guide** (beginner-friendly, 23 chapters) | <https://hnakada123.github.io/astro-defender/doc/source.en.html> |
+| 🌐 **ゲーム紹介・遊び方 (Japanese)** | <https://hnakada123.github.io/astro-defender/> |
+| 🌐 **ソースコード解説 (Japanese)** | <https://hnakada123.github.io/astro-defender/doc/source.html> |
 
 Current version: **v3.0.0** ([changelog](CHANGELOG.en.md))
 
 A neo-retro fixed-screen shooter you play in the browser with the mouse.
 In-game graphics and audio are generated from code, and the game runs from a single `game.html` file without external libraries.
-Browser favicons and icon images are provided in `favicon.ico` and `assets/icons/`.
 
 Built on classic formation-shooter gameplay, with a modern arcade layer on top:
 neon glow effects, a combo multiplier, power-ups and a synthwave soundtrack.
@@ -116,15 +119,33 @@ python3 -m http.server 8000
 A beginner-friendly guide walks through `game.html` in 23 chapters: the game loop, the state machine,
 sprite generation, collision detection, sound synthesis with Web Audio, and more, with line-numbered
 excerpts from the real source and interactive labs that run in the browser.
+The English guide puts all 23 chapters on one page; the Japanese guide lists them in four parts, one page per chapter.
 
 - English: <https://hnakada123.github.io/astro-defender/doc/source.en.html> ([doc/source.en.html](doc/source.en.html))
 - 日本語: <https://hnakada123.github.io/astro-defender/doc/source.html> ([doc/source.html](doc/source.html))
 
+## Files
+
+| Path | Contents |
+| --- | --- |
+| `game.html` | The game itself (HTML, CSS and JavaScript in one file) |
+| `index.html` | The Japanese game guide, the top page of the site (`doc/index.html` has the same content) |
+| `doc/` | The English game guide (`index.en.html`), the source code guides (`source.en.html`, `source.html`, `guide/`), and their shared CSS, JavaScript and images |
+| `favicon.ico`, `assets/icons/` | Browser icons |
+| `assets/fonts/` | The Silkscreen font used for labels on the guide pages |
+| `assets/social/` | Card images shown when the game guide is shared on X and similar sites (`generation.txt` explains how to rebuild them) |
+| `screenshots/` | Screenshots for this README |
+| `promo/` | Trailer videos (v1.0.0, English and Japanese) |
+| `tests/` | Tests for the game logic |
+
+When you change the CSS or JavaScript of the guide pages, also bump the `?v=20261009-4` number that each page adds to those files,
+so browsers don't pair a new page with an old cached file.
+
 ## Tests
 
 Node.js's built-in test runner covers the linked cannons, the special attacks, the boss,
-the diving enemies, input handling, and what happens on a miss or a
-wave transition (no extra packages required).
+the diving enemies, later-wave enemy fire, combos and extra lives, input handling, the dot font,
+the particle cap, and what happens on a miss or a wave transition (no extra packages required).
 
 ```sh
 node --test tests/*.test.cjs
