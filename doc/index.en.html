@@ -40,7 +40,7 @@
   </div>
   <figure class="hero-figure"><a href="../game.html" aria-label="Play the game"><img src="img/play.png" alt="Gameplay showing the neon alien formation, player ship, green barriers, laser gauge and score." width="960" height="1280"></a><figcaption>Move the mouse to fly. Hold the left button to fire.</figcaption></figure>
 </div></header>
-<div class="container"><ul class="meta" aria-label="Game facts"><li>Play directly in your browser</li><li>Japanese / English</li><li>Boss battle every 5 waves</li><li>v2.0.0 · CC0</li></ul></div>
+<div class="container"><ul class="meta" aria-label="Game facts"><li>Play directly in your browser</li><li>Japanese / English</li><li>Boss battle every 5 waves</li><li>v3.0.0 · CC0</li></ul></div>
 
 <section class="container section" id="screenshots" aria-labelledby="screenshots-title">
   <div class="section-heading"><h2 id="screenshots-title">A closer look at the action</h2><p>Select an image to view it full size</p></div>
@@ -63,9 +63,10 @@
 <li>Start with three lives. Enemy bullets and diving aliens can cost you a life; losing them all ends the game.</li>
 <li>If the formation reaches the ground, the game ends even if you still have lives.</li>
 <li>Green barriers block enemy fire, while your own shots pass straight through. They crumble when hit and are restored each wave.</li>
-<li>Every fifth wave brings a battleship. Destroy both turrets before attacking the central core.</li>
+<li>Every fifth wave brings a battleship. Destroy both turrets before attacking the central core. Each battleship is a level higher than the last, adding twin lasers that box you in and aimed fan shots.</li>
+<li>Red shots aimed at your ship join in from wave 6, diving enemies shoot back from wave 11, and formations fire 3-way volleys from wave 16. The wave-clear screen announces each one before it starts.</li>
 </ul></section><section class="rules"><h3>Build a higher score</h3><ul>
-<li>Keep kills within 2.2 seconds of each other to maintain your combo. The multiplier can reach ×8.</li>
+<li>Keep kills within 2.2 seconds of each other to maintain your combo. Higher tiers need longer chains, and ×8 takes 42 kills in a row. The chain starts over each wave.</li>
 <li>Clear a wave without taking damage to earn a perfect bonus.</li>
 <li>Earn an extra life at 10,000 points and every 20,000 points after that, up to a maximum of five lives.</li>
 <li>The saucer crossing the top of the screen is another source of points. Take the shot when it is safe.</li>
@@ -94,10 +95,10 @@
   <div class="powerup-grid">
 <section class="powerup"><span class="powerup-symbol wide" aria-hidden="true">W</span><h3>W · 3-way shot</h3><p>Fire forward and diagonally for eight seconds, covering a wider area.</p></section>
 <section class="powerup"><span class="powerup-symbol rapid" aria-hidden="true">R</span><h3>R · Rapid fire</h3><p>Shoot at shorter intervals for eight seconds.</p></section>
-<section class="powerup"><span class="powerup-symbol shield" aria-hidden="true">S</span><h3>S · Shield</h3><p>Absorb one hit. Your linked cannons are preserved when the shield protects you.</p></section>
-<section class="powerup"><span class="powerup-symbol beam" aria-hidden="true">B</span><h3>B · Beam link</h3><p>Each pickup adds one cannon, alternating sides, up to four. They have no time limit, but an unshielded hit costs you two of them.</p></section>
+<section class="powerup"><span class="powerup-symbol shield" aria-hidden="true">S</span><h3>S · Shield</h3><p>Absorb one hit. Your linked cannons are preserved when the shield protects you. Picking one up while shielded scores 500 points.</p></section>
+<section class="powerup"><span class="powerup-symbol beam" aria-hidden="true">B</span><h3>B · Beam link</h3><p>Each pickup adds one cannon, alternating sides, up to four. Each cannon can have one beam on screen at a time. They have no time limit, but an unshielded hit costs you two of them. With all four linked, a pickup scores 500 points.</p></section>
 </div><div class="special-grid">
-  <section class="special"><h3><kbd>Z</kbd> Link laser</h3><p>Charge the gauge by defeating enemies and shooting the boss. At full charge, fire a 1.2-second laser through enemies and bullets in its path. More linked cannons make it wider and stronger, and firing does not consume them.</p></section>
+  <section class="special"><h3><kbd>Z</kbd> Link laser</h3><p>Charge the gauge by defeating enemies and shooting the boss. At full charge, fire a 1.2-second laser through enemies and bullets in its path. The recoil slows your ship while it fires. More linked cannons make it wider and stronger, and firing does not consume them.</p></section>
   <section class="special"><h3><kbd>X</kbd> Emergency bomb</h3><p>Clear all enemy bullets and destroy enemies within 240 pixels of your ship. Bombs also interrupt the boss laser and grant 1.6 seconds of invulnerability. Start with two and carry up to three.</p></section>
 </div></section>
 

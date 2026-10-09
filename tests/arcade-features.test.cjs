@@ -94,8 +94,10 @@ test("boss attacks lock a visible warning position before firing, and bombs canc
   run("wave = 5; makeWave(); bannerT = 0; player.inv = 0; boss.attackT = 0; updateBoss(0.01)");
   assert.ok(run("boss.warning > 1"));
   assert.equal(run("boss.laserT"), 0);
-  run("const target = boss.targetX; player.x = 30; updateBoss(0.5)");
-  assert.equal(run("boss.targetX === target"), true);
+  assert.equal(run("boss.lanes.length"), 1);
+  assert.equal(run("boss.lanes[0]"), 240);
+  run("player.x = 30; updateBoss(0.5)");
+  assert.equal(run("boss.lanes[0]"), 240);
   assert.equal(run("boss.laserT"), 0);
   run("updateBoss(0.61); updateBoss(0.01)");
   assert.ok(run("boss.laserT > 0"));
@@ -141,7 +143,7 @@ test("boss fights allow five main shots on screen instead of three", () => {
 
 test("boss laser damages a player in the warned lane and respects shield invulnerability", () => {
   const run = game();
-  run("wave = 5; makeWave(); bannerT = 0; player.inv = 0; active.shield = 1; boss.targetX = player.x; boss.laserT = 0.6; updateBoss(0.01)");
+  run("wave = 5; makeWave(); bannerT = 0; player.inv = 0; active.shield = 1; boss.lanes = [player.x]; boss.laserT = 0.6; updateBoss(0.01)");
   assert.equal(run("active.shield"), 0);
   assert.equal(run("lives"), 3);
   run("updateBoss(0.01)");
@@ -308,10 +310,10 @@ test("the 1UP popup stays clear of the centered wave-clear text", () => {
   run("score = 9900; aliens.forEach(a => a.alive = false); aliveN = 0; updatePlay(0)");
   assert.equal(run("state"), "clear");
   assert.equal(run("lives"), 4);
-  // 寿命いっぱい上昇したときの文字の上端が、中央の文字の最下行 NEXT: WAVE (y=356) より下にある。
+  // 寿命いっぱい上昇したときの文字の上端が、中央の文字の最下行(次のウェーブの予告 y=380)より下にある。
   assert.ok(run(`(() => {
     const p = popups.find(p => p.txt === "1UP!");
-    return p.y - 22 * (p.life / 0.9) - p.size > 360;
+    return p.y - 22 * (p.life / 0.9) - p.size > 383;
   })()`));
 });
 
@@ -329,4 +331,140 @@ test("holding the mouse button through a miss keeps firing after respawn, like t
   assert.equal(run("shooting"), true, "a press during the respawn wait counts too");
   run.event("pointerup");
   assert.equal(run("shooting"), false);
+});
+
+test("the ship slows down while the laser fires, so one laser cannot sweep the whole formation", () => {
+  const run = game();
+  run(`
+    player.x = mouseX = 60; special.charge = 100; activateLaser();
+    mouseX = W; // 照射中にマウスを画面の右端まで振る
+    for (let i = 0; i < 115; i++) { freezeT = 0; updatePlay(0.01); }
+  `);
+  assert.ok(run("special.laserT > 0"));
+  assert.ok(run("Math.abs(player.x - (60 + LASER_MOVE * 1.15)) < 0.01"), `moved to ${run("player.x")}`);
+  run("for (let i = 0; i < 10; i++) { freezeT = 0; updatePlay(0.01); }");
+  assert.equal(run("special.laserT"), 0);
+  assert.ok(run("aliveN >= 30"), `one laser destroyed ${run("50 - aliveN")} enemies`);
+  run("const stopped = player.x; updatePlay(0.05)");
+  assert.ok(run("player.x - stopped > 30"), "normal speed returns after the laser");
+  run("player.x = 240; inputMode = 'keys'; keys.right = true; special.charge = 100; activateLaser(); updatePlay(0.1)");
+  assert.ok(run("Math.abs(player.x - (240 + LASER_MOVE * 0.1)) < 0.01"), "keyboard movement slows down too");
+});
+
+test("combo tiers need longer chains as they climb, and each wave starts a fresh chain", () => {
+  const run = game();
+  const multAfter = kills => run(`resetCombo(); for (let i = 0; i < ${kills}; i++) bumpCombo(); combo.mult`);
+  assert.equal(multAfter(2), 1);
+  assert.equal(multAfter(3), 2);
+  assert.equal(multAfter(6), 2);
+  assert.equal(multAfter(7), 3);
+  assert.equal(multAfter(41), 7);
+  assert.equal(multAfter(42), 8);
+  assert.equal(multAfter(100), 8);
+  run("resetCombo(); for (let i = 0; i < 12; i++) bumpCombo(); updateCommon(COMBO_WINDOW + 0.01)");
+  assert.equal(run("combo.mult"), 1);
+  // ウェーブをクリアしても倍率は次のウェーブへ持ち越さない。
+  run("for (let i = 0; i < 42; i++) bumpCombo(); aliens.forEach(a => a.alive = false); aliveN = 0; updatePlay(0); update(1.7)");
+  assert.equal(run("wave"), 2);
+  assert.equal(run("combo.mult + combo.n"), 1);
+});
+
+test("enemy fire keeps escalating past wave 13 while the formation's base speed stops growing", () => {
+  const run = game();
+  const at = (w, expr) => run(`wave = ${w}; ${expr}`);
+  assert.ok(at(13, "enemyFireInterval()") > at(20, "enemyFireInterval()"));
+  assert.ok(at(20, "enemyFireInterval()") > at(30, "enemyFireInterval()"));
+  assert.equal(at(31, "enemyFireInterval()"), at(60, "enemyFireInterval()"));
+  assert.equal(at(5, "maxEnemyBullets()"), 7);
+  assert.ok(at(25, "maxEnemyBullets()") > at(13, "maxEnemyBullets()"));
+  assert.equal(at(13, "formSpeed()"), at(40, "formSpeed()"));
+  assert.ok(at(12, "formSpeed()") < at(13, "formSpeed()"));
+});
+
+test("aimed shots start at wave 6 and head for the ship", () => {
+  const run = game();
+  assert.equal(run("wave = 5; aimedChance()"), 0);
+  assert.ok(run("wave = 6; aimedChance()") > 0);
+  assert.ok(run("wave = 20; aimedChance()") > run("wave = 6; aimedChance()"));
+  run("player.x = 200; eBullets = []; enemyShot(100, 200, true); enemyShot(100, 200, false)");
+  const [aimed, straight] = [run("eBullets[0]"), run("eBullets[1]")];
+  assert.equal(aimed.aimed, true);
+  const landX = aimed.x + aimed.vx * (run("PLAYER_Y") - aimed.y) / aimed.vy;
+  assert.ok(Math.abs(landX - 200) < 1, `aimed shot lands at ${landX}`);
+  assert.equal(straight.vx, 0);
+  assert.equal(straight.aimed, false);
+});
+
+test("divers shoot back from wave 11, once per dive", () => {
+  for (const w of [10, 11]) {
+    const run = game();
+    run(`
+      wave = ${w}; eBullets = []; player.inv = 100;
+      launchFlight(aliens[0], 'dive');
+      Object.assign(aliens[0].flight, { x: 200, y: PLAYER_Y - 300, warning: 0, vx: 0 });
+      updateFlights(0.01);
+    `);
+    assert.equal(run("eBullets.length"), w >= 11 ? 1 : 0, `wave ${w}`);
+    if (w >= 11) {
+      assert.equal(run("eBullets[0].aimed"), true);
+      run("updateFlights(0.1)");
+      assert.equal(run("eBullets.length"), 1);
+    }
+  }
+});
+
+test("formations fire 3-way volleys from wave 16", () => {
+  for (const w of [14, 16]) {
+    const run = game();
+    run(`wave = ${w}; volleyT = 0; eBullets = []; updatePlay(0.01)`);
+    assert.equal(run("eBullets.length"), w >= 16 ? 3 : 0, `wave ${w}`);
+    if (w >= 16) assert.equal(run("eBullets.map(b => b.vx).sort((a, b) => a - b).join()"), "-70,0,70");
+  }
+});
+
+test("the wave-clear screen announces each new attack in both languages", () => {
+  const run = game();
+  assert.equal(run("Object.keys(WAVE_NEWS).join()"), "6,10,11,15,16,20");
+  for (const code of ["ja", "en"]) {
+    assert.equal(run(`Object.values(WAVE_NEWS).every(k => typeof STRINGS.${code}[k] === "string")`), true);
+  }
+});
+
+test("bosses add twin lasers at Lv.2, an aimed fan at Lv.3 and faster attacks from Lv.4, while durability stops at Lv.4", () => {
+  const run = game();
+  run(`
+    function bossAt(w) { wave = w; makeWave(); bannerT = 0; player.x = 240; player.inv = 0; }
+    function volleyAt(w) { bossAt(w); eBullets = []; boss.warning = 0.01; updateBoss(0.02); return eBullets; }
+  `);
+  run("bossAt(5); boss.attackN = 1; startBossAttack()");
+  assert.equal(run("boss.lanes.length"), 1, "Lv.1 always fires a single lane");
+  run("bossAt(10); startBossAttack()");
+  assert.equal(run("boss.lanes.length"), 1, "Lv.2 alternates, starting with a single lane");
+  run("startBossAttack()");
+  assert.equal(run("boss.lanes.join()"), "190,290");
+  assert.equal(run("inBossLane(playerRect())"), false, "staying still between twin lanes is safe");
+  run("player.x = 190");
+  assert.equal(run("inBossLane(playerRect())"), true);
+  run("player.x = 30; startBossAttack(); startBossAttack()");
+  assert.equal(run("boss.lanes.every(x => x >= 22)"), true, "twin lanes stay on screen near the edge");
+
+  assert.equal(run("volleyAt(10).length"), 6);
+  assert.equal(run("volleyAt(15).filter(b => b.aimed).length"), 5);
+  assert.equal(run("volleyAt(15).length"), 11);
+
+  assert.ok(run("bossAt(15); bossAttackInterval()") > run("bossAt(20); bossAttackInterval()"));
+  assert.ok(run("bossAt(20); bossAttackInterval()") > run("bossAt(30); bossAttackInterval()"));
+  assert.equal(run("bossAt(20); JSON.stringify(boss.parts.map(p => p.max))"), run("bossAt(40); JSON.stringify(boss.parts.map(p => p.max))"));
+  assert.ok(run("bossAt(15); boss.parts[2].max") < run("bossAt(20); boss.parts[2].max"));
+  assert.match(run("bossAt(15); lang = 'en'; T('bossGuns', boss.level)"), /LV\.3/);
+});
+
+test("a shield capsule picked up while shielded becomes points", () => {
+  const run = game();
+  run("applyPU('shield')");
+  assert.equal(run("score"), 0);
+  run("applyPU('shield')");
+  assert.equal(run("active.shield"), 1);
+  assert.equal(run("score"), 500);
+  assert.equal(run("popups.at(-1).txt"), "SHIELD +500");
 });

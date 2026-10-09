@@ -39,7 +39,7 @@
   </div>
   <figure class="hero-figure"><a href="../game.html" aria-label="ゲームをプレイ"><img src="img/play.png" alt="ネオンの敵編隊に向けて自機が射撃するプレイ画面。緑のバリアとレーザーゲージ、スコアが表示されている。" width="960" height="1280"></a><figcaption>マウスを動かして移動、クリック長押しで連射。</figcaption></figure>
 </div></header>
-<div class="container"><ul class="meta" aria-label="ゲームの概要"><li>ブラウザでそのままプレイ</li><li>日本語・英語に対応</li><li>5ウェーブごとにボス戦</li><li>v2.0.0 · CC0</li></ul></div>
+<div class="container"><ul class="meta" aria-label="ゲームの概要"><li>ブラウザでそのままプレイ</li><li>日本語・英語に対応</li><li>5ウェーブごとにボス戦</li><li>v3.0.0 · CC0</li></ul></div>
 
 <section class="container section" id="screenshots" aria-labelledby="screenshots-title">
   <div class="section-heading"><h2 id="screenshots-title">ゲーム画面で見る、3つの見どころ</h2><p>画像を選ぶと拡大できます</p></div>
@@ -62,9 +62,10 @@
 <li>残機は3からスタート。敵弾や突入する敵に当たるとミスになり、残機がなくなるとゲームオーバーです。</li>
 <li>編隊が地上まで侵入すると、残機があってもゲームオーバーになります。</li>
 <li>緑のバリアは敵弾を防ぎ、自機の弾は通り抜けます。撃たれると崩れ、次のウェーブで復元します。</li>
-<li>5ウェーブごとに大型戦艦が出現。左右の砲台を破壊してから、中央コアを撃破します。</li>
+<li>5ウェーブごとに大型戦艦が出現。左右の砲台を破壊してから、中央コアを撃破します。戦艦は登場するたびにレベルが上がり、2本のレーザーでの挟み撃ちや扇状の狙い撃ちが加わります。</li>
+<li>ウェーブ6からは自機を狙う赤い弾、11からは撃ってくる突入敵、16からは編隊の3方向弾が加わります。始まる前のウェーブクリア画面で予告されます。</li>
 </ul></section><section class="rules"><h3>スコアを伸ばすコツ</h3><ul>
-<li>2.2秒以内に撃破をつなぐとコンボが継続。倍率は最大×8まで上がります。</li>
+<li>2.2秒以内に撃破をつなぐとコンボが継続。倍率は上の段ほど多くつなぐ必要があり、42体連続で最大×8。ウェーブごとに数え直します。</li>
 <li>ノーダメージでウェーブをクリアすると、パーフェクトボーナスがもらえます。</li>
 <li>10000点で残機が1つ増え、以降は20000点ごとに増えます。残機の上限は5です。</li>
 <li>ときどき画面上部を横切る円盤も得点源。無理に追わず、敵弾の少ないタイミングを狙いましょう。</li>
@@ -93,10 +94,10 @@
   <div class="powerup-grid">
 <section class="powerup"><span class="powerup-symbol wide" aria-hidden="true">W</span><h3>W · 3方向ショット</h3><p>8秒間、正面と左右へ同時に発射。広い範囲の敵を狙えます。</p></section>
 <section class="powerup"><span class="powerup-symbol rapid" aria-hidden="true">R</span><h3>R · 連射強化</h3><p>8秒間、ショットの発射間隔が短くなります。</p></section>
-<section class="powerup"><span class="powerup-symbol shield" aria-hidden="true">S</span><h3>S · シールド</h3><p>ダメージを1回防ぎます。防いだ場合は連結砲も残ります。</p></section>
-<section class="powerup"><span class="powerup-symbol beam" aria-hidden="true">B</span><h3>B · ビーム砲連結</h3><p>1回の取得で左右交互に1門ずつ追加し、最大4門に。時間制限はなく、ミスすると2門減ります。</p></section>
+<section class="powerup"><span class="powerup-symbol shield" aria-hidden="true">S</span><h3>S · シールド</h3><p>ダメージを1回防ぎます。防いだ場合は連結砲も残ります。シールド中に取ると500点です。</p></section>
+<section class="powerup"><span class="powerup-symbol beam" aria-hidden="true">B</span><h3>B · ビーム砲連結</h3><p>1回の取得で左右交互に1門ずつ追加し、最大4門に。ビームは1門につき画面内1発まで。時間制限はなく、ミスすると2門減ります。4門そろった後に取ると500点です。</p></section>
 </div><div class="special-grid">
-  <section class="special"><h3><kbd>Z</kbd> 合体レーザー</h3><p>敵の撃破やボスへの射撃でゲージをため、満タンになったら発射。1.2秒間、射線上の敵と敵弾を貫きます。連結砲が多いほど太く強力になり、発射しても連結砲は失われません。</p></section>
+  <section class="special"><h3><kbd>Z</kbd> 合体レーザー</h3><p>敵の撃破やボスへの射撃でゲージをため、満タンになったら発射。1.2秒間、射線上の敵と敵弾を貫きます。照射中は反動で自機がゆっくりとしか動けません。連結砲が多いほど太く強力になり、発射しても連結砲は失われません。</p></section>
   <section class="special"><h3><kbd>X</kbd> 緊急回避ボム</h3><p>画面全体の敵弾を消し、自機から半径240px以内の敵を撃破。ボスのレーザーも中断し、使用後は1.6秒間無敵になります。初期2個、最大3個。危険が迫ったら早めに使いましょう。</p></section>
 </div></section>
 

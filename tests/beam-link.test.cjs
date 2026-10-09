@@ -20,20 +20,25 @@ test("B capsules can drop, fall, and be collected; each pickup adds one cannon u
   assert.equal(run("BEAM_OFFSETS.slice(0, active.beam).reduce((a, b) => a + b, 0)"), 0, "two cannons sit symmetrically");
   run("collectBeam(2)");
   assert.equal(run("active.beam"), 4);
-  run("collectBeam()");
+  run("const before = score; collectBeam()");
   assert.equal(run("active.beam"), 4);
-  assert.equal(run("popups.at(-1).txt"), "BEAM LINK MAX!");
+  assert.equal(run("popups.at(-1).txt"), "BEAM LINK MAX! +500");
+  assert.equal(run("score - before"), 500, "a capsule with no effect left becomes points");
 });
 
-test("linked cannons fire with the main gun without consuming its bullet allowance", () => {
+test("linked cannons fire with the main gun, one beam per cannon on screen, outside the main bullet allowance", () => {
   const run = game();
   run("collectBeam(2); shooting = true; updatePlay(0)");
   assert.equal(run("pBullets.filter(p => p.beam).length"), 2);
   assert.equal(run("pBullets.filter(p => !p.beam).length"), 1);
   assert.equal(run("pBullets.filter(p => p.beam).every(p => Math.abs(p.x + p.w / 2 - player.x) === 24)"), true);
+  // 2 回目の発射: 通常弾は 2 発目が出るが、前のビームがまだ画面内にある砲は撃たない。
   run("for (let i = 0; i < 28; i++) updatePlay(0.01)");
-  assert.equal(run("pBullets.filter(p => p.beam).length"), 4);
+  assert.equal(run("pBullets.filter(p => p.beam).length"), 2);
   assert.equal(run("pBullets.filter(p => !p.beam).length"), 2);
+  // ビームが消えれば、その砲は次の発射で撃てる。
+  run("pBullets = pBullets.filter(p => !p.beam); player.cool = 0; updatePlay(0)");
+  assert.equal(run("pBullets.filter(p => p.beam && p.y === PLAYER_Y - 32).length"), 2);
 });
 
 test("four cannons work alongside wide shots, rapid fire, and a shield", () => {
@@ -47,8 +52,10 @@ test("four cannons work alongside wide shots, rapid fire, and a shield", () => {
   assert.equal(run("pBullets.length"), 7);
   assert.equal(run("pBullets.filter(p => p.beam).length"), 4);
   assert.equal(run("pBullets.filter(p => !p.beam && p.vx !== 0).length"), 2);
+  // 連射で通常弾と 3 方向弾は 2 回目が出るが、ビームは 1 門 1 発のまま。
   run("for (let i = 0; i < 13; i++) updatePlay(0.01)");
-  assert.equal(run("pBullets.length"), 14);
+  assert.equal(run("pBullets.length"), 10);
+  assert.equal(run("pBullets.filter(p => p.beam).length"), 4);
   assert.equal(run("active.shield"), 1);
 });
 

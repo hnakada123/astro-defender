@@ -5,6 +5,38 @@
 This project follows [Semantic Versioning](https://semver.org/).
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [3.0.0] - 2026-10-09
+
+The link laser, combos and linked cannons were strong enough to flatten the late game. This release reins them in and adds new attacks as the waves and bosses advance. Weapons and enemy attacks change how the game plays, so the major version goes up.
+
+### Added
+
+- From wave 6, some formation shots fly diagonally at your ship (shown in red; the share grows to 50% by wave 20)
+- From wave 11, diving enemies fire one aimed shot on the way down
+- From wave 16, formations occasionally fire a 3-way volley
+- The wave-clear screen shows a line announcing each new attack just before it starts
+- Bosses now have levels (wave 5 is Lv.1, wave 10 is Lv.2, and so on), shown at the top of the screen
+  - Lv.2: every other attack boxes you in with two lasers, one on each side (hold still to stay between them)
+  - Lv.3: when the warning ends, the center of the hull fires an aimed fan of five shots
+  - Lv.4–6: each level shortens the time between attacks by 0.15 seconds
+- Picking up an S capsule while shielded, or a B capsule with all four cannons linked, now scores 500 points instead of doing nothing
+- The source code guide (Japanese and English) now covers boss levels, later-wave enemy fire, the laser slowdown and more, with every code excerpt’s line numbers updated. A screenshot of the twin lasers was added, and the title, boss and wave-start screenshots were retaken
+
+### Changed
+
+- While the link laser fires, the recoil limits your ship to 70px per second (sweeping the mouse used to wipe out the whole formation and end the wave in one shot)
+- Each combo tier needs a longer chain than the last (×2 at 3 kills, ×3 at 7 … ×8 at 42). It used to rise every 4 kills and hit ×8 early in every wave
+- The combo now starts over each wave (the first kill of the next wave used to continue the chain, so ×8 never ran out)
+- Each linked cannon can have one beam on screen at a time (they fired every volley outside the main bullet cap, so four cannons kept outpacing the late-game enemies)
+- Enemy fire keeps speeding up past wave 13 until around wave 30, and the cap on enemy bullets grows from 7 at wave 5 by one every 4 waves, up to 12
+- The formation's base speed stops growing at wave 13 (any faster and constant edge bounces drop it to the ground before bullets matter)
+- Boss durability stops growing at Lv.4 (wave 20), where later boss fights used to just get longer
+
+### Fixed
+
+- “LASER READY! [Z]” overlapped the barriers and the “COMBO ×n” text around the ship, making both hard to read. It now appears just above the barriers
+- From wave 6 on, the “WAVE n” banner at the start of a wave overlapped the formation. It now appears between the formation and the barriers
+
 ## [2.0.0] - 2026-10-09
 
 This release removes the between-wave upgrade pick and reworks rules such as barriers and boss fights. Because the way you play changes, the major version goes up.
@@ -61,6 +93,7 @@ First official release.
 - A beginner-friendly source code guide (Japanese / English)
 - Version number in the bottom-right corner of the title screen
 
+[3.0.0]: https://github.com/hnakada123/astro-defender/releases/tag/v3.0.0
 [2.0.0]: https://github.com/hnakada123/astro-defender/releases/tag/v2.0.0
 [1.0.1]: https://github.com/hnakada123/astro-defender/releases/tag/v1.0.1
 [1.0.0]: https://github.com/hnakada123/astro-defender/releases/tag/v1.0.0

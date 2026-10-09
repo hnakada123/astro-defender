@@ -6,7 +6,7 @@
 **🎮 Game guide: <https://hnakada123.github.io/astro-defender/doc/index.en.html>**
 **📖 Source code guide: <https://hnakada123.github.io/astro-defender/doc/source.en.html>** (beginner-friendly, 23 chapters)
 
-Current version: **v2.0.0** ([changelog](CHANGELOG.en.md))
+Current version: **v3.0.0** ([changelog](CHANGELOG.en.md))
 
 A neo-retro fixed-screen shooter you play in the browser with the mouse.
 In-game graphics and audio are generated from code, and the game runs from a single `game.html` file without external libraries.
@@ -68,13 +68,16 @@ python3 -m http.server 8000
 ## Modern arcade features
 
 - **Combo multiplier** — chain kills within about 2 seconds to raise the multiplier, up to ×8.
-  Taking a hit or running out of time resets it
+  Each tier needs a longer chain: ×2 at 3 kills, ×3 at 7, and ×8 at 42 kills in a row.
+  Taking a hit, running out of time, or moving on to the next wave resets it
 - **Power-ups** — enemies occasionally drop a capsule; pick it up to activate it
   - `W` 3-way shot (8s) / `R` rapid fire (8s) / `S` shield (absorbs one hit)
   - `B` beam link — each pickup adds one cannon, alternating between the sides of your ship (up to 4).
     They fire alongside your main gun and stack with `W`, `R` and `S`.
+    Each cannon can have one beam on screen at a time and fires again once it is gone.
     There is no timer and they carry over into the next wave, but a miss costs you two of them
     (a shield-blocked hit keeps them). The link count is shown at the bottom of the screen
+  - An `S` while shielded, or a `B` with all four cannons linked, scores 500 points instead
 - **Perfect bonus** — clear a wave without taking damage for bonus points
 - **Presentation** — neon glow, bullet trails, particle explosions, shockwave rings,
   hit-stop, screen shake, and a parallax starfield with nebulae
@@ -85,15 +88,24 @@ python3 -m http.server 8000
 - **Link laser** — killing enemies and hitting the boss with normal shots charges the gauge;
   at full charge you fire a 1.2 second piercing laser. It clears every enemy and enemy bullet
   in its path and leaves the barriers intact. More linked beam cannons make it wider and stronger,
-  and it works with no linked cannons at all. Firing it does not consume your cannons,
+  and it works with no linked cannons at all. While it fires, the recoil slows your ship
+  to 70px per second. Firing it does not consume your cannons,
   and kills made by the laser do not recharge the gauge
 - **Battleship boss fights** — turrets on either side protect the central core.
   Alongside their spread shots, the boss fires a laser that telegraphs its impact point
   1.1 seconds ahead with a red zone. The marked spot is fixed, so you can step out of it to dodge,
   and the boss holds still while it telegraphs and fires. During boss fights you can have five
-  main shots on screen instead of three. Beating the boss restocks one bomb
+  main shots on screen instead of three. Beating the boss restocks one bomb.
+  Each battleship is one level higher than the last (wave 5 is Lv.1, wave 10 is Lv.2, and so on)
+  - Lv.2: every other attack boxes you in with two lasers, one on each side. Hold still to stay between them
+  - Lv.3: when it fires, the center of the hull also sends an aimed fan of five shots
+  - Lv.4 and up: attacks come faster (up to Lv.6). Durability stops growing at Lv.4
 - **Diving enemies** — from wave 2 on, enemies telegraph and then dive, zigzag, or sweep in
   from the side. Any that get past you rejoin the formation, and the wave continues until they are destroyed
+- **New attacks in later waves** — red shots aimed at your ship join in from wave 6,
+  diving enemies fire once on the way down from wave 11, and formations fire 3-way volleys from wave 16.
+  Enemy fire rate and the cap on enemy bullets keep rising until around wave 30 (the formation's base speed
+  stops growing at wave 13). The wave-clear screen announces each new attack just before it starts
 - **Emergency bomb** — you start with 2, up to a maximum of 3. It erases every enemy bullet on
   screen and destroys enemies within 240px of your ship. It also damages every boss part and
   interrupts the boss's telegraphed or firing laser. You are invincible for 1.6 seconds afterwards.
@@ -121,7 +133,7 @@ node --test tests/*.test.cjs
 ## Versioning
 
 Releases follow [Semantic Versioning](https://semver.org/) and are recorded as `vX.Y.Z` git tags.
-The current version is **v2.0.0**. It is also shown in the bottom-right corner of the title screen, and the changes are listed in [CHANGELOG.en.md](CHANGELOG.en.md).
+The current version is **v3.0.0**. It is also shown in the bottom-right corner of the title screen, and the changes are listed in [CHANGELOG.en.md](CHANGELOG.en.md).
 
 - X (major): changes that affect how the game plays, such as new controls or rules
 - Y (minor): new features, enemies or effects

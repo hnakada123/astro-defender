@@ -58,7 +58,7 @@
 
 /* ================= 基本ユーティリティ ================= */
 
-const VERSION = "2.0.0"; // セマンティック バージョニング。上げ方は README の「バージョン」を参照
+const VERSION = "3.0.0"; // セマンティック バージョニング。上げ方は README の「バージョン」を参照
 const W = 480, H = 640;
 const cvs = document.getElementById("game");
 const ctx = cvs.getContext("2d", { alpha: false }); // 毎フレーム全面を塗るので不透明にし、ページとの合成コストを下げる
@@ -89,7 +89,13 @@ const STRINGS = {
     laserBtn: gauge => `Z 合体レーザー ${gauge}`,
     bombBtn: n => `X ボム ×${n}`,
     bossCore: "中央コアを狙え！",
-    bossGuns: "BOSS / 左右の砲台を破壊せよ",
+    bossGuns: lv => `BOSS Lv.${lv} / 左右の砲台を破壊せよ`,
+    newsAimed: "NEW: 自機を狙う赤い弾が混ざる",
+    newsDiverShot: "NEW: 突入する敵が弾を撃ってくる",
+    newsVolley: "NEW: 編隊が3方向弾を撃ってくる",
+    newsBoss2: "BOSS Lv.2: 2本のレーザーで挟み撃ち",
+    newsBoss3: "BOSS Lv.3: 扇状の狙い撃ち弾",
+    newsBoss4: "BOSS Lv.4: 攻撃の間隔が短くなる",
     titleCombo: "連続撃破でコンボ倍率 ×8 まで上昇!",
     titlePowerups: "W: 3方向  R: 連射  S: シールド",
     titleBeam: "B: ビーム砲を1門ずつ連結・最大4門 / ミスで2門減",
@@ -111,7 +117,13 @@ const STRINGS = {
     laserBtn: gauge => `Z LINK LASER ${gauge}`,
     bombBtn: n => `X BOMB ×${n}`,
     bossCore: "AIM FOR THE CORE!",
-    bossGuns: "BOSS / DESTROY BOTH TURRETS",
+    bossGuns: lv => `BOSS LV.${lv} / DESTROY BOTH TURRETS`,
+    newsAimed: "NEW: RED SHOTS AIM AT YOU",
+    newsDiverShot: "NEW: DIVERS SHOOT BACK",
+    newsVolley: "NEW: FORMATIONS FIRE 3-WAY VOLLEYS",
+    newsBoss2: "BOSS LV.2: TWIN LASERS BOX YOU IN",
+    newsBoss3: "BOSS LV.3: AIMED FAN SHOTS",
+    newsBoss4: "BOSS LV.4: FASTER ATTACKS",
     titleCombo: "CHAIN YOUR KILLS FOR A COMBO UP TO ×8!",
     titlePowerups: "W: 3-WAY  R: RAPID  S: SHIELD",
     titleBeam: "B: LINK BEAM CANNONS ONE BY ONE (MAX 4) / A MISS COSTS 2",
@@ -519,6 +531,10 @@ const P_GLOW = glowDot("#7df9ff", 9);
 const E_GLOW = glowDot("#ffd24d", 8);
 const P_TRAIL = makeTrail("#7df9ff", 4, 26, true);
 const E_TRAIL = makeTrail("#ffd24d", 4, 20, false);
+// 自機を狙って斜めに飛んでくる敵弾は赤で描き、まっすぐ落ちる黄色い弾と見分けられるようにする。
+const AIM_COLOR = "#ff5c7a";
+const A_GLOW = glowDot(AIM_COLOR, 8);
+const A_TRAIL = makeTrail(AIM_COLOR, 4, 20, false);
 
 // タイトルロゴ: 光彩層と文字層に分け、光彩層の透明度を揺らして脈動させる。
 const TITLE_LOGO_Y = 80; // ロゴ画像を置くキャンバス上の y
@@ -600,15 +616,29 @@ const STAR_COLORS = ["#39456e", "#6f83c9", "#bcd0ff"];
 const DASH_WARNING = [8, 6], DASH_NONE = [];
 const FIRST_LIFE = 10000, LIFE_STEP = 20000; // 1UP は 10000 点で 1 回、以降 20000 点ごと
 const COMBO_WINDOW = 2.2;
+// ×2〜×8 に上がるのに必要な連続撃破数。上の段ほど多くつなぐ必要があり、×8 は 1 ウェーブをほぼ途切れずに撃ち続けた証になる。
+const COMBO_STEPS = [3, 7, 12, 18, 25, 33, 42];
 const MULT_COLORS = ["#cfd8ff", "#7df9ff", "#7dff7a", "#ffe066", "#ff9a5c", "#ff6ad5", "#ff4d6d", "#ff2e88"];
 const BEAM_OFFSETS = [-24, 24, -42, 42]; // 連結砲の位置。カプセル 1 個で 1 門ずつ、この順に左右交互に増える
 const BEAM_LOSS = 2;                       // ミス 1 回で失う連結砲の数
+const SPARE_BONUS = 500;                   // 効果のないカプセル(シールド中の S、4 門そろった後の B)を拾ったときの得点
 // 自機の弾の速さ(px/秒)。終盤の素早い敵にも当てやすいよう速めにしている。
 // 通常弾の長さ 14px は、dt の上限 0.05 秒で 1 フレームに進む 30px が敵の高さ 16px + 弾の長さを超えず、すり抜けないようにするため。
 const SHOT_SPEED = 600, SHOT_H = 14;
 const LASER_MAX = 100, BOMB_MAX = 3, BOMB_RADIUS = 240;
+// 合体レーザー照射中の自機の最高速度(px/秒)。反動で鈍り、横に振って編隊全体をなぎ払えないようにする。
+// ボスの最高速度(約 59px/秒)よりは速く、動くコアを追い続けることはできる。
+const LASER_MOVE = 70;
 const BOSS_SWAY = 0.45;      // ボスが左右に揺れる速さ(角速度)。振れ幅は ±130px
 const BOSS_BOMB_DAMAGE = 5;  // ボムがボスの各部位に与えるダメージ
+const BOSS_HP_LEVEL_MAX = 4; // ボスの耐久力は Lv.4(ウェーブ 20)で頭打ち。以降は攻撃の速さで手強くなる
+const BOSS_TWIN_GAP = 50;    // Lv.2 からの挟み撃ちレーザー: 自機の左右この距離に 2 本。動かなければ間に収まる(画面端では内側へずれる)
+// 新しい攻撃が加わるウェーブ。それぞれクリア画面で次のウェーブに来るものを予告する(WAVE_NEWS)。
+const AIMED_WAVE = 6, DIVER_SHOT_WAVE = 11, VOLLEY_WAVE = 16;
+const WAVE_NEWS = {
+  [AIMED_WAVE]: "newsAimed", 10: "newsBoss2", [DIVER_SHOT_WAVE]: "newsDiverShot",
+  15: "newsBoss3", [VOLLEY_WAVE]: "newsVolley", 20: "newsBoss4",
+};
 
 const PU_DEFS = {
   wide: { label: "W", color: "#61e8ff", dur: 8, name: "3-WAY!" },
@@ -640,7 +670,7 @@ let barriers = [], particles = [], popups = [], rings = [], powerups = [];
 const combo = { n: 0, t: 0, mult: 1 };
 const active = { wide: 0, rapid: 0, shield: 0, beam: 0 };
 const special = { charge: 0, laserT: 0, laserW: 0, laserDps: 0, bombs: 2, bombT: 0 };
-let boss = null, flightT = 6, flightCount = 0;
+let boss = null, flightT = 6, flightCount = 0, volleyT = 4;
 let shake = 0;
 
 const starLayers = [0, 1, 2].map(l => Array.from({ length: [36, 26, 14][l] }, () => ({
@@ -728,9 +758,10 @@ function makeWave() {
   saucer = null; saucerSoundStop(); saucerT = rand(10, 20);
   fireT = 1.5; bannerT = 1.3; freezeT = 0;
   waveNoDamage = true; perfectBonus = 0;
+  resetCombo(); // コンボはウェーブごとに数え直す(次のウェーブの最初の撃破で前のウェーブから続けない)
   player.alive = true; player.inv = 1.5; player.cool = 0;
   special.laserT = 0; special.bombT = 0;
-  flightT = 6; flightCount = 0;
+  flightT = 6; flightCount = 0; volleyT = 4;
   makeBarriers();
 }
 
@@ -754,7 +785,7 @@ function addScore(n) {
     nextLife += LIFE_STEP;
     if (lives < 5) {
       lives++;
-      // 画面中央の WAVE 表示・WAVE CLEAR!・PERFECT! (y=244〜356) と重ならない高さに出す。
+      // 画面中央の WAVE 表示・WAVE CLEAR!・PERFECT!・次のウェーブの予告 (y=244〜380) と重ならない高さに出す。
       popup(W / 2, 430, "1UP!", "#ffe066", 20);
       sfx.oneUp();
     }
@@ -776,7 +807,8 @@ function resetCombo() { combo.n = 0; combo.t = 0; combo.mult = 1; }
 
 function bumpCombo() {
   combo.n++; combo.t = COMBO_WINDOW;
-  const m = Math.min(8, 1 + Math.floor(combo.n / 4));
+  let m = 1;
+  while (m <= COMBO_STEPS.length && combo.n >= COMBO_STEPS[m - 1]) m++;
   if (m > combo.mult) {
     combo.mult = m;
     maxMult = Math.max(maxMult, m);
@@ -794,12 +826,16 @@ function maybeDrop(x, y) {
 function applyPU(type) {
   const d = PU_DEFS[type];
   let name = d.name;
-  if (type === "shield") active.shield = 1;
-  else if (type === "beam") {
+  if (type === "shield") {
+    // すでにシールドがあるときは効果が重ならないので、代わりに得点にする。
+    if (active.shield > 0) { addScore(SPARE_BONUS); name = `SHIELD +${SPARE_BONUS}`; }
+    active.shield = 1;
+  } else if (type === "beam") {
     const wasMax = active.beam === d.max;
     active.beam = Math.min(d.max, active.beam + 1);
     player.x = clampPlayerX(player.x);
-    name = wasMax ? "BEAM LINK MAX!" : `${d.name} ×${active.beam}!`;
+    name = `${d.name} ×${active.beam}!`;
+    if (wasMax) { addScore(SPARE_BONUS); name = `BEAM LINK MAX! +${SPARE_BONUS}`; } // 4 門そろった後も同じく得点に
     spawnRing(player.x, PLAYER_Y + 8, d.color, 180, 0.35);
   }
   else active[type] = d.dur;
@@ -814,7 +850,8 @@ function gainCharge(n) {
   const before = special.charge;
   special.charge = Math.min(LASER_MAX, special.charge + n);
   if (before < LASER_MAX && special.charge === LASER_MAX) {
-    popup(W / 2, PLAYER_Y - 60, "LASER READY! [Z]", BEAM_COLOR, 16);
+    // バリア(y=490〜530)や自機まわりの COMBO 表示と重ならないよう、バリアの上に出す。
+    popup(W / 2, H - 168, "LASER READY! [Z]", BEAM_COLOR, 16);
     sfx.pickup();
   }
 }
@@ -873,13 +910,13 @@ function updateLaser(dt) {
 /* ================= 大型戦艦 ================= */
 
 function makeBoss() {
-  const level = wave / 5;
+  const level = wave / 5, hpLevel = Math.min(level, BOSS_HP_LEVEL_MAX);
   boss = {
-    x: W / 2, y: 112, t: 0, attackT: 2, warning: 0, laserT: 0, targetX: W / 2,
+    level, x: W / 2, y: 112, t: 0, attackT: 2, attackN: 0, warning: 0, laserT: 0, lanes: [],
     parts: [
-      { kind: "gun", offset: -54, hp: 7 + level * 2, max: 7 + level * 2, flash: 0 },
-      { kind: "gun", offset: 54, hp: 7 + level * 2, max: 7 + level * 2, flash: 0 },
-      { kind: "core", offset: 0, hp: 20 + level * 8, max: 20 + level * 8, flash: 0 },
+      { kind: "gun", offset: -54, hp: 7 + hpLevel * 2, max: 7 + hpLevel * 2, flash: 0 },
+      { kind: "gun", offset: 54, hp: 7 + hpLevel * 2, max: 7 + hpLevel * 2, flash: 0 },
+      { kind: "core", offset: 0, hp: 20 + hpLevel * 8, max: 20 + hpLevel * 8, flash: 0 },
     ],
   };
 }
@@ -917,6 +954,48 @@ function hitBoss(rect, damage) {
   return hit(rect, { x: boss.x - 80, y: boss.y, w: 160, h: 40 });
 }
 
+// 次の攻撃までの時間。コアが露出すると速まり、Lv.4〜6 では 1 段ごとに 0.15 秒ずつ縮む。
+function bossAttackInterval() {
+  return (coreExposed() ? 1.5 : 2.2) - clamp(boss.level - 3, 0, 3) * 0.15;
+}
+
+// 攻撃の予告を始める。レーザーの位置(lanes)はこの時点で固定し、予告と同じ場所に撃つ。
+// Lv.1 は自機を狙う 1 本。Lv.2 からは 1 回おきに、自機の左右へ 2 本の挟み撃ち(動かなければ間に収まる)。
+function startBossAttack() {
+  const twin = boss.level >= 2 && boss.attackN % 2 === 1;
+  if (twin) {
+    const x = clamp(player.x, 22 + BOSS_TWIN_GAP, W - 22 - BOSS_TWIN_GAP);
+    boss.lanes = [x - BOSS_TWIN_GAP, x + BOSS_TWIN_GAP];
+  } else boss.lanes = [clamp(player.x, 22, W - 22)];
+  boss.attackN++;
+  boss.warning = 1.1;
+  boss.attackT = bossAttackInterval();
+  beep({ f0: 740, dur: 0.12, type: "square", vol: 0.07 });
+}
+
+// 予告が終わった瞬間の射撃。残っている砲台は 3 方向弾、Lv.3 からは船体中央が自機へ扇状の 5 発も撃つ。
+function fireBossVolley() {
+  const vy = 180 + Math.min(wave * 3, 90);
+  for (const part of boss.parts) {
+    if (part.hp <= 0 || part.kind !== "gun") continue;
+    for (const vx of [-75, 0, 75]) eBullets.push({ x: boss.x + part.offset, y: boss.y + 40, w: 3, h: 9, vx, vy });
+  }
+  if (boss.level >= 3) {
+    const x = boss.x, y = boss.y + 44, aim = Math.atan2(PLAYER_Y - y, player.x - x);
+    for (const da of [-0.36, -0.18, 0, 0.18, 0.36]) {
+      const a = aim + da;
+      eBullets.push({ x: x - 1.5, y, w: 3, h: 9, vx: Math.cos(a) * vy, vy: Math.sin(a) * vy, aimed: true });
+    }
+  }
+}
+
+function inBossLane(rect) {
+  for (const x of boss.lanes) {
+    if (hit(rect, { x: x - 18, y: boss.y + 40, w: 36, h: GROUND_Y - boss.y - 40 })) return true;
+  }
+  return false;
+}
+
 function updateBoss(dt) {
   if (!boss || bannerT > 0) return;
   boss.parts.forEach(p => p.flash = Math.max(0, p.flash - dt));
@@ -924,27 +1003,18 @@ function updateBoss(dt) {
     boss.warning = Math.max(0, boss.warning - dt);
     if (boss.warning === 0) {
       boss.laserT = 0.6;
-      for (const part of boss.parts) {
-        if (part.hp <= 0 || part.kind !== "gun") continue;
-        for (const vx of [-75, 0, 75]) eBullets.push({ x: boss.x + part.offset, y: boss.y + 40, w: 3, h: 9, vx, vy: 180 + Math.min(wave * 3, 90) });
-      }
+      fireBossVolley();
       beep({ f0: 300, f1: 80, dur: 0.35, type: "sawtooth", vol: 0.09 });
     }
   } else if (boss.laserT > 0) {
     boss.laserT = Math.max(0, boss.laserT - dt);
-    const danger = { x: boss.targetX - 18, y: boss.y + 40, w: 36, h: GROUND_Y - boss.y - 40 };
-    if (boss.laserT > 0 && player.inv <= 0 && hit(danger, playerRect())) damagePlayer();
+    if (boss.laserT > 0 && player.inv <= 0 && inBossLane(playerRect())) damagePlayer();
   } else {
     // 予告・照射中は止まるので、移動中だけ時間を進める(止まっている間も進めると攻撃後に瞬間移動する)。
     boss.t += dt;
     boss.x = W / 2 + Math.sin(boss.t * BOSS_SWAY) * 130;
     boss.attackT -= dt;
-    if (boss.attackT <= 0) {
-      boss.targetX = clamp(player.x, 22, W - 22);
-      boss.warning = 1.1;
-      boss.attackT = coreExposed() ? 1.5 : 2.2;
-      beep({ f0: 740, dur: 0.12, type: "square", vol: 0.07 });
-    }
+    if (boss.attackT <= 0) startBossAttack();
   }
 }
 
@@ -982,6 +1052,13 @@ function updateFlights(dt) {
       f.y += speed * dt;
       if (f.mode === "zigzag") f.x = clamp(f.startX + Math.sin(f.t * 5) * 54, 5, W - 29);
       else f.x += (f.mode === "flank" ? -f.side * speed * 1.5 : f.vx) * dt;
+      // ウェーブ 11 からは、降下の途中で(自機から 200px 以上離れているうちに)自機を狙って 1 発撃つ。
+      if (wave >= DIVER_SHOT_WAVE && !f.shot && f.y > PLAYER_Y - 320 && f.y < PLAYER_Y - 200 &&
+          f.x > 0 && f.x < W - 24 && eBullets.length < maxEnemyBullets()) {
+        const t = TYPES[a.type];
+        f.shot = true;
+        enemyShot(f.x + t.w / 2 - 1.5, f.y + t.h, true);
+      }
       if (player.alive && player.inv <= 0 && hit(alienRect(a), playerRect())) damagePlayer();
       if (f.y > GROUND_Y + 24 || f.x < -60 || f.x > W + 60) a.flight = null;
     }
@@ -1159,9 +1236,43 @@ function erodeBarriers() {
 
 /* ================= 更新 ================= */
 
+// ---- 難易度の上がり方 ----
+// 序盤(〜13 ウェーブ)は従来どおりに上がり、その先も 30 ウェーブ前後までゆっくり厳しくなり続ける。
+function enemyFireInterval() {
+  return wave <= 13 ? Math.max(0.3, 1.15 - (wave - 1) * 0.07) : Math.max(0.18, 0.3 - (wave - 13) * 0.007);
+}
+
+function maxEnemyBullets() { // 画面内の敵弾の上限。ウェーブ 5 で 7 発、以降 4 ウェーブごとに 1 発ずつ増えて最大 12 発
+  return wave <= 5 ? 2 + wave : Math.min(12, 7 + Math.floor((wave - 5) / 4));
+}
+
+function aimedChance() { // 編隊の弾のうち自機を狙う割合。ウェーブ 6 の 15% から、ウェーブ 20 で 50% まで
+  return wave < AIMED_WAVE ? 0 : Math.min(0.5, 0.15 + (wave - AIMED_WAVE) * 0.025);
+}
+
+// 敵弾を 1 発出す。狙い撃ち弾は撃った瞬間の自機の位置へ向かう(横の速さは避けられる程度に制限)。
+function enemyShot(x, y, aimed, vx = 0) {
+  const vy = Math.min(330, 150 + wave * 14) * rand(0.9, 1.1);
+  if (aimed) vx = clamp((player.x - x) * vy / Math.max(60, PLAYER_Y - y), -110, 110);
+  eBullets.push({ x, y, w: 3, h: 9, vx, vy, aimed });
+}
+
+// 各列のいちばん下にいる(編隊にいる)敵から 1 体を選び、その矩形を返す。
+function pickShooter() {
+  const bottoms = [];
+  for (let c = 0; c < COLS; c++) {
+    let low = null;
+    for (const a of aliens) if (a.alive && !a.flight && a.c === c && (!low || a.r > low.r)) low = a;
+    if (low) bottoms.push(low);
+  }
+  return bottoms.length ? alienRect(bottoms[(Math.random() * bottoms.length) | 0]) : null;
+}
+
 function formSpeed() {
   const r = aliveN / TOTAL;
-  let s = 16 + (wave - 1) * 7 + 130 * Math.pow(1 - r, 1.7);
+  // ウェーブごとの基本速度はウェーブ 13 で頭打ち。それ以上速いと端での折り返しが続いて一気に降下し、
+  // 弾をかわす前に侵攻で終わってしまうため、後半は弾の攻撃で難しくする。
+  let s = 16 + Math.min(wave - 1, 12) * 7 + 130 * Math.pow(1 - r, 1.7);
   if (aliveN <= 3) s += 55;
   if (aliveN === 1) s += 75;
   return Math.min(s, 240);
@@ -1277,11 +1388,12 @@ function updatePlay(dt) {
   bannerT = Math.max(0, bannerT - dt);
 
   // --- 自機 ---
-  const speed = 340;
+  // 合体レーザーの照射中は反動でマウス・キーボードとも LASER_MOVE まで遅くなる。
+  const lasing = special.laserT > 0, speed = 340;
   if (inputMode === "mouse") {
-    const target = clampPlayerX(mouseX);
-    player.x = clampPlayerX(player.x + clamp(target - player.x, -speed * dt * 2, speed * dt * 2));
-  } else player.x = clampPlayerX(player.x + speed * dt * ((keys.right ? 1 : 0) - (keys.left ? 1 : 0)));
+    const target = clampPlayerX(mouseX), step = (lasing ? LASER_MOVE : speed * 2) * dt;
+    player.x = clampPlayerX(player.x + clamp(target - player.x, -step, step));
+  } else player.x = clampPlayerX(player.x + (lasing ? LASER_MOVE : speed) * dt * ((keys.right ? 1 : 0) - (keys.left ? 1 : 0)));
   player.cool -= dt;
   player.inv = Math.max(0, player.inv - dt);
   active.wide = Math.max(0, active.wide - dt);
@@ -1292,14 +1404,20 @@ function updatePlay(dt) {
   // ボスは遠く弾の到達に時間がかかるので、ボス戦では画面内の通常弾の上限を緩める。
   const maxB = (active.rapid > 0 || active.wide > 0) ? 12 : boss ? 5 : 3;
   // ビームは通常弾の上限に数えず、共通のクールダウンで同時発射する。
-  const normalBulletCount = pBullets.reduce((n, p) => n + (p.beam ? 0 : 1), 0);
+  // ただし 1 門につき画面内 1 発までで、前のビームが消えるまでその砲は撃たない(4 門そろっても火力が際限なく増えない)。
+  let normalBulletCount = 0, beamSlots = 0;
+  for (const p of pBullets) {
+    if (p.beam) beamSlots |= 1 << p.slot;
+    else normalBulletCount++;
+  }
   if ((shooting || keys.fire) && player.cool <= 0 && normalBulletCount < maxB) {
     const mk = vx => pBullets.push({ x: player.x - 1, y: PLAYER_Y - SHOT_H, w: 2, h: SHOT_H, vx });
     mk(0);
     if (active.wide > 0) { mk(-70); mk(70); }
     for (let i = 0; i < active.beam; i++) {
+      if (beamSlots & (1 << i)) continue;
       const x = player.x + BEAM_OFFSETS[i];
-      pBullets.push({ x: x - 2, y: PLAYER_Y - 32, w: 4, h: 28, vx: 0, beam: true });
+      pBullets.push({ x: x - 2, y: PLAYER_Y - 32, w: 4, h: 28, vx: 0, beam: true, slot: i });
       spawnBurst(x, PLAYER_Y - 4, BEAM_COLOR, 3, 55);
     }
     player.cool = cd;
@@ -1353,25 +1471,19 @@ function updatePlay(dt) {
 
   // --- 敵の射撃 ---
   fireT -= dt;
-  const maxEB = Math.min(7, 2 + wave);
+  const maxEB = maxEnemyBullets();
   if (fireT <= 0 && bannerT <= 0 && aliveN > 0) {
-    const base = Math.max(0.3, 1.15 - (wave - 1) * 0.07);
-    fireT = base * rand(0.5, 1.5) * (0.55 + 0.45 * (aliveN / TOTAL));
-    if (eBullets.length < maxEB) {
-      const bottoms = [];
-      for (let c = 0; c < COLS; c++) {
-        let low = null;
-        for (const a of aliens) if (a.alive && !a.flight && a.c === c && (!low || a.r > low.r)) low = a;
-        if (low) bottoms.push(low);
-      }
-      if (bottoms.length) {
-        const shooter = bottoms[(Math.random() * bottoms.length) | 0];
-        const r = alienRect(shooter);
-        eBullets.push({
-          x: r.x + r.w / 2 - 1.5, y: r.y + r.h, w: 3, h: 9,
-          vy: Math.min(330, 150 + wave * 14) * rand(0.9, 1.1),
-        });
-      }
+    fireT = enemyFireInterval() * rand(0.5, 1.5) * (0.55 + 0.45 * (aliveN / TOTAL));
+    const r = eBullets.length < maxEB && pickShooter();
+    if (r) enemyShot(r.x + r.w / 2 - 1.5, r.y + r.h, Math.random() < aimedChance());
+  }
+  // ウェーブ 16 からは、ときどき編隊の 1 体が 3 方向に広がる弾をまとめて撃つ(間隔は少しずつ縮む)。
+  if (wave >= VOLLEY_WAVE && bannerT <= 0 && aliveN > 0) {
+    volleyT -= dt;
+    if (volleyT <= 0) {
+      volleyT = Math.max(2.5, 6 - (wave - VOLLEY_WAVE) * 0.25) * rand(0.8, 1.2);
+      const r = eBullets.length + 3 <= maxEB && pickShooter();
+      if (r) for (const vx of [-70, 0, 70]) enemyShot(r.x + r.w / 2 - 1.5, r.y + r.h, false, vx);
     }
   }
 
@@ -1605,8 +1717,8 @@ function drawGlowPass(t) {
     }
   }
   for (const b of eBullets) {
-    ctx.drawImage(E_TRAIL, b.x - 0.5, b.y + b.h - 20);
-    ctx.drawImage(E_GLOW, b.x - 6.5, b.y + 1);
+    ctx.drawImage(b.aimed ? A_TRAIL : E_TRAIL, b.x - 0.5, b.y + b.h - 20);
+    ctx.drawImage(b.aimed ? A_GLOW : E_GLOW, b.x - 6.5, b.y + 1);
   }
 
   for (const u of powerups) {
@@ -1726,18 +1838,20 @@ function drawHud() {
 function drawBoss(t) {
   if (!boss) return;
   if (boss.warning > 0 || boss.laserT > 0) {
-    const x = boss.targetX, y = boss.y + 40;
-    ctx.fillStyle = boss.laserT > 0 ? "#ff4d6dbb" : "#ff4d6d22";
-    ctx.fillRect(x - 18, y, 36, GROUND_Y - y);
-    ctx.strokeStyle = "#ff4d6d"; ctx.lineWidth = 2;
-    ctx.setLineDash(boss.warning > 0 ? DASH_WARNING : DASH_NONE);
-    ctx.strokeRect(x - 18, y, 36, GROUND_Y - y);
-    ctx.setLineDash(DASH_NONE);
-    if (boss.laserT > 0) {
-      ctx.fillStyle = "#fff0f4"; ctx.fillRect(x - 6, y, 12, GROUND_Y - y);
-    } else {
-      drawText("! DANGER !", clamp(x, 52, W - 52), GROUND_Y - 85, { size: 12, color: "#ff8a9e" });
-      drawText(`${boss.warning.toFixed(1)}s`, clamp(x, 30, W - 30), GROUND_Y - 65, { size: 11, color: "#ffe066" });
+    const y = boss.y + 40;
+    for (const x of boss.lanes) {
+      ctx.fillStyle = boss.laserT > 0 ? "#ff4d6dbb" : "#ff4d6d22";
+      ctx.fillRect(x - 18, y, 36, GROUND_Y - y);
+      ctx.strokeStyle = "#ff4d6d"; ctx.lineWidth = 2;
+      ctx.setLineDash(boss.warning > 0 ? DASH_WARNING : DASH_NONE);
+      ctx.strokeRect(x - 18, y, 36, GROUND_Y - y);
+      ctx.setLineDash(DASH_NONE);
+      if (boss.laserT > 0) {
+        ctx.fillStyle = "#fff0f4"; ctx.fillRect(x - 6, y, 12, GROUND_Y - y);
+      } else {
+        drawText("! DANGER !", clamp(x, 52, W - 52), GROUND_Y - 85, { size: 12, color: "#ff8a9e" });
+        drawText(`${boss.warning.toFixed(1)}s`, clamp(x, 30, W - 30), GROUND_Y - 65, { size: 11, color: "#ffe066" });
+      }
     }
   }
   ctx.drawImage(BOSS_HULL, boss.x - 80 - BOSS_HULL_PAD, boss.y - 8 - BOSS_HULL_PAD);
@@ -1767,7 +1881,7 @@ function drawBoss(t) {
   const maxHealth = boss.parts.reduce((sum, p) => sum + p.max, 0);
   ctx.fillStyle = "#352033"; ctx.fillRect(72, 77, W - 144, 5);
   ctx.fillStyle = "#ff6ad5"; ctx.fillRect(72, 77, (W - 144) * health / maxHealth, 5);
-  drawText(T(coreExposed() ? "bossCore" : "bossGuns"), W / 2, 71, { size: 10, color: "#ffb4e8" });
+  drawText(coreExposed() ? T("bossCore") : T("bossGuns", boss.level), W / 2, 71, { size: 10, color: "#ffb4e8" });
 }
 
 function drawSpecials(t) {
@@ -1819,9 +1933,9 @@ function drawGame(t) {
     }
   }
 
-  ctx.fillStyle = "#ffd24d";
   const wig = (Math.floor(t * 18) % 2) * 2 - 1;
   for (const b of eBullets) {
+    ctx.fillStyle = b.aimed ? AIM_COLOR : "#ffd24d";
     ctx.fillRect(b.x + wig, b.y, 3, 3);
     ctx.fillRect(b.x - wig, b.y + 3, 3, 3);
     ctx.fillRect(b.x + wig, b.y + 6, 3, 3);
@@ -1857,7 +1971,8 @@ function drawGame(t) {
     const p = 1 - bannerT / 1.3;
     const size = 30 + 26 * Math.max(0, 1 - p * 4);
     ctx.globalAlpha = Math.min(1, bannerT * 2) * Math.min(1, p * 6 + 0.2);
-    drawText(boss ? `BOSS WAVE ${wave}` : `WAVE ${wave}`, W / 2, 300, { size: boss ? size * 0.7 : size, color: boss ? "#ff6ad5" : "#ffe066", weight: 900 });
+    // 編隊(開始時は y=282 まで)と重ならないよう、編隊とバリアの間に出す。
+    drawText(boss ? `BOSS WAVE ${wave}` : `WAVE ${wave}`, W / 2, 370, { size: boss ? size * 0.7 : size, color: boss ? "#ff6ad5" : "#ffe066", weight: 900 });
     ctx.globalAlpha = 1;
   }
 }
@@ -1904,6 +2019,9 @@ function drawOverlay(t) {
       drawText(`PERFECT! +${perfectBonus}`, W / 2, 326, { size: 17, color: "#ffe066" });
     }
     drawText(`NEXT: WAVE ${wave + 1}${(wave + 1) % 5 === 0 ? " / BOSS" : ""}`, W / 2, 356, { size: 14, color: "#cfd8ff" });
+    // 新しい攻撃が始まるウェーブの前には、何が来るかを予告する(1UP! の表示 y=430〜 より上に収める)。
+    const news = WAVE_NEWS[wave + 1];
+    if (news) drawText(T(news), W / 2, 380, { size: 13, color: "#ff8a9e" });
   } else if (state === "gameover") {
     ctx.fillStyle = "rgba(2,3,10,0.65)";
     ctx.fillRect(0, 0, W, H);
