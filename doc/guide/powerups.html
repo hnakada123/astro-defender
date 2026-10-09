@@ -85,7 +85,7 @@
   powerups.push({ x, y, type: ks[(Math.random() * ks.length) | 0], ph: Math.random() * 6.28 });
 }</code></pre></figure>
 <p>通常の敵の撃破時に、約8%の確率でカプセルを作ります。同時に存在できるのは2個までです。カプセルは毎秒62 pxで落下し、自機より少し大きい回収用の四角形と重なると <code>applyPU()</code> が効果を反映します。</p>
-<figure class="code-block"><figcaption><span>game.html · L1668–1678</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1668-L1678">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1668–1678"><code>  // --- パワーアップカプセル ---
+<figure class="code-block"><figcaption><span>game.html · L1670–1680</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1670-L1680">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1670–1680"><code>  // --- パワーアップカプセル ---
   const prInf = { x: player.x - 17, y: PLAYER_Y - 4, w: 34, h: 24 };
   for (let i = powerups.length - 1; i &gt;= 0; i--) {
     const u = powerups[i];
@@ -123,7 +123,7 @@
 const BEAM_LOSS = 2;                       // ミス 1 回で失う連結砲の数
 const SPARE_BONUS = 500;                   // 効果のないカプセル(シールド中の S、4 門そろった後の B)を拾ったときの得点</code></pre></figure>
 <p>砲の位置は <code>BEAM_OFFSETS</code> の先頭から順に使います。1門目は左 (-24)、2門目は右 (+24)、3門目はさらに外側の左 (-42)、4門目は右 (+42) なので、取るたびに左右交互に増えていきます。各砲は通常ショットと同じタイミングで縦長の弾を1発ずつ撃ちます。この弾は敵に当たると消える普通の弾で、貫通はしません。</p>
-<figure class="code-block"><figcaption><span>game.html · L1567–1583</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1567-L1583">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1567–1583"><code>  // ビームは通常弾の上限に数えず、共通のクールダウンで同時発射する。
+<figure class="code-block"><figcaption><span>game.html · L1569–1585</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1569-L1585">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1569–1585"><code>  // ビームは通常弾の上限に数えず、共通のクールダウンで同時発射する。
   // ただし 1 門につき画面内 1 発までで、前のビームが消えるまでその砲は撃たない(4 門そろっても火力が際限なく増えない)。
   let normalBulletCount = 0, beamSlots = 0;
   for (const p of pBullets) {
@@ -141,7 +141,7 @@ const SPARE_BONUS = 500;                   // 効果のないカプセル(シー
       spawnBurst(x, PLAYER_Y - 4, BEAM_COLOR, 3, 55);
     }</code></pre></figure>
 <p>ビームは通常弾の同時発射数の上限には数えません。そのかわり、1門につき画面内に1発までです。発射前に <code>pBullets</code> を1回だけ見て、通常弾の数と、ビームが飛んでいる砲の番号 (<code>slot</code>) をビット (<code>beamSlots</code>) に記録します。ビットが立っている砲は、前の弾が敵に当たるか画面の外へ出るまで撃ちません。近くの敵ほど弾がすぐ消えるので連射が速くなり、4門そろっても火力が際限なく増えることはありません。</p>
-<figure class="code-block"><figcaption><span>game.html · L1489–1489</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1489-L1489">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1489–1489"><code>  active.beam = Math.max(0, active.beam - BEAM_LOSS);</code></pre></figure>
+<figure class="code-block"><figcaption><span>game.html · L1491–1491</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1491-L1491">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1491–1491"><code>  active.beam = Math.max(0, active.beam - BEAM_LOSS);</code></pre></figure>
 <p>連結砲はW・R・Sと併用でき、次のウェーブにも持ち越せます。シールドで防げなかったミスでは <code>BEAM_LOSS</code> の2門だけを失い、残りは復帰後もそのまま使えます。4門なら2門に、1門なら0門になります。シールドが攻撃を防いだ場合は1門も失いません。</p>
 <aside class="note"><strong>読み解くポイント</strong><p><code>active</code> は取得中の効果をまとめたオブジェクトです。W・Rは残り秒数、Sは有無、Bは門数と、キーごとに値の意味が違います。秒数は <code>updatePlay()</code> で毎フレーム減らし、0になれば効果が切れます。連結砲は門数を数値で持つので、「1門増やす」「2門減らす」をそれぞれ足し算と引き算1つで書けます。</p>
 </aside>

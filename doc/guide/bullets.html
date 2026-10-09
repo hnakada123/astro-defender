@@ -71,7 +71,7 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 09 弾の移動と衝突の順序</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 09 · 全23項目</p><h1>弾の移動と衝突の順序</h1><p class="lead">配列の逆順走査、弾が消える条件、シールドとミスの分岐を説明します。</p><p class="source-ref">主な参照先：pBullets / eBullets / damagePlayer / hitPlayer</p></header>
 <h2 id="section-1">弾は位置と速度を持つオブジェクト</h2>
-<figure class="code-block"><figcaption><span>game.html · L1682–1689</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1682-L1689">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1682–1689"><code>  // --- 自弾 ---
+<figure class="code-block"><figcaption><span>game.html · L1684–1691</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1684-L1691">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1684–1691"><code>  // --- 自弾 ---
   for (let i = pBullets.length - 1; i &gt;= 0; i--) {
     const p = pBullets[i];
     p.y -= SHOT_SPEED * dt;
@@ -87,7 +87,7 @@
 <h2 id="section-3">削除しながら調べるなら後ろから</h2>
 <p><code>splice(i, 1)</code> は要素を消し、後ろの要素を前へ詰めます。前から進むループだと、詰まってきた要素を飛ばすことがあります。末尾から先頭へ調べれば、まだ調べていない要素の位置は変わりません。</p>
 <h2 id="section-4">シールドと残機減少を分ける</h2>
-<figure class="code-block"><figcaption><span>game.html · L1495–1507</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1495-L1507">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1495–1507"><code>function damagePlayer() {
+<figure class="code-block"><figcaption><span>game.html · L1497–1509</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1497-L1509">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1497–1509"><code>function damagePlayer() {
   waveNoDamage = false;
   resetCombo();
   if (active.shield &gt; 0) {
@@ -100,7 +100,7 @@
   }
   hitPlayer();
 }</code></pre></figure>
-<p>ダメージを受けると、まずノーダメージ記録とコンボを解除します。シールドがあればそれを消費し、1.2秒の無敵時間を与えます。シールドがなければ <code>hitPlayer()</code> が残機を減らし、連結砲を <code>BEAM_LOSS</code> の2門だけ減らして <code>dying</code> に移します。射撃中かどうかを表す <code>shooting</code> は消さないので、射撃ボタンを押し続けていれば復帰後もそのまま撃てます。</p>
+<p>ダメージを受けると、まずノーダメージ記録とコンボを解除します。シールドがあればそれを消費し、1.2秒の無敵時間を与えます。シールドがなければ <code>hitPlayer()</code> が残機を減らし、連結砲を <code>BEAM_LOSS</code> の2門だけ減らして <code>dying</code> に移します。ミスの演出中は円盤も止まるので、円盤の効果音もここで止め、プレイに戻る時に鳴らし直します（演出中にタブを隠しても音が鳴り続けないように）。射撃中かどうかを表す <code>shooting</code> は消さないので、射撃ボタンを押し続けていれば復帰後もそのまま撃てます。</p>
 <aside class="exercise"><strong>確かめてみよう</strong><p><code>damagePlayer()</code> と <code>hitPlayer()</code> の役割を分けて確認してください。シールドで防いでもノーダメージボーナスの条件から外れる理由を説明できますか。</p>
 </aside>
 </article>

@@ -111,7 +111,7 @@
 <figure class="code-block"><figcaption><span>game.html · L895–896</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L895-L896">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L895–896"><code>    const img = barrierImgs[i] ??= prerender(bw, rows * cell, () =&gt; {});
     barriers.push({ x, y, w: bw, h: rows * cell, cell, cols, rows, g, img, dirty: true });</code></pre></figure>
 <p>画像はウェーブをまたいで使い回すので、<code>barrierImgs</code> に4枚だけ作っておきます。<code>??=</code> は「まだ無ければ作って入れる」という書き方です。新しいバリアは <code>dirty: true</code> で始まるので、最初の描画で一度だけ塗られます。</p>
-<figure class="code-block"><figcaption><span>game.html · L1802–1819</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1802-L1819">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1802–1819"><code>function drawBarriers() {
+<figure class="code-block"><figcaption><span>game.html · L1804–1821</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1804-L1821">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1804–1821"><code>function drawBarriers() {
   for (const b of barriers) {
     if (b.dirty) {
       const g = b.img.getContext(&quot;2d&quot;);

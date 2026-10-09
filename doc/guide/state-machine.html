@@ -80,14 +80,14 @@ let paused = false;</code></pre></figure>
   state = s; stateT = 0;
   cvs.style.cursor = (s === &quot;play&quot; &amp;&amp; !paused) ? &quot;none&quot; : &quot;pointer&quot;;
 }</code></pre></figure>
-<figure class="code-block"><figcaption><span>game.html · L1747–1761</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1747-L1761">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1747–1761"><code>function update(dt) {
+<figure class="code-block"><figcaption><span>game.html · L1749–1763</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1749-L1763">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1749–1763"><code>function update(dt) {
   stateT += dt;
   updateCommon(dt);
   if (state === &quot;play&quot;) {
     updatePlay(dt);
   } else if (state === &quot;dying&quot;) {
     if (stateT &gt; 1.15) {
-      if (lives &gt; 0) { player.alive = true; player.inv = 2; setState(&quot;play&quot;); }
+      if (lives &gt; 0) { player.alive = true; player.inv = 2; setState(&quot;play&quot;); if (saucer) saucerSoundStart(); }
       else gameOver();
     }
   } else if (state === &quot;clear&quot;) {
@@ -95,7 +95,7 @@ let paused = false;</code></pre></figure>
     if (stateT &gt; 1.6) { wave++; makeWave(); setState(&quot;play&quot;); }
   }
 }</code></pre></figure>
-<p><code>stateT</code> は現在の状態になってからの秒数です。切り替えるたびに0へ戻すことで、「ミスしてから何秒待つか」をその状態だけの条件として書けます。<code>updateCommon()</code> は星やパーティクルなどの共通処理、<code>updatePlay()</code> は戦闘専用の処理です。<code>clear</code> では入力を待たず、1.6秒を超えたフレームで <code>wave++</code>・<code>makeWave()</code>・<code>setState(&quot;play&quot;)</code> を続けて実行し、次のウェーブを始めます（<a href="upgrades.html">ウェーブクリアと次のウェーブ</a>）。</p>
+<p><code>stateT</code> は現在の状態になってからの秒数です。切り替えるたびに0へ戻すことで、「ミスしてから何秒待つか」をその状態だけの条件として書けます。<code>updateCommon()</code> は星やパーティクルなどの共通処理、<code>updatePlay()</code> は戦闘専用の処理です。<code>clear</code> では入力を待たず、1.6秒を超えたフレームで <code>wave++</code>・<code>makeWave()</code>・<code>setState(&quot;play&quot;)</code> を続けて実行し、次のウェーブを始めます（<a href="upgrades.html">ウェーブクリアと次のウェーブ</a>）。<code>dying</code> からプレイに戻る時は、ミスした時に <code>hitPlayer()</code> が止めた円盤の効果音を、円盤がまだ画面にいれば鳴らし直します。</p>
 <h2 id="section-3">ポーズは別のフラグ</h2>
 <p><code>paused</code> は <code>state</code> と独立しています。プレイ中またはミスの演出中に一時停止しても、どちらの状態だったかは失われません。<code>setPaused(true)</code> は押しっぱなしの入力を解放し、音の予約を止めます。</p>
 <aside class="note"><strong>読み解くポイント</strong><p>画面の描き分けとルールの進行は別です。クリア表示中も星やパーティクルは動きますが、<code>state === &quot;play&quot;</code> ではないため戦闘は進みません。</p>

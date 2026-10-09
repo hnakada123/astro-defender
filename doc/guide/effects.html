@@ -87,7 +87,7 @@ function spawnBurst(x, y, color, n = 12, sp = 110) {
 <p>爆発はランダムな方向へ進む粒子の集まりです。<code>cos</code> と <code>sin</code> で角度から横・縦の速度を作り、毎フレーム座標を進め、<code>life</code> を減らします。衝撃波は半径が増える <code>rings</code>、得点表示は上へ浮く <code>popups</code> として管理します。</p>
 <p>ボムで編隊をまとめて倒すと、1体16個の粒子が一度に何百個も生まれます。そこで画面内の粒子は <code>MAX_PARTICLES</code>（400個）までとし、<code>spawnBurst()</code> は上限に届いたぶんだけ作る数を減らします。ふだんのプレイで上限に届くことはなく、描画がいちばん重くなる瞬間だけを抑える安全弁です。</p>
 <h2 id="section-2">描く順序が不要なものは素早く削除する</h2>
-<figure class="code-block"><figcaption><span>game.html · L1511–1514</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1511-L1514">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1511–1514"><code>function removeAt(arr, i) {
+<figure class="code-block"><figcaption><span>game.html · L1513–1516</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1513-L1516">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1513–1516"><code>function removeAt(arr, i) {
   const last = arr.pop();
   if (i &lt; arr.length) arr[i] = last;
 }</code></pre></figure>

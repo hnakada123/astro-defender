@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Fixed
 
 - Hiding the tab right after a miss while the bonus saucer was on screen left the saucer’s hum playing indefinitely. The hum now stops during the miss sequence and resumes when play continues (this also fixes the saucer flying silently after pausing and resuming during a miss)
+- The source code guide (Japanese and English) now explains this fix, with code excerpt line numbers and the test count updated
 
 ## [3.0.0] - 2026-10-09
 

@@ -114,7 +114,7 @@ function pickShooter() {
   return bottoms.length ? alienRect(bottoms[(Math.random() * bottoms.length) | 0]) : null;
 }</code></pre></figure>
 <p><code>pickShooter()</code> は各列で最も下にいる敵を候補にし、そこからランダムに射撃役を選んで、その四角形を返します。突入中の敵はこの候補に入りません。</p>
-<figure class="code-block"><figcaption><span>game.html · L1633–1649</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1633-L1649">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1633–1649"><code>  // --- 敵の射撃 ---
+<figure class="code-block"><figcaption><span>game.html · L1635–1651</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1635-L1651">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1635–1651"><code>  // --- 敵の射撃 ---
   fireT -= dt;
   const maxEB = maxEnemyBullets();
   if (fireT &lt;= 0 &amp;&amp; bannerT &lt;= 0 &amp;&amp; aliveN &gt; 0) {

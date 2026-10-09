@@ -94,8 +94,8 @@ const source = html.match(/&lt;script&gt;([\s\S]*?)&lt;\/script&gt;/)[1];</code>
 <p>このテストは近い敵・遠い敵・敵弾・バリアを用意し、ボムを使った結果を調べています。近い敵だけが消え、敵弾が空になり、バリアが保持され、無敵時間が付くことを検証します。直後の再使用が拒否されることまで含めて仕様を表しています。</p>
 <h2 id="section-3">実行する</h2>
 <figure class="code-block"><figcaption>リポジトリのルートで実行</figcaption><pre tabindex="0"><code>node --test tests/*.test.cjs</code></pre></figure>
-<p>2つのファイルに合計41個のテストがあります。</p>
-<div class="table-wrap" tabindex="0" role="region" aria-label="ファイル・主な対象"><table><thead><tr><th scope="col">ファイル</th><th scope="col">主な対象</th></tr></thead><tbody><tr><th scope="row"><code>tests/beam-link.test.cjs</code></th><td>連結砲の取得（1個で1門）・射撃（1門につき画面内1発）・併用・バリアの素通り・持ち越し・画面端・ミスで2門減（9個）</td></tr><tr><th scope="row"><code>tests/arcade-features.test.cjs</code></th><td>レーザー（照射中の減速を含む）・ボム・ボス（レベルごとの攻撃）・コンボの段・ウェーブクリア後の自動進行・後半の射撃（狙い撃ち・突入敵の射撃・3方向弾・予告）・突入・入力・1UP・弾のすり抜け防止・連続ウェーブ・ドット文字（32個）</td></tr></tbody></table></div>
+<p>2つのファイルに合計42個のテストがあります。</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="ファイル・主な対象"><table><thead><tr><th scope="col">ファイル</th><th scope="col">主な対象</th></tr></thead><tbody><tr><th scope="row"><code>tests/beam-link.test.cjs</code></th><td>連結砲の取得（1個で1門）・射撃（1門につき画面内1発）・併用・バリアの素通り・持ち越し・画面端・ミスで2門減（9個）</td></tr><tr><th scope="row"><code>tests/arcade-features.test.cjs</code></th><td>レーザー（照射中の減速を含む）・ボム・ボス（レベルごとの攻撃）・コンボの段・ウェーブクリア後の自動進行・後半の射撃（狙い撃ち・突入敵の射撃・3方向弾・予告）・突入・入力・1UP・弾のすり抜け防止・連続ウェーブ・ミス時の円盤の効果音・ドット文字（33個）</td></tr></tbody></table></div>
 <h2 id="section-4">このテストでは分からないこと</h2>
 <p>Canvasの描画命令と音声出力を置き換えているため、実際の絵の崩れ、文字の見切れ、音の聴こえ方、描画速度は確認できません。ロジックのテストに加え、ブラウザで通常プレイ・ウェーブの切り替わり・ボス戦・ポーズを確認します。</p>
 <aside class="exercise"><strong>確かめてみよう</strong><p>連結砲やボムの上限、無敵時間を変更するときは、正常に使える場合に加え、上限到達時・資源不足・ポーズ中の結果も確認してください。</p>

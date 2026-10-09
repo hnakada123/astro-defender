@@ -76,7 +76,7 @@
 }</code></pre></figure>
 <p>ポインター移動は目標位置 <code>mouseX</code>、左右キーは <code>keys.left</code> と <code>keys.right</code>、射撃は <code>shooting</code> または <code>keys.fire</code> に記録します。実際の移動と弾の生成は、毎フレームの <code>updatePlay()</code> が担当します。</p>
 <h2 id="section-2">どちらの入力も速度を通して動かす</h2>
-<figure class="code-block"><figcaption><span>game.html · L1552–1561</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1552-L1561">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1552–1561"><code>  // 合体レーザーの照射中は反動でマウス・キーボードとも LASER_MOVE まで遅くなる。
+<figure class="code-block"><figcaption><span>game.html · L1554–1563</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1554-L1563">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1554–1563"><code>  // 合体レーザーの照射中は反動でマウス・キーボードとも LASER_MOVE まで遅くなる。
   const lasing = special.laserT &gt; 0, speed = 340;
   if (inputMode === &quot;mouse&quot;) {
     const target = clampPlayerX(mouseX), step = (lasing ? LASER_MOVE : speed * 2) * dt;
