@@ -1,4 +1,4 @@
-<img src="assets/icons/icon-192.png" width="128" height="128" alt="ASTRO DEFENDER icon">
+<p align="center"><img src="assets/icons/icon-192.png" width="128" height="128" alt="ASTRO DEFENDER icon"></p>
 
 # ASTRO DEFENDER — NEON ARCADE EDITION
 
