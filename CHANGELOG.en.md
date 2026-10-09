@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The game guide pages (Japanese and English) have a link in the header for posting on X
 - The game page has a link for posting on X next to the website link. It shares the game guide in the current display language
 - Share card images (Japanese and English, 1200 × 630) in assets/social/ now appear when the game guide pages are posted on X and similar sites, with Open Graph and X card tags on those pages
+- game.html has a page description and card tags too, so posting the game’s own URL shows the Japanese card image
 - The source code guide (Japanese and English) explains the website and X post links in chapter 01 and the post link’s language switching in chapter 19, with every code excerpt’s line numbers updated. The English whole-page screenshot was retaken
 
 ### Changed

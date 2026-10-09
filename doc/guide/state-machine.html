@@ -71,16 +71,16 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 03 画面と状態遷移</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 03 · 全23項目</p><h1>画面と状態遷移</h1><p class="lead">タイトル、プレイ、ミス、クリア、ゲームオーバーを状態で管理します。</p><p class="source-ref">主な参照先：state / stateT / setState / setPaused</p></header>
 <h2 id="section-1">画面名を1つの変数で表す</h2>
-<figure class="code-block"><figcaption><span>game.html · L818–820</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L818-L820">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L818–820"><code>let state = &quot;title&quot;;       // title | play | dying | clear | gameover
+<figure class="code-block"><figcaption><span>game.html · L832–834</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L832-L834">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L832–834"><code>let state = &quot;title&quot;;       // title | play | dying | clear | gameover
 let stateT = 0;
 let paused = false;</code></pre></figure>
 <div class="table-wrap" tabindex="0" role="region" aria-label="状態・起きること・次の状態"><table><thead><tr><th scope="col">状態</th><th scope="col">起きること</th><th scope="col">次の状態</th></tr></thead><tbody><tr><th scope="row"><code>title</code></th><td>開始入力を待つ</td><td><code>startGame()</code> で <code>play</code></td></tr><tr><th scope="row"><code>play</code></th><td>移動・射撃・衝突を処理</td><td>被弾で <code>dying</code>、全滅で <code>clear</code>、侵入で <code>gameover</code></td></tr><tr><th scope="row"><code>dying</code></th><td>ミスの演出を待つ</td><td>1.15秒を超えると残機に応じて復帰か終了</td></tr><tr><th scope="row"><code>clear</code></th><td>クリア演出を表示</td><td>1.6秒を超えると次のウェーブを作って <code>play</code></td></tr><tr><th scope="row"><code>gameover</code></th><td>結果を表示</td><td>0.6秒を超えてから開始入力で再挑戦</td></tr></tbody></table></div>
 <h2 id="section-2">状態の切り替えと経過時間</h2>
-<figure class="code-block"><figcaption><span>game.html · L853–856</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L853-L856">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L853–856"><code>function setState(s) {
+<figure class="code-block"><figcaption><span>game.html · L867–870</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L867-L870">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L867–870"><code>function setState(s) {
   state = s; stateT = 0;
   cvs.style.cursor = (s === &quot;play&quot; &amp;&amp; !paused) ? &quot;none&quot; : &quot;pointer&quot;;
 }</code></pre></figure>
-<figure class="code-block"><figcaption><span>game.html · L1772–1786</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1772-L1786">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1772–1786"><code>function update(dt) {
+<figure class="code-block"><figcaption><span>game.html · L1786–1800</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1786-L1800">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1786–1800"><code>function update(dt) {
   stateT += dt;
   updateCommon(dt);
   if (state === &quot;play&quot;) {

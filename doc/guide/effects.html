@@ -71,7 +71,7 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 17 演出と描画の高速化</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 17 · 全23項目</p><h1>演出と描画の高速化</h1><p class="lead">パーティクル、加算合成、ヒットストップと、画像を再利用する工夫を整理します。</p><p class="source-ref">主な参照先：spawnBurst / MAX_PARTICLES / updateCommon / removeAt / refreshFormLayer / refreshSky</p></header>
 <h2 id="section-1">短い寿命のオブジェクトで演出する</h2>
-<figure class="code-block"><figcaption><span>game.html · L1243–1256</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1243-L1256">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1243–1256"><code>// 画面内のパーティクルの上限。ボムで編隊をまとめて倒した時などに、描画が一度に重くなりすぎないようにする。
+<figure class="code-block"><figcaption><span>game.html · L1257–1270</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1257-L1270">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1257–1270"><code>// 画面内のパーティクルの上限。ボムで編隊をまとめて倒した時などに、描画が一度に重くなりすぎないようにする。
 // 爆発の破片は上限の 24 個手前で止め、自機の噴射と発射炎(多くて 20 個ほど)が上限に当たって消えないようにする。
 const MAX_PARTICLES = 400, BURST_PARTICLES = MAX_PARTICLES - 24;
 
@@ -88,7 +88,7 @@ function spawnBurst(x, y, color, n = 12, sp = 110) {
 <p>爆発はランダムな方向へ進む粒子の集まりです。<code>cos</code> と <code>sin</code> で角度から横・縦の速度を作り、毎フレーム座標を進め、<code>life</code> を減らします。衝撃波は半径が増える <code>rings</code>、得点表示は上へ浮く <code>popups</code> として管理します。</p>
 <p>ボムで編隊をまとめて倒すと、1体16個の粒子が一度に何百個も生まれます。そこで画面内の粒子は <code>MAX_PARTICLES</code>（400個）までとします。爆発の破片を作る <code>spawnBurst()</code> は、その24個手前の <code>BURST_PARTICLES</code>（376個）に届いたぶんだけ作る数を減らします。空けておいた分は、自分で <code>MAX_PARTICLES</code> を確かめてから足す自機の噴射と発射炎（多くて20個ほど）に回るので、まとめて倒した直後でも噴射が途切れません。ふだんのプレイで上限に届くことはなく、描画がいちばん重くなる瞬間だけを抑える安全弁です。</p>
 <h2 id="section-2">描く順序が不要なものは素早く削除する</h2>
-<figure class="code-block"><figcaption><span>game.html · L1536–1539</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1536-L1539">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1536–1539"><code>function removeAt(arr, i) {
+<figure class="code-block"><figcaption><span>game.html · L1550–1553</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1550-L1553">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1550–1553"><code>function removeAt(arr, i) {
   const last = arr.pop();
   if (i &lt; arr.length) arr[i] = last;
 }</code></pre></figure>

@@ -72,7 +72,7 @@
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 01 · 全23項目</p><h1>1ファイルの全体構成</h1><p class="lead">HTML・CSS・JavaScript の役割と、入力から描画までのデータの流れを整理します。</p><p class="source-ref">主な参照先：cvs / ctx / player / update / draw</p></header>
 <h2 id="section-1">画面の骨組みとゲーム本体</h2>
 <p>HTML はゲーム画面用の Canvas、必殺技と言語のボタン、操作説明、紹介ページと X への投稿のリンクを配置します。CSS は画面の大きさや周囲の装飾を担当します。自機・敵・弾は HTML 要素ではなく、JavaScript が Canvas に描く図形です。</p>
-<figure class="code-block"><figcaption><span>game.html · L52–65</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L52-L65">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L52–65"><code>&lt;div class=&quot;frame&quot;&gt;&lt;canvas id=&quot;game&quot; width=&quot;480&quot; height=&quot;640&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;
+<figure class="code-block"><figcaption><span>game.html · L66–79</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L66-L79">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L66–79"><code>&lt;div class=&quot;frame&quot;&gt;&lt;canvas id=&quot;game&quot; width=&quot;480&quot; height=&quot;640&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;
 &lt;div class=&quot;actions&quot;&gt;
   &lt;button id=&quot;laserButton&quot; type=&quot;button&quot; disabled&gt;Z 合体レーザー 0%&lt;/button&gt;
   &lt;button id=&quot;bombButton&quot; type=&quot;button&quot; disabled&gt;X ボム ×2&lt;/button&gt;
