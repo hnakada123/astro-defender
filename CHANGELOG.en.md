@@ -20,6 +20,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - On-screen particles are capped at 400 so mass kills don't spike the drawing cost. Explosion debris stops 24 short of the cap, so the ship's exhaust and muzzle flash never vanish against it
   - The full-screen clear each frame is skipped unless the screen is shaking (the opaque sky image already covers the canvas)
 - The source code guide (Japanese and English) now explains frame skipping on fast displays, barrier redraws, the kill-sound throttle, the particle cap and the pre-rendered laser lines, with every code excerpt’s line numbers updated
+- The game guide and the source code guide (Japanese and English) now share the game’s dark space and neon colors
+  - Body text sits in white cards with dark text; neon colors and the Silkscreen pixel font are kept for headings, labels and numbers
+  - Code excerpts show their original line numbers with syntax colors
+  - The chapter list sits beside the article on wide screens and folds away on narrow ones
 
 ### Fixed
 

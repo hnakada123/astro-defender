@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
+  <meta name="color-scheme" content="dark">
   <title>項目一覧 | ASTRO DEFENDER ソースコード解説</title>
   <meta name="description" content="ASTRO DEFENDER のソースコードを全23項目で解説。ゲームループ、Canvas、当たり判定、ボス戦、Web Audio、テストを実装に沿って学べます。">
   <link rel="stylesheet" href="guide.css">
@@ -36,20 +36,22 @@
   </div>
   <figure class="hero-figure"><a href="../game.html" aria-label="ASTRO DEFENDERをプレイ"><img src="img/play.png" alt="敵の編隊、弾、自機、バリアをCanvasに描いたASTRO DEFENDERのプレイ画面" width="960" height="1280"></a><figcaption>この画面の絵も音も、コードから生成。</figcaption></figure>
 </div></header>
-<div class="container"><ul class="meta" aria-label="解説の概要"><li>全23項目 / 4つの分野</li><li>対象ソース v3.0.0</li><li>HTML・CSS・JavaScript</li><li>Canvas 2D / Web Audio</li></ul></div>
+<div class="meta-band"><div class="container"><ul class="meta" aria-label="解説の概要"><li><span class="meta-label" aria-hidden="true">CHAPTERS</span>全23項目 / 4つの分野</li><li><span class="meta-label" aria-hidden="true">SOURCE</span>対象ソース v3.0.0</li><li><span class="meta-label" aria-hidden="true">LANGUAGE</span>HTML・CSS・JavaScript</li><li><span class="meta-label" aria-hidden="true">API</span>Canvas 2D / Web Audio</li></ul></div></div>
 
 <section class="container section" aria-labelledby="start-title">
+  <p class="kicker yellow" aria-hidden="true">START HERE</p>
   <div class="section-heading"><h2 id="start-title">まずは、この順番で。</h2><p>全体像をつかむための5項目</p></div>
   <p class="lead">ファイルの役割を知り、時間と状態の管理を押さえたら、入力から弾の処理へ。<br>「操作すると画面が変わる」までの流れを追えます。</p>
   <ol class="reading-path">
-<li><a href="guide/architecture.html"><span>01 / どこに何があるか</span><strong>全体構成 →</strong></a></li>
-<li><a href="guide/game-loop.html"><span>02 / 時間を進める</span><strong>ゲームループ →</strong></a></li>
-<li><a href="guide/state-machine.html"><span>03 / 処理を切り替える</span><strong>状態遷移 →</strong></a></li>
-<li><a href="guide/input.html"><span>08 / 操作を受け取る</span><strong>自機と入力 →</strong></a></li>
-<li><a href="guide/bullets.html"><span>09 / ルールを適用する</span><strong>弾と衝突 →</strong></a></li>
+<li><a href="guide/architecture.html"><span class="path-num" aria-hidden="true">01</span><span>どこに何があるか</span><strong>全体構成 →</strong></a></li>
+<li><a href="guide/game-loop.html"><span class="path-num" aria-hidden="true">02</span><span>時間を進める</span><strong>ゲームループ →</strong></a></li>
+<li><a href="guide/state-machine.html"><span class="path-num" aria-hidden="true">03</span><span>処理を切り替える</span><strong>状態遷移 →</strong></a></li>
+<li><a href="guide/input.html"><span class="path-num" aria-hidden="true">08</span><span>操作を受け取る</span><strong>自機と入力 →</strong></a></li>
+<li><a href="guide/bullets.html"><span class="path-num" aria-hidden="true">09</span><span>ルールを適用する</span><strong>弾と衝突 →</strong></a></li>
 </ol></section>
 
 <section class="container section" id="chapters" aria-labelledby="chapters-title">
+  <p class="kicker" aria-hidden="true">ALL CHAPTERS</p>
   <div class="section-heading"><h2 id="chapters-title">ソースコード解説</h2><p>気になる項目から読めます</p></div>
   <p class="lead">各ページに、仕組みの説明・ソースの抜粋・確認課題をまとめました。<br>関数名を手掛かりに、ゲーム本体のコードと行き来してください。</p>
   <nav class="category-nav" aria-label="解説の分野">
@@ -92,12 +94,14 @@
 </section>
 
 <section class="container section" aria-labelledby="flow-title">
+  <p class="kicker green" aria-hidden="true">HOW IT WORKS</p>
   <h2 id="flow-title">ひとつの操作が、画面になるまで。</h2>
   <p class="lead">ゲームは「入力」「状態の更新」「描画」を繰り返しています。<br>描かれた絵と、その裏で変わるデータを分けて読むのが出発点です。</p>
 <ol class="flow"><li><strong>1. 入力を記録</strong><small><code>keys</code> / <code>mouseX</code></small></li><li><strong>2. 状態を更新</strong><small><code>update(dt)</code></small></li><li><strong>3. 衝突と得点</strong><small><code>hit()</code> / <code>addScore()</code></small></li><li><strong>4. 画面を描画</strong><small><code>draw(t)</code></small></li></ol>
 <p><a href="guide/architecture.html">ファイル全体の構成を詳しく見る →</a></p></section>
 
 <section class="container section" aria-labelledby="resources-title">
+  <p class="kicker purple" aria-hidden="true">TRY IT YOURSELF</p>
   <h2 id="resources-title">手元のソースで確かめる</h2>
   <div class="resource-grid"><div><h3>ゲームとソースコード</h3><p>ゲーム本体はルートの <code>game.html</code> です。各解説のコード枠から、GitHubの該当箇所へ移動できます。</p><p><a href="../game.html">ゲームをプレイ</a> · <a href="../game.html" download="astro-defender.html">本体HTMLを保存</a></p></div>
   <div><h3>変更後はテストで確認</h3><p>リポジトリのルートで次を実行します。ゲームのルールをNode.jsの組み込みテスト機能で検証できます。</p><div class="code-block"><pre tabindex="0"><code>node --test tests/*.test.cjs</code></pre></div><a href="guide/tests.html">テストの仕組みを読む →</a></div></div>

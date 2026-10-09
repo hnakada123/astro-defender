@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
+  <meta name="color-scheme" content="dark">
   <title>文字列からドット絵を作る | ASTRO DEFENDER ソースコード解説</title>
   <meta name="description" content="X と . の配列を画像に変換し、2コマのスプライトとして再利用します。画面の英数字も同じ考え方のドット文字です。">
   <link rel="stylesheet" href="../guide.css">
@@ -89,7 +89,7 @@
 .XX.X.XX.
 XXXXXXXXX
 ..X...X..
-.X.....X.</textarea><label for="sprite-color">ドットの色</label><input id="sprite-color" type="color" value="#315c45"><canvas width="360" height="220" role="img" aria-label="入力したXの位置を塗ったドット絵">Xの位置を四角く塗って表示します。</canvas><output for="sprite-rows sprite-color" aria-live="polite"></output><noscript>操作にはJavaScriptが必要です。上のmakeSprite()で同じ仕組みを確認できます。</noscript></section><h2 id="section-2">データと描画処理を分ける</h2>
+.X.....X.</textarea><label for="sprite-color">ドットの色</label><input id="sprite-color" type="color" value="#7dff7a"><canvas width="360" height="220" role="img" aria-label="入力したXの位置を塗ったドット絵">Xの位置を四角く塗って表示します。</canvas><output for="sprite-rows sprite-color" aria-live="polite"></output><noscript>操作にはJavaScriptが必要です。上のmakeSprite()で同じ仕組みを確認できます。</noscript></section><h2 id="section-2">データと描画処理を分ける</h2>
 <p>敵の <code>TYPES</code> には得点 <code>pts</code>、色 <code>color</code>、2コマ分の <code>frames</code> をまとめています。起動時に <code>frames</code> を画像へ変換し、戦闘中は <code>form.anim</code> でどちらを描くか選びます。文字列を毎フレーム解析する必要はありません。</p>
 <figure class="code-block"><figcaption><span>game.html · L554–565</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L554-L565">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L554–565"><code>  a: { // トゲ型エイリアン
     pts: 30, color: &quot;#ff6ad5&quot;,

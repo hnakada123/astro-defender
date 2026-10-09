@@ -156,3 +156,7 @@ It uses no copyrighted material from any existing commercial game.
 [CC0 1.0 Universal](LICENSE) (effectively public domain).
 No credit and no permission required — anyone may use, modify, redistribute,
 or sell this work freely.
+
+The one exception is the Silkscreen font ([assets/fonts/](assets/fonts/)) used for labels on the guide pages.
+It is the work of The Silkscreen Project Authors and is distributed under the
+[SIL Open Font License 1.1](assets/fonts/OFL.txt), not CC0. The game itself (`game.html`) does not use it.

@@ -153,3 +153,7 @@ node --test tests/*.test.cjs
 
 [CC0 1.0 Universal](LICENSE)（パブリックドメイン相当）です。
 クレジット表記・許諾は一切不要で、誰でも自由に使用・改変・再配布・商用利用できます。
+
+ただし、紹介ページと解説ページのラベルに使っている Silkscreen フォント（[assets/fonts/](assets/fonts/)）は
+The Silkscreen Project Authors の著作物で、[SIL Open Font License 1.1](assets/fonts/OFL.txt) で配布されています。
+このフォントは CC0 の対象外です。ゲーム本体（`game.html`）では使っていません。

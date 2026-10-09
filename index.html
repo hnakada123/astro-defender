@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light">
+  <meta name="color-scheme" content="dark">
   <title>ASTRO DEFENDER — ゲーム紹介・遊び方・操作方法</title>
   <meta name="description" content="ASTRO DEFENDERはブラウザで遊べる無料のシューティングゲーム。ゲーム画面、遊び方、操作方法、パワーアップ、合体レーザーとボムを紹介します。">
   <link rel="stylesheet" href="doc/guide.css">
@@ -26,13 +26,15 @@
     <a href="#controls">操作方法</a>
     <a href="doc/source.html">ソースコード解説</a>
     <a href="doc/index.en.html" lang="en" hreflang="en">English</a>
+    <a href="game.html">ゲームをプレイ</a>
   </nav>
 </div></header>
 <main id="main">
 <header class="game-hero"><div class="container hero-inner">
   <div>
     <p class="eyebrow">ブラウザで遊べるネオンアーケード</p>
-    <h1 class="game-title">ASTRO<br>DEFENDER</h1>
+    <h1 class="game-title"><span class="logo-astro">ASTRO</span> <span class="logo-defender">DEFENDER</span></h1>
+    <p class="edition">— NEON ARCADE EDITION —</p>
     <p class="game-tagline">撃って、つなげて、強くなる。</p>
     <p class="lead">迫る編隊を撃ち落とし、カプセルで自機を強化。<br>連結ビーム砲と合体レーザーを武器に、<br>5ウェーブごとに現れる大型戦艦へ挑もう。</p>
     <div class="actions"><a class="button" href="game.html">ゲームをプレイ →</a><a class="button secondary" href="#how-to">遊び方を見る</a></div>
@@ -40,32 +42,34 @@
   </div>
   <figure class="hero-figure"><a href="game.html" aria-label="ゲームをプレイ"><img src="doc/img/play.png" alt="ネオンの敵編隊に向けて自機が射撃するプレイ画面。緑のバリアとレーザーゲージ、スコアが表示されている。" width="960" height="1280"></a><figcaption>マウスを動かして移動、クリック長押しで連射。</figcaption></figure>
 </div></header>
-<div class="container"><ul class="meta" aria-label="ゲームの概要"><li>ブラウザでそのままプレイ</li><li>日本語・英語に対応</li><li>5ウェーブごとにボス戦</li><li>v3.0.0 · CC0</li></ul></div>
+<div class="meta-band"><div class="container"><ul class="meta" aria-label="ゲームの概要"><li><span class="meta-label" aria-hidden="true">PLAY</span>ブラウザでそのままプレイ</li><li><span class="meta-label" aria-hidden="true">LANGUAGE</span>日本語・英語に対応</li><li><span class="meta-label" aria-hidden="true">BOSS</span>5ウェーブごとにボス戦</li><li><span class="meta-label" aria-hidden="true">VERSION</span>v3.0.0 · CC0</li></ul></div></div>
 
 <section class="container section" id="screenshots" aria-labelledby="screenshots-title">
+  <p class="kicker" aria-hidden="true">01 — SCREENS</p>
   <div class="section-heading"><h2 id="screenshots-title">ゲーム画面で見る、3つの見どころ</h2><p>画像を選ぶと拡大できます</p></div>
   <p class="lead">編隊との撃ち合いから、ボムでの切り返し、ボスとの攻防まで。ウェーブを進めるほど戦い方が広がります。</p>
   <div class="gallery">
-<figure class="screen-card"><a href="doc/img/laser.png"><img src="doc/img/laser.png" alt="自機から画面上方へ太い合体レーザーが伸びている。" width="960" height="1280" loading="lazy"></a><figcaption><h3>連結砲と合体レーザー</h3><p>連結ビーム砲で火力を増やし、ゲージが満タンになったらレーザーを発射。射線上の敵と敵弾をまとめて消し去ります。</p></figcaption></figure>
-<figure class="screen-card"><a href="doc/img/bosslaser.png"><img src="doc/img/bosslaser.png" alt="大型戦艦と、赤く表示されたレーザーの攻撃範囲。" width="960" height="1280" loading="lazy"></a><figcaption><h3>5ウェーブごとの大型戦艦</h3><p>左右の砲台を壊して中央コアを攻撃。赤く示されたレーザーの予告位置から離れ、反撃の機会を狙います。</p></figcaption></figure>
-<figure class="screen-card"><a href="doc/img/bomb.png"><img src="doc/img/bomb.png" alt="自機を中心に広がる黄色い衝撃波で、周囲の敵がまとめて撃破されている。" width="960" height="1280" loading="lazy"></a><figcaption><h3>緊急回避ボムで一掃</h3><p>画面の敵弾を消し、周囲の敵をまとめて撃破。使用後の短い無敵時間で、追い詰められた場面を立て直せます。</p></figcaption></figure>
+<figure class="screen-card"><a href="doc/img/laser.png"><img src="doc/img/laser.png" alt="自機から画面上方へ太い合体レーザーが伸びている。" width="960" height="1280" loading="lazy"></a><figcaption><span class="tag purple">LASER</span><h3>連結砲と合体レーザー</h3><p>連結ビーム砲で火力を増やし、ゲージが満タンになったらレーザーを発射。射線上の敵と敵弾をまとめて消し去ります。</p></figcaption></figure>
+<figure class="screen-card"><a href="doc/img/bosslaser.png"><img src="doc/img/bosslaser.png" alt="大型戦艦と、赤く表示されたレーザーの攻撃範囲。" width="960" height="1280" loading="lazy"></a><figcaption><span class="tag pink">BOSS</span><h3>5ウェーブごとの大型戦艦</h3><p>左右の砲台を壊して中央コアを攻撃。赤く示されたレーザーの予告位置から離れ、反撃の機会を狙います。</p></figcaption></figure>
+<figure class="screen-card"><a href="doc/img/bomb.png"><img src="doc/img/bomb.png" alt="自機を中心に広がる黄色い衝撃波で、周囲の敵がまとめて撃破されている。" width="960" height="1280" loading="lazy"></a><figcaption><span class="tag yellow">BOMB</span><h3>緊急回避ボムで一掃</h3><p>画面の敵弾を消し、周囲の敵をまとめて撃破。使用後の短い無敵時間で、追い詰められた場面を立て直せます。</p></figcaption></figure>
 </div></section>
 
 <section class="container section" id="how-to" aria-labelledby="how-to-title">
+  <p class="kicker yellow" aria-hidden="true">02 — HOW TO PLAY</p>
   <h2 id="how-to-title">まずは、1ウェーブをクリアしよう</h2>
   <p class="lead">基本は「左右へ動く」「撃つ」「避ける」の3つ。操作に慣れたら、連続撃破やカプセルの回収も狙ってみましょう。</p>
   <ol class="play-steps">
-<li><span class="step-number">01</span><h3>ゲームを開いてスタート</h3><p>「ゲームをプレイ」から画面を開き、タイトル画面をクリック。スペースキーまたはEnterキーでも始められます。</p></li>
-<li><span class="step-number">02</span><h3>左右に動いて、撃って、避ける</h3><p>マウスを左右に動かして自機を操作し、クリックを押し続けて射撃。敵弾や突入してくる敵を避けながら、編隊を減らします。</p></li>
-<li><span class="step-number">03</span><h3>全滅させたら、次のウェーブへ</h3><p>敵をすべて倒すとウェーブクリア。すぐに次のウェーブが始まり、5ウェーブごとに大型戦艦が現れます。</p></li>
+<li><span class="step-number">STEP 01</span><h3>ゲームを開いてスタート</h3><p>「ゲームをプレイ」から画面を開き、タイトル画面をクリック。スペースキーまたはEnterキーでも始められます。</p></li>
+<li><span class="step-number">STEP 02</span><h3>左右に動いて、撃って、避ける</h3><p>マウスを左右に動かして自機を操作し、クリックを押し続けて射撃。敵弾や突入してくる敵を避けながら、編隊を減らします。</p></li>
+<li><span class="step-number">STEP 03</span><h3>全滅させたら、次のウェーブへ</h3><p>敵をすべて倒すとウェーブクリア。すぐに次のウェーブが始まり、5ウェーブごとに大型戦艦が現れます。</p></li>
 </ol><div class="rule-grid">
-  <section class="rules"><h3>覚えておきたいルール</h3><ul>
+  <section class="rules"><span class="tag green">RULES</span><h3>覚えておきたいルール</h3><ul>
 <li>残機は3からスタート。敵弾や突入する敵に当たるとミスになり、残機がなくなるとゲームオーバーです。</li>
 <li>編隊が地上まで侵入すると、残機があってもゲームオーバーになります。</li>
 <li>緑のバリアは敵弾を防ぎ、自機の弾は通り抜けます。撃たれると崩れ、次のウェーブで復元します。</li>
 <li>5ウェーブごとに大型戦艦が出現。左右の砲台を破壊してから、中央コアを撃破します。戦艦は登場するたびにレベルが上がり、2本のレーザーでの挟み撃ちや扇状の狙い撃ちが加わります。</li>
 <li>ウェーブ6からは自機を狙う赤い弾、11からは撃ってくる突入敵、16からは編隊の3方向弾が加わります。始まる前のウェーブクリア画面で予告されます。</li>
-</ul></section><section class="rules"><h3>スコアを伸ばすコツ</h3><ul>
+</ul></section><section class="rules"><span class="tag yellow">SCORE</span><h3>スコアを伸ばすコツ</h3><ul>
 <li>2.2秒以内に撃破をつなぐとコンボが継続。倍率は上の段ほど多くつなぐ必要があり、42体連続で最大×8。ウェーブごとに数え直します。</li>
 <li>ノーダメージでウェーブをクリアすると、パーフェクトボーナスがもらえます。</li>
 <li>10000点で残機が1つ増え、以降は20000点ごとに増えます。残機の上限は5です。</li>
@@ -73,6 +77,7 @@
 </ul></section></div></section>
 
 <section class="container section" id="controls" aria-labelledby="controls-title">
+  <p class="kicker green" aria-hidden="true">03 — CONTROLS</p>
   <h2 id="controls-title">操作方法</h2>
   <p class="lead">マウス中心でも、キーボード中心でも遊べます。レーザーとボムには、ゲーム画面の下に専用ボタンもあります。</p>
   <div class="table-wrap controls-table" tabindex="0" role="region" aria-label="ゲームの操作一覧"><table>
@@ -90,6 +95,7 @@
 </section>
 
 <section class="container section" id="powerups" aria-labelledby="powerups-title">
+  <p class="kicker pink" aria-hidden="true">04 — POWER-UPS</p>
   <h2 id="powerups-title">カプセルを拾って、ピンチを切り抜ける</h2>
   <p class="lead">倒した敵が落とすカプセルを拾うと、自機がパワーアップ。4種類の効果は組み合わせて使えます。</p>
   <div class="powerup-grid">
@@ -103,6 +109,7 @@
 </div></section>
 
 <section class="container section" id="faq" aria-labelledby="faq-title">
+  <p class="kicker purple" aria-hidden="true">05 — FAQ</p>
   <h2 id="faq-title">よくある質問</h2><div class="faq-list">
 <details><summary>インストールや登録は必要ですか？</summary><p>必要ありません。「ゲームをプレイ」からブラウザで開くだけで始められます。ゲームは無料です。</p></details>
 <details><summary>音が鳴らないときは？</summary><p>ゲーム画面をクリックするか、スペースキーで開始してください。ミュートになっている場合はMキーで切り替えられます。ブラウザのタブや端末の音量設定も確認してください。</p></details>
@@ -112,7 +119,7 @@
 
 <section class="container section" id="source-code" aria-labelledby="source-title">
   <div class="source-callout"><div><p class="eyebrow">SOURCE CODE GUIDE</p><h2 id="source-title">ゲームの仕組みも、読んでみよう</h2><p>ゲームループ、当たり判定、敵の動き、音の合成まで。<br>全23項目のソースコード解説を、専用ページにまとめています。</p></div><a class="button secondary" href="doc/source.html">ソースコード解説 →</a></div>
-  <div class="play-again"><p>操作が分かったら、最初のウェーブへ。</p><a class="button" href="game.html">ゲームをプレイ →</a></div>
+  <div class="play-again"><p class="wave-sign" aria-hidden="true">WAVE 1</p><p>操作が分かったら、最初のウェーブへ。</p><a class="button" href="game.html">ゲームをプレイ →</a></div>
 </section>
 </main>
 <footer class="site-footer"><div class="container footer-inner">
