@@ -189,6 +189,26 @@ test("a miss keeps bombs and laser charge, while restarting resets special resou
   assert.equal(run("special.bombs"), 2);
 });
 
+test("the saucer hum stops during a miss, stays off in a hidden tab, and resumes when play continues", () => {
+  const run = game();
+  run(`
+    var hum = false;
+    saucerSoundStart = () => { hum = true; }; saucerSoundStop = () => { hum = false; };
+    saucer = { x: 100, y: 62, w: 32, h: 14, vx: 100 }; saucerSoundStart();
+    hitPlayer(); document.hidden = true;
+  `);
+  run.event("visibilitychange");
+  assert.equal(run("state"), "dying");
+  assert.equal(run("hum"), false);
+  run("document.hidden = false; setPaused(true); setPaused(false)");
+  assert.equal(run("hum"), false);
+  run("update(1.2)");
+  assert.equal(run("state"), "play");
+  assert.equal(run("hum"), true);
+  run("saucer = null; hitPlayer(); update(1.2)");
+  assert.equal(run("hum"), false);
+});
+
 test("divers, zigzags, and flankers warn before moving and return without ending the wave", () => {
   for (const mode of ["dive", "zigzag", "flank"]) {
     const run = game();

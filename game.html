@@ -1484,6 +1484,8 @@ function hitPlayer() {
   spawnBurst(pr.x + 13, pr.y + 8, "#ff9a5c", 18, 110);
   spawnRing(pr.x + 13, pr.y + 8, "#ff4d6d", 260, 0.5);
   sfx.player();
+  // ミス演出中は円盤も止まるので音も止め、プレイに戻る時に鳴らし直す(タブを隠しても鳴り続けないように)。
+  saucerSoundStop();
   shake = 0.5;
   player.alive = false;
   active.beam = Math.max(0, active.beam - BEAM_LOSS);
@@ -1751,7 +1753,7 @@ function update(dt) {
     updatePlay(dt);
   } else if (state === "dying") {
     if (stateT > 1.15) {
-      if (lives > 0) { player.alive = true; player.inv = 2; setState("play"); }
+      if (lives > 0) { player.alive = true; player.inv = 2; setState("play"); if (saucer) saucerSoundStart(); }
       else gameOver();
     }
   } else if (state === "clear") {

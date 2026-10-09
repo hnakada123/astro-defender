@@ -21,6 +21,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - The full-screen clear each frame is skipped unless the screen is shaking (the opaque sky image already covers the canvas)
 - The source code guide (Japanese and English) now explains frame skipping on fast displays, barrier redraws, the kill-sound throttle, the particle cap and the pre-rendered laser lines, with every code excerpt’s line numbers updated
 
+### Fixed
+
+- Hiding the tab right after a miss while the bonus saucer was on screen left the saucer’s hum playing indefinitely. The hum now stops during the miss sequence and resumes when play continues (this also fixes the saucer flying silently after pausing and resuming during a miss)
+
 ## [3.0.0] - 2026-10-09
 
 The link laser, combos and linked cannons were strong enough to flatten the late game. This release reins them in and adds new attacks as the waves and bosses advance. Weapons and enemy attacks change how the game plays, so the major version goes up.
