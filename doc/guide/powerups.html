@@ -69,23 +69,23 @@
 </nav></details>
 <main id="main" class="doc-main">
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 12 カプセルと連結ビーム砲</nav>
-<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 12 · 全23項目</p><h1>カプセルと連結ビーム砲</h1><p class="lead">時間制限のある強化と、シールド・連結砲のような回数で管理する効果を分けます。</p><p class="source-ref">主な参照先：PU_DEFS / maybeDrop / applyPU / active / BEAM_OFFSETS / BEAM_LOSS</p></header>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 12 · 全23項目</p><h1>カプセルと連結ビーム砲</h1><p class="lead">時間制限のある強化と、シールド・連結砲のような回数で管理する効果を分けます。</p><p class="source-ref">主な参照先：PU_DEFS / maybeDrop / applyPU / active / BEAM_OFFSETS / BEAM_LOSS / SPARE_BONUS</p></header>
 <h2 id="section-1">4種類の効果をデータで定義する</h2>
-<figure class="code-block"><figcaption><span>game.html · L613–618</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L613-L618">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L613–618"><code>const PU_DEFS = {
+<figure class="code-block"><figcaption><span>game.html · L643–648</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L643-L648">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L643–648"><code>const PU_DEFS = {
   wide: { label: &quot;W&quot;, color: &quot;#61e8ff&quot;, dur: 8, name: &quot;3-WAY!&quot; },
   rapid: { label: &quot;R&quot;, color: &quot;#ffe066&quot;, dur: 8, name: &quot;RAPID!&quot; },
   shield: { label: &quot;S&quot;, color: &quot;#7dff7a&quot;, dur: 0, name: &quot;SHIELD!&quot; },
   beam: { label: &quot;B&quot;, color: BEAM_COLOR, dur: 0, name: &quot;BEAM LINK&quot;, max: BEAM_OFFSETS.length },
 };</code></pre></figure>
-<div class="table-wrap" tabindex="0" role="region" aria-label="カプセル・状態の持ち方・効果"><table><thead><tr><th scope="col">カプセル</th><th scope="col">状態の持ち方</th><th scope="col">効果</th></tr></thead><tbody><tr><th scope="row">W</th><td><code>active.wide</code> に残り秒数</td><td>8秒間、3方向へ射撃</td></tr><tr><th scope="row">R</th><td><code>active.rapid</code> に残り秒数</td><td>8秒間、射撃間隔を短縮</td></tr><tr><th scope="row">S</th><td><code>active.shield</code> に有無</td><td>ダメージを1回防ぐ</td></tr><tr><th scope="row">B</th><td><code>active.beam</code> に砲の数</td><td>1回の取得で1門ずつ左右交互に増加、最大4門。ミスで2門減る</td></tr></tbody></table></div>
+<div class="table-wrap" tabindex="0" role="region" aria-label="カプセル・状態の持ち方・効果"><table><thead><tr><th scope="col">カプセル</th><th scope="col">状態の持ち方</th><th scope="col">効果</th></tr></thead><tbody><tr><th scope="row">W</th><td><code>active.wide</code> に残り秒数</td><td>8秒間、3方向へ射撃</td></tr><tr><th scope="row">R</th><td><code>active.rapid</code> に残り秒数</td><td>8秒間、射撃間隔を短縮</td></tr><tr><th scope="row">S</th><td><code>active.shield</code> に有無</td><td>ダメージを1回防ぐ</td></tr><tr><th scope="row">B</th><td><code>active.beam</code> に砲の数</td><td>1回の取得で1門ずつ左右交互に増加、最大4門。ビームは1門につき画面内1発まで。ミスで2門減る</td></tr></tbody></table></div>
 <h2 id="section-2">落とす、拾う</h2>
-<figure class="code-block"><figcaption><span>game.html · L788–792</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L788-L792">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L788–792"><code>function maybeDrop(x, y) {
+<figure class="code-block"><figcaption><span>game.html · L820–824</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L820-L824">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L820–824"><code>function maybeDrop(x, y) {
   if (Math.random() &gt; 0.08 || powerups.length &gt;= 2) return;
   const ks = Object.keys(PU_DEFS);
   powerups.push({ x, y, type: ks[(Math.random() * ks.length) | 0], ph: Math.random() * 6.28 });
 }</code></pre></figure>
 <p>通常の敵の撃破時に、約8%の確率でカプセルを作ります。同時に存在できるのは2個までです。カプセルは毎秒62 pxで落下し、自機より少し大きい回収用の四角形と重なると <code>applyPU()</code> が効果を反映します。</p>
-<figure class="code-block"><figcaption><span>game.html · L1395–1405</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1395-L1405">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1395–1405"><code>  // --- パワーアップカプセル ---
+<figure class="code-block"><figcaption><span>game.html · L1507–1517</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1507-L1517">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1507–1517"><code>  // --- パワーアップカプセル ---
   const prInf = { x: player.x - 17, y: PLAYER_Y - 4, w: 34, h: 24 };
   for (let i = powerups.length - 1; i &gt;= 0; i--) {
     const u = powerups[i];
@@ -98,26 +98,50 @@
   }</code></pre></figure>
 <p>カプセルを自機へ引き寄せる処理はないので、拾うには落ちてくる位置へ自機を動かします。地面の高さ <code>GROUND_Y</code> を越えたカプセルは消えます。回収できるのは自機が生存している間だけです。ループの途中で <code>splice</code> により要素を取り除くため、配列の末尾から先頭へ向かって回しています。</p>
 <h2 id="section-3">連結砲は時間で消えない</h2>
-<figure class="code-block"><figcaption><span>game.html · L794–808</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L794-L808">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L794–808"><code>function applyPU(type) {
+<figure class="code-block"><figcaption><span>game.html · L826–844</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L826-L844">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L826–844"><code>function applyPU(type) {
   const d = PU_DEFS[type];
   let name = d.name;
-  if (type === &quot;shield&quot;) active.shield = 1;
-  else if (type === &quot;beam&quot;) {
+  if (type === &quot;shield&quot;) {
+    // すでにシールドがあるときは効果が重ならないので、代わりに得点にする。
+    if (active.shield &gt; 0) { addScore(SPARE_BONUS); name = `SHIELD +${SPARE_BONUS}`; }
+    active.shield = 1;
+  } else if (type === &quot;beam&quot;) {
     const wasMax = active.beam === d.max;
     active.beam = Math.min(d.max, active.beam + 1);
     player.x = clampPlayerX(player.x);
-    name = wasMax ? &quot;BEAM LINK MAX!&quot; : `${d.name} ×${active.beam}!`;
+    name = `${d.name} ×${active.beam}!`;
+    if (wasMax) { addScore(SPARE_BONUS); name = `BEAM LINK MAX! +${SPARE_BONUS}`; } // 4 門そろった後も同じく得点に
     spawnRing(player.x, PLAYER_Y + 8, d.color, 180, 0.35);
   }
   else active[type] = d.dur;
   popup(player.x, PLAYER_Y - 24, name, d.color, 13);
   sfx.pickup();
 }</code></pre></figure>
-<p>Bカプセルは1個につき連結砲を1門追加し、<code>d.max</code>、つまり <code>BEAM_OFFSETS.length</code> の4門で止めます。最大の状態で取ると「BEAM LINK MAX!」、それ以外は「BEAM LINK ×3!」のように現在の門数を表示します。門数が増えると外側の砲まで画面内に収める必要があるため、<code>clampPlayerX()</code> で自機の位置を補正し直します。</p>
-<figure class="code-block"><figcaption><span>game.html · L604–605</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L604-L605">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L604–605"><code>const BEAM_OFFSETS = [-24, 24, -42, 42]; // 連結砲の位置。カプセル 1 個で 1 門ずつ、この順に左右交互に増える
-const BEAM_LOSS = 2;                       // ミス 1 回で失う連結砲の数</code></pre></figure>
-<p>砲の位置は <code>BEAM_OFFSETS</code> の先頭から順に使います。1門目は左 (-24)、2門目は右 (+24)、3門目はさらに外側の左 (-42)、4門目は右 (+42) なので、取るたびに左右交互に増えていきます。各砲は通常ショットと同じタイミングで縦長の弾を1発ずつ撃ちます。この弾は敵に当たると消える普通の弾で、貫通はしません。また、通常弾の同時発射数の上限には数えません。</p>
-<figure class="code-block"><figcaption><span>game.html · L1217–1217</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1217-L1217">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1217–1217"><code>  active.beam = Math.max(0, active.beam - BEAM_LOSS);</code></pre></figure>
+<p>Bカプセルは1個につき連結砲を1門追加し、<code>d.max</code>、つまり <code>BEAM_OFFSETS.length</code> の4門で止めます。取るたびに「BEAM LINK ×3!」のように現在の門数を表示します。門数が増えると外側の砲まで画面内に収める必要があるため、<code>clampPlayerX()</code> で自機の位置を補正し直します。</p>
+<p>シールドがあるときのS、4門そろった後のBは、取っても効果が増えません。拾い損にならないよう、代わりに <code>SPARE_BONUS</code> の500点を加え、「SHIELD +500」「BEAM LINK MAX! +500」と表示します。</p>
+<figure class="code-block"><figcaption><span>game.html · L622–624</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L622-L624">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L622–624"><code>const BEAM_OFFSETS = [-24, 24, -42, 42]; // 連結砲の位置。カプセル 1 個で 1 門ずつ、この順に左右交互に増える
+const BEAM_LOSS = 2;                       // ミス 1 回で失う連結砲の数
+const SPARE_BONUS = 500;                   // 効果のないカプセル(シールド中の S、4 門そろった後の B)を拾ったときの得点</code></pre></figure>
+<p>砲の位置は <code>BEAM_OFFSETS</code> の先頭から順に使います。1門目は左 (-24)、2門目は右 (+24)、3門目はさらに外側の左 (-42)、4門目は右 (+42) なので、取るたびに左右交互に増えていきます。各砲は通常ショットと同じタイミングで縦長の弾を1発ずつ撃ちます。この弾は敵に当たると消える普通の弾で、貫通はしません。</p>
+<figure class="code-block"><figcaption><span>game.html · L1406–1422</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1406-L1422">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1406–1422"><code>  // ビームは通常弾の上限に数えず、共通のクールダウンで同時発射する。
+  // ただし 1 門につき画面内 1 発までで、前のビームが消えるまでその砲は撃たない(4 門そろっても火力が際限なく増えない)。
+  let normalBulletCount = 0, beamSlots = 0;
+  for (const p of pBullets) {
+    if (p.beam) beamSlots |= 1 &lt;&lt; p.slot;
+    else normalBulletCount++;
+  }
+  if ((shooting || keys.fire) &amp;&amp; player.cool &lt;= 0 &amp;&amp; normalBulletCount &lt; maxB) {
+    const mk = vx =&gt; pBullets.push({ x: player.x - 1, y: PLAYER_Y - SHOT_H, w: 2, h: SHOT_H, vx });
+    mk(0);
+    if (active.wide &gt; 0) { mk(-70); mk(70); }
+    for (let i = 0; i &lt; active.beam; i++) {
+      if (beamSlots &amp; (1 &lt;&lt; i)) continue;
+      const x = player.x + BEAM_OFFSETS[i];
+      pBullets.push({ x: x - 2, y: PLAYER_Y - 32, w: 4, h: 28, vx: 0, beam: true, slot: i });
+      spawnBurst(x, PLAYER_Y - 4, BEAM_COLOR, 3, 55);
+    }</code></pre></figure>
+<p>ビームは通常弾の同時発射数の上限には数えません。そのかわり、1門につき画面内に1発までです。発射前に <code>pBullets</code> を1回だけ見て、通常弾の数と、ビームが飛んでいる砲の番号 (<code>slot</code>) をビット (<code>beamSlots</code>) に記録します。ビットが立っている砲は、前の弾が敵に当たるか画面の外へ出るまで撃ちません。近くの敵ほど弾がすぐ消えるので連射が速くなり、4門そろっても火力が際限なく増えることはありません。</p>
+<figure class="code-block"><figcaption><span>game.html · L1328–1328</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1328-L1328">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1328–1328"><code>  active.beam = Math.max(0, active.beam - BEAM_LOSS);</code></pre></figure>
 <p>連結砲はW・R・Sと併用でき、次のウェーブにも持ち越せます。シールドで防げなかったミスでは <code>BEAM_LOSS</code> の2門だけを失い、残りは復帰後もそのまま使えます。4門なら2門に、1門なら0門になります。シールドが攻撃を防いだ場合は1門も失いません。</p>
 <aside class="note"><strong>読み解くポイント</strong><p><code>active</code> は取得中の効果をまとめたオブジェクトです。W・Rは残り秒数、Sは有無、Bは門数と、キーごとに値の意味が違います。秒数は <code>updatePlay()</code> で毎フレーム減らし、0になれば効果が切れます。連結砲は門数を数値で持つので、「1門増やす」「2門減らす」をそれぞれ足し算と引き算1つで書けます。</p>
 </aside>

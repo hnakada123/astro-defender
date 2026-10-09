@@ -71,7 +71,7 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 17 演出と描画の高速化</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 17 · 全23項目</p><h1>演出と描画の高速化</h1><p class="lead">パーティクル、加算合成、ヒットストップと、画像を再利用する工夫を整理します。</p><p class="source-ref">主な参照先：spawnBurst / updateCommon / removeAt / refreshFormLayer / refreshSky</p></header>
 <h2 id="section-1">短い寿命のオブジェクトで演出する</h2>
-<figure class="code-block"><figcaption><span>game.html · L994–1002</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L994-L1002">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L994–1002"><code>function spawnBurst(x, y, color, n = 12, sp = 110) {
+<figure class="code-block"><figcaption><span>game.html · L1071–1079</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1071-L1079">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1071–1079"><code>function spawnBurst(x, y, color, n = 12, sp = 110) {
   for (let i = 0; i &lt; n; i++) {
     const a = Math.random() * Math.PI * 2, v = sp * rand(0.35, 1);
     particles.push({
@@ -82,7 +82,7 @@
 }</code></pre></figure>
 <p>爆発はランダムな方向へ進む粒子の集まりです。<code>cos</code> と <code>sin</code> で角度から横・縦の速度を作り、毎フレーム座標を進め、<code>life</code> を減らします。衝撃波は半径が増える <code>rings</code>、得点表示は上へ浮く <code>popups</code> として管理します。</p>
 <h2 id="section-2">描く順序が不要なものは素早く削除する</h2>
-<figure class="code-block"><figcaption><span>game.html · L1239–1242</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1239-L1242">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1239–1242"><code>function removeAt(arr, i) {
+<figure class="code-block"><figcaption><span>game.html · L1350–1353</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1350-L1353">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1350–1353"><code>function removeAt(arr, i) {
   const last = arr.pop();
   if (i &lt; arr.length) arr[i] = last;
 }</code></pre></figure>

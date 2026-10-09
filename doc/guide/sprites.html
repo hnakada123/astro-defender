@@ -71,7 +71,7 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 05 文字列からドット絵を作る</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 05 · 全23項目</p><h1>文字列からドット絵を作る</h1><p class="lead">X と . の配列を画像に変換し、2コマのスプライトとして再利用します。</p><p class="source-ref">主な参照先：makeSprite / TYPES / withGlow / prerender</p></header>
 <h2 id="section-1">X のマスを塗るだけで画像になる</h2>
-<figure class="code-block"><figcaption><span>game.html · L322–332</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L322-L332">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L322–332"><code>function makeSprite(rows, color, scale = 2) {
+<figure class="code-block"><figcaption><span>game.html · L334–344</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L334-L344">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L334–344"><code>function makeSprite(rows, color, scale = 2) {
   const c = document.createElement(&quot;canvas&quot;);
   c.width = rows[0].length * scale;
   c.height = rows.length * scale;
@@ -91,7 +91,7 @@ XXXXXXXXX
 ..X...X..
 .X.....X.</textarea><label for="sprite-color">ドットの色</label><input id="sprite-color" type="color" value="#315c45"><canvas width="360" height="220" role="img" aria-label="入力したXの位置を塗ったドット絵">Xの位置を四角く塗って表示します。</canvas><output for="sprite-rows sprite-color" aria-live="polite"></output><noscript>操作にはJavaScriptが必要です。上のmakeSprite()で同じ仕組みを確認できます。</noscript></section><h2 id="section-2">データと描画処理を分ける</h2>
 <p>敵の <code>TYPES</code> には得点 <code>pts</code>、色 <code>color</code>、2コマ分の <code>frames</code> をまとめています。起動時に <code>frames</code> を画像へ変換し、戦闘中は <code>form.anim</code> でどちらを描くか選びます。文字列を毎フレーム解析する必要はありません。</p>
-<figure class="code-block"><figcaption><span>game.html · L404–415</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L404-L415">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L404–415"><code>  a: { // トゲ型エイリアン
+<figure class="code-block"><figcaption><span>game.html · L416–427</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L416-L427">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L416–427"><code>  a: { // トゲ型エイリアン
     pts: 30, color: &quot;#ff6ad5&quot;,
     frames: [[
       &quot;.X..XX..X.&quot;,

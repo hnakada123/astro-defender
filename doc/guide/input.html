@@ -69,26 +69,28 @@
 </nav></details>
 <main id="main" class="doc-main">
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 08 自機の移動と入力</nav>
-<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 08 · 全23項目</p><h1>自機の移動と入力</h1><p class="lead">ポインターとキーボードを共通の状態にまとめ、移動速度と連射を制御します。</p><p class="source-ref">主な参照先：keys / mouseX / inputMode / releaseControls / updatePlay</p></header>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 08 · 全23項目</p><h1>自機の移動と入力</h1><p class="lead">ポインターとキーボードを共通の状態にまとめ、移動速度と連射を制御します。</p><p class="source-ref">主な参照先：keys / mouseX / inputMode / releaseControls / updatePlay / LASER_MOVE</p></header>
 <h2 id="section-1">イベントでは操作を覚えておく</h2>
-<figure class="code-block"><figcaption><span>game.html · L1019–1021</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1019-L1021">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1019–1021"><code>function releaseControls() {
+<figure class="code-block"><figcaption><span>game.html · L1096–1098</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1096-L1098">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1096–1098"><code>function releaseControls() {
   shooting = false; keys.left = false; keys.right = false; keys.fire = false;
 }</code></pre></figure>
 <p>ポインター移動は目標位置 <code>mouseX</code>、左右キーは <code>keys.left</code> と <code>keys.right</code>、射撃は <code>shooting</code> または <code>keys.fire</code> に記録します。実際の移動と弾の生成は、毎フレームの <code>updatePlay()</code> が担当します。</p>
 <h2 id="section-2">どちらの入力も速度を通して動かす</h2>
-<figure class="code-block"><figcaption><span>game.html · L1280–1288</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1280-L1288">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1280–1288"><code>  const speed = 340;
+<figure class="code-block"><figcaption><span>game.html · L1391–1400</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1391-L1400">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1391–1400"><code>  // 合体レーザーの照射中は反動でマウス・キーボードとも LASER_MOVE まで遅くなる。
+  const lasing = special.laserT &gt; 0, speed = 340;
   if (inputMode === &quot;mouse&quot;) {
-    const target = clampPlayerX(mouseX);
-    player.x = clampPlayerX(player.x + clamp(target - player.x, -speed * dt * 2, speed * dt * 2));
-  } else player.x = clampPlayerX(player.x + speed * dt * ((keys.right ? 1 : 0) - (keys.left ? 1 : 0)));
+    const target = clampPlayerX(mouseX), step = (lasing ? LASER_MOVE : speed * 2) * dt;
+    player.x = clampPlayerX(player.x + clamp(target - player.x, -step, step));
+  } else player.x = clampPlayerX(player.x + (lasing ? LASER_MOVE : speed) * dt * ((keys.right ? 1 : 0) - (keys.left ? 1 : 0)));
   player.cool -= dt;
   player.inv = Math.max(0, player.inv - dt);
   active.wide = Math.max(0, active.wide - dt);
   active.rapid = Math.max(0, active.rapid - dt);</code></pre></figure>
-<p>キーボードは左右の真偽値を -1・0・1の向きに変換します。ポインター操作は目標へ瞬間移動するのではなく、1回に進める距離を制限して追従します。速度 <code>speed</code> は毎秒340 pxで固定です。ポインターで追従するときは1フレームに最大 <code>speed * dt * 2</code> まで進めるので、キーボード移動の2倍の速さまで出せます。</p>
+<p>キーボードは左右の真偽値を -1・0・1の向きに変換します。ポインター操作は目標へ瞬間移動するのではなく、1回に進める距離 <code>step</code> を制限して追従します。基本の速度 <code>speed</code> は毎秒340 pxです。ポインターで追従するときは1フレームに最大 <code>speed * 2 * dt</code> まで進めるので、キーボード移動の2倍の速さまで出せます。</p>
+<p>合体レーザーの照射中 (<code>lasing</code>) だけは、ポインターでもキーボードでも速さを <code>LASER_MOVE</code> の毎秒70 pxに抑えます。射線は自機の位置から伸びるので、ここで速さを抑えておくと、レーザーを横に振って編隊全体をなぎ払うことができなくなります（「<a href="specials.html">13 合体レーザーとボム</a>」）。</p>
 <p><code>clampPlayerX()</code> は画面端で位置を制限します。連結砲があるときは砲の幅も考慮しますが、敵弾と当たるのは自機本体だけです。</p>
 <h2 id="section-3">長押しの射撃はクールダウンで調整する</h2>
-<p><code>player.cool</code> が0以下で、通常弾数が上限未満なら発射します。基本間隔は0.27秒、連射(R)の効果中は0.12秒です。通常弾の上限は基本3、ボス戦では5です。3方向ショットまたは連射の効果中は、ボス戦かどうかにかかわらず12になります。連結ビームはこの通常弾数に数えません。</p>
+<p><code>player.cool</code> が0以下で、通常弾数が上限未満なら発射します。基本間隔は0.27秒、連射(R)の効果中は0.12秒です。通常弾の上限は基本3、ボス戦では5です。3方向ショットまたは連射の効果中は、ボス戦かどうかにかかわらず12になります。連結ビームはこの通常弾数に数えず、1門につき画面内1発までという別の上限で管理します（「<a href="powerups.html">12 カプセルと連結ビーム砲</a>」）。</p>
 <h2 id="section-4">入力が残る場面をなくす</h2>
 <p>キーを離す、ポインターを離す、操作がキャンセルされる、といったイベントで入力を解除します。ポーズ、ゲーム開始、ゲームオーバーのときも <code>releaseControls()</code> を呼びます。ウィンドウがフォーカスを失うと、プレイ中なら自動でポーズになります。</p>
 <p>一方、ミスとウェーブクリアでは入力を解除しません。射撃や移動のキーを押したままなら、復帰後や次のウェーブでもそのまま撃ち続け、動き続けます。ポインターも同じで、<code>play</code> に加えてミス後の <code>dying</code> とクリア表示中の <code>clear</code> で押し始めた場合も <code>shooting</code> を立てます。</p>

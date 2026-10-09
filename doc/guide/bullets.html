@@ -71,7 +71,7 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 09 弾の移動と衝突の順序</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 09 · 全23項目</p><h1>弾の移動と衝突の順序</h1><p class="lead">配列の逆順走査、弾が消える条件、シールドとミスの分岐を説明します。</p><p class="source-ref">主な参照先：pBullets / eBullets / damagePlayer / hitPlayer</p></header>
 <h2 id="section-1">弾は位置と速度を持つオブジェクト</h2>
-<figure class="code-block"><figcaption><span>game.html · L1409–1416</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1409-L1416">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1409–1416"><code>  // --- 自弾 ---
+<figure class="code-block"><figcaption><span>game.html · L1521–1528</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1521-L1528">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1521–1528"><code>  // --- 自弾 ---
   for (let i = pBullets.length - 1; i &gt;= 0; i--) {
     const p = pBullets[i];
     p.y -= SHOT_SPEED * dt;
@@ -79,7 +79,7 @@
     // 自機の弾は自陣のバリアを素通りする(バリアは敵弾から身を守るためのもの)。
     let dead = p.y + p.h &lt; 0 || p.x &lt; -20 || p.x &gt; W + 20;
     if (!dead) {</code></pre></figure>
-<p>自弾は毎秒 <code>SHOT_SPEED</code> = 600 pxで上へ進み、横方向の速度がある弾は xも変化します。画面外へ出たら削除対象です。敵弾は各オブジェクトの <code>vy</code>、必要なら <code>vx</code> を使って進めます。</p>
+<p>自弾は毎秒 <code>SHOT_SPEED</code> = 600 pxで上へ進み、横方向の速度がある弾は xも変化します。画面外へ出たら削除対象です。敵弾は各オブジェクトの <code>vy</code>、必要なら <code>vx</code> を使って進めます。ボスの3方向弾や、自機を狙って斜めに飛ぶ狙い撃ちの弾（赤く描く <code>aimed</code> の弾）が <code>vx</code> を持ちます（「<a href="formation.html">07 敵の編隊とウェーブ生成</a>」）。</p>
 <p>通常弾の長さ <code>SHOT_H</code> は14 pxです。<code>dt</code> の上限0.05秒のフレームでは弾が30 px進みますが、これが敵の高さ16 pxと弾の長さ14 pxの合計を超えないため、弾が敵を飛び越えて当たり損ねることはありません。</p>
 <h2 id="section-2">衝突を調べる順番にも意味がある</h2>
 <div class="table-wrap" tabindex="0" role="region" aria-label="順番・自弾の処理"><table><thead><tr><th scope="col">順番</th><th scope="col">自弾の処理</th></tr></thead><tbody><tr><th scope="row">1</th><td>画面外かどうかを調べる</td></tr><tr><th scope="row">2</th><td>敵弾と相殺する</td></tr><tr><th scope="row">3</th><td>ボーナス円盤、ボスとの衝突を調べる</td></tr><tr><th scope="row">4</th><td>通常の敵に当たれば撃破し、弾を消す</td></tr></tbody></table></div>
@@ -87,7 +87,7 @@
 <h2 id="section-3">削除しながら調べるなら後ろから</h2>
 <p><code>splice(i, 1)</code> は要素を消し、後ろの要素を前へ詰めます。前から進むループだと、詰まってきた要素を飛ばすことがあります。末尾から先頭へ調べれば、まだ調べていない要素の位置は変わりません。</p>
 <h2 id="section-4">シールドと残機減少を分ける</h2>
-<figure class="code-block"><figcaption><span>game.html · L1223–1235</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1223-L1235">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1223–1235"><code>function damagePlayer() {
+<figure class="code-block"><figcaption><span>game.html · L1334–1346</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1334-L1346">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1334–1346"><code>function damagePlayer() {
   waveNoDamage = false;
   resetCombo();
   if (active.shield &gt; 0) {

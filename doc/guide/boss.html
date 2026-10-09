@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <title>大型戦艦のボス戦 | ASTRO DEFENDER ソースコード解説</title>
-  <meta name="description" content="部位ごとの耐久値、コアの保護、予告位置を固定する攻撃を実装します。">
+  <meta name="description" content="部位ごとの耐久値、コアの保護、予告位置を固定する攻撃と、登場するたびに上がるボスのレベルを実装します。">
   <link rel="stylesheet" href="../guide.css">
   <script src="../guide.js" defer></script>
   <link rel="icon" href="../../favicon.ico" sizes="16x16 32x32 48x48">
@@ -69,23 +69,25 @@
 </nav></details>
 <main id="main" class="doc-main">
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 15 大型戦艦のボス戦</nav>
-<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 15 · 全23項目</p><h1>大型戦艦のボス戦</h1><p class="lead">部位ごとの耐久値、コアの保護、予告位置を固定する攻撃を実装します。</p><p class="source-ref">主な参照先：makeBoss / coreExposed / damageBossPart / updateBoss / BOSS_SWAY</p></header>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 15 · 全23項目</p><h1>大型戦艦のボス戦</h1><p class="lead">部位ごとの耐久値、コアの保護、予告位置を固定する攻撃と、登場するたびに上がるボスのレベルを実装します。</p><p class="source-ref">主な参照先：makeBoss / coreExposed / damageBossPart / startBossAttack / fireBossVolley / updateBoss / BOSS_SWAY</p></header>
 <h2 id="section-1">ボスを3つの部位に分ける</h2>
-<figure class="code-block"><figcaption><span>game.html · L875–885</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L875-L885">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L875–885"><code>function makeBoss() {
-  const level = wave / 5;
+<figure class="code-block"><figcaption><span>game.html · L912–922</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L912-L922">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L912–922"><code>function makeBoss() {
+  const level = wave / 5, hpLevel = Math.min(level, BOSS_HP_LEVEL_MAX);
   boss = {
-    x: W / 2, y: 112, t: 0, attackT: 2, warning: 0, laserT: 0, targetX: W / 2,
+    level, x: W / 2, y: 112, t: 0, attackT: 2, attackN: 0, warning: 0, laserT: 0, lanes: [],
     parts: [
-      { kind: &quot;gun&quot;, offset: -54, hp: 7 + level * 2, max: 7 + level * 2, flash: 0 },
-      { kind: &quot;gun&quot;, offset: 54, hp: 7 + level * 2, max: 7 + level * 2, flash: 0 },
-      { kind: &quot;core&quot;, offset: 0, hp: 20 + level * 8, max: 20 + level * 8, flash: 0 },
+      { kind: &quot;gun&quot;, offset: -54, hp: 7 + hpLevel * 2, max: 7 + hpLevel * 2, flash: 0 },
+      { kind: &quot;gun&quot;, offset: 54, hp: 7 + hpLevel * 2, max: 7 + hpLevel * 2, flash: 0 },
+      { kind: &quot;core&quot;, offset: 0, hp: 20 + hpLevel * 8, max: 20 + hpLevel * 8, flash: 0 },
     ],
   };
 }</code></pre></figure>
-<p>5ウェーブごとに大型戦艦を作ります。左右の砲台と中央コアを <code>parts</code> に入れ、各部位に現在HPと最大HPを持たせます。<code>level</code> はウェーブ数÷5で、砲台は <code>7 + level × 2</code>、コアは <code>20 + level × 8</code> です。5ウェーブ目なら砲台は各9、コアは28、10ウェーブ目なら砲台は各11、コアは36になります。自機の弾は通常弾も連結砲の弾も1発で1ダメージなので、5ウェーブ目の砲台は9発で壊れます。部位の画面座標はボス本体の座標に <code>offset</code> を足して求めます。</p>
+<figure class="code-block"><figcaption><span>game.html · L634–635</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L634-L635">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L634–635"><code>const BOSS_HP_LEVEL_MAX = 4; // ボスの耐久力は Lv.4(ウェーブ 20)で頭打ち。以降は攻撃の速さで手強くなる
+const BOSS_TWIN_GAP = 50;    // Lv.2 からの挟み撃ちレーザー: 自機の左右この距離に 2 本。動かなければ間に収まる(画面端では内側へずれる)</code></pre></figure>
+<p>5ウェーブごとに大型戦艦を作ります。左右の砲台と中央コアを <code>parts</code> に入れ、各部位に現在HPと最大HPを持たせます。<code>level</code> はウェーブ数÷5で、5ウェーブ目がLv.1、10ウェーブ目がLv.2です。耐久値は <code>hpLevel</code>、つまり <code>level</code> を <code>BOSS_HP_LEVEL_MAX</code> の4で止めた値から求め、砲台は <code>7 + hpLevel × 2</code>、コアは <code>20 + hpLevel × 8</code> です。5ウェーブ目なら砲台は各9、コアは28、10ウェーブ目なら砲台は各11、コアは36、20ウェーブ目以降は砲台が各15、コアが52のまま増えません。後半はボス戦が長くなるのではなく、攻撃が激しくなる作りです。自機の弾は通常弾も連結砲の弾も1発で1ダメージなので、5ウェーブ目の砲台は9発で壊れます。部位の画面座標はボス本体の座標に <code>offset</code> を足して求めます。</p>
 <h2 id="section-2">左右の砲台を壊すまでコアを保護する</h2>
-<figure class="code-block"><figcaption><span>game.html · L891–891</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L891-L891">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L891–891"><code>function coreExposed() { return boss &amp;&amp; boss.parts.slice(0, 2).every(p =&gt; p.hp &lt;= 0); }</code></pre></figure>
-<figure class="code-block"><figcaption><span>game.html · L893–900</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L893-L900">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L893–900"><code>function damageBossPart(part, amount, source = &quot;shot&quot;) {
+<figure class="code-block"><figcaption><span>game.html · L928–928</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L928-L928">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L928–928"><code>function coreExposed() { return boss &amp;&amp; boss.parts.slice(0, 2).every(p =&gt; p.hp &lt;= 0); }</code></pre></figure>
+<figure class="code-block"><figcaption><span>game.html · L930–937</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L930-L937">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L930–937"><code>function damageBossPart(part, amount, source = &quot;shot&quot;) {
   if (!boss || part.hp &lt;= 0 || amount &lt;= 0) return;
   if (part.kind === &quot;core&quot; &amp;&amp; !coreExposed()) return;
   const r = bossPartRect(part), damage = Math.min(part.hp, amount);
@@ -96,11 +98,55 @@
 <p>コアへの攻撃を受けた時点で、両方の砲台のHPが0以下かを調べます。通常弾だけでなくレーザーやボムも同じ関数を通すため、このルールを共用できます。通常射撃のダメージだけがゲージ充電につながります。</p>
 <h2 id="section-3">予告、発射、待機の3段階</h2>
 <ol class="flow"><li><strong>予告</strong><small>1.1秒。狙うx座標を固定</small></li><li><strong>発射</strong><small>0.6秒。幅36 pxの危険範囲</small></li><li><strong>待機</strong><small>横移動し、次の攻撃を待つ</small></li></ol>
-<p>攻撃を始める瞬間の <code>player.x</code> を <code>boss.targetX</code> に保存します。予告が終わっても位置を追い直さないため、プレイヤーは予告を見て逃げられます。レーザー発射の開始時には、生きている砲台から拡散弾も出します。</p>
+<p>待機中に <code>attackT</code> が0になると <code>startBossAttack()</code> が呼ばれ、その瞬間の <code>player.x</code> から攻撃する列を決めて <code>boss.lanes</code> に保存します。予告が終わっても位置を追い直さないため、プレイヤーは予告を見て逃げられます。</p>
+<figure class="code-block"><figcaption><span>game.html · L957–974</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L957-L974">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L957–974"><code>// 次の攻撃までの時間。コアが露出すると速まり、Lv.4〜6 では 1 段ごとに 0.15 秒ずつ縮む。
+function bossAttackInterval() {
+  return (coreExposed() ? 1.5 : 2.2) - clamp(boss.level - 3, 0, 3) * 0.15;
+}
+
+// 攻撃の予告を始める。レーザーの位置(lanes)はこの時点で固定し、予告と同じ場所に撃つ。
+// Lv.1 は自機を狙う 1 本。Lv.2 からは 1 回おきに、自機の左右へ 2 本の挟み撃ち(動かなければ間に収まる)。
+function startBossAttack() {
+  const twin = boss.level &gt;= 2 &amp;&amp; boss.attackN % 2 === 1;
+  if (twin) {
+    const x = clamp(player.x, 22 + BOSS_TWIN_GAP, W - 22 - BOSS_TWIN_GAP);
+    boss.lanes = [x - BOSS_TWIN_GAP, x + BOSS_TWIN_GAP];
+  } else boss.lanes = [clamp(player.x, 22, W - 22)];
+  boss.attackN++;
+  boss.warning = 1.1;
+  boss.attackT = bossAttackInterval();
+  beep({ f0: 740, dur: 0.12, type: &quot;square&quot;, vol: 0.07 });
+}</code></pre></figure>
+<p>Lv.1は自機を狙う1本だけです。Lv.2からは <code>attackN</code> が奇数の回、つまり1回おきに、自機の左右へ <code>BOSS_TWIN_GAP</code> の50 pxずつ離れた2本で挟み撃ちにします。危険範囲の幅は36 pxなので、2本の内側の端は自機の中心から32 px、自機の半分の幅は13 pxで、動かなければ間に収まります。画面の端では2本とも画面に収まるよう中心を内側へずらすため、端にいると逃げる必要があります。</p>
+<figure class="shot"><img src="../img/bosstwin.png" alt="Lv.2のボスが自機の左右に2本のレーザーを予告している。自機は2本の間にいる。" width="960" height="1280" loading="lazy"><figcaption>Lv.2の挟み撃ち。2本の予告の間にとどまれば当たらない。</figcaption></figure>
+<p>次の攻撃までの時間は <code>bossAttackInterval()</code> で決めます。コアが露出すると2.2秒から1.5秒に縮み、Lv.4〜6では1段ごとにさらに0.15秒縮みます。</p>
+<figure class="code-block"><figcaption><span>game.html · L976–990</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L976-L990">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L976–990"><code>// 予告が終わった瞬間の射撃。残っている砲台は 3 方向弾、Lv.3 からは船体中央が自機へ扇状の 5 発も撃つ。
+function fireBossVolley() {
+  const vy = 180 + Math.min(wave * 3, 90);
+  for (const part of boss.parts) {
+    if (part.hp &lt;= 0 || part.kind !== &quot;gun&quot;) continue;
+    for (const vx of [-75, 0, 75]) eBullets.push({ x: boss.x + part.offset, y: boss.y + 40, w: 3, h: 9, vx, vy });
+  }
+  if (boss.level &gt;= 3) {
+    const x = boss.x, y = boss.y + 44, aim = Math.atan2(PLAYER_Y - y, player.x - x);
+    for (const da of [-0.36, -0.18, 0, 0.18, 0.36]) {
+      const a = aim + da;
+      eBullets.push({ x: x - 1.5, y, w: 3, h: 9, vx: Math.cos(a) * vy, vy: Math.sin(a) * vy, aimed: true });
+    }
+  }
+}</code></pre></figure>
+<p>予告が終わってレーザーを撃つ瞬間に <code>fireBossVolley()</code> が弾も撃ちます。生きている砲台は3方向に広がる弾、Lv.3からは船体の中央が自機を狙った扇状の5発です。扇は自機への角度 <code>aim</code> を <code>Math.atan2()</code> で求め、±0.18・±0.36ラジアンずらした向きに同じ速さで飛ばします。狙い撃ちの弾には <code>aimed</code> を付け、画面では赤く描きます。</p>
+<figure class="code-block"><figcaption><span>game.html · L992–997</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L992-L997">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L992–997"><code>function inBossLane(rect) {
+  for (const x of boss.lanes) {
+    if (hit(rect, { x: x - 18, y: boss.y + 40, w: 36, h: GROUND_Y - boss.y - 40 })) return true;
+  }
+  return false;
+}</code></pre></figure>
+<p>発射中は <code>inBossLane()</code> で、自機がどれかの列に重なっていないかを毎フレーム調べます。列が1本でも2本でも同じ処理で判定できます。</p>
 <figure class="shot"><img src="../img/bosslaser.png" alt="ボスのレーザー攻撃。予告時に確定した列を攻撃する。" width="960" height="1280" loading="lazy"><figcaption>ボスのレーザー攻撃。予告時に確定した列を攻撃する。</figcaption></figure>
 <h2 id="section-4">動いている間だけ時計を進める</h2>
-<figure class="code-block"><figcaption><span>game.html · L610–610</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L610-L610">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L610–610"><code>const BOSS_SWAY = 0.45;      // ボスが左右に揺れる速さ(角速度)。振れ幅は ±130px</code></pre></figure>
-<figure class="code-block"><figcaption><span>game.html · L937–941</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L937-L941">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L937–941"><code>  } else {
+<figure class="code-block"><figcaption><span>game.html · L632–632</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L632-L632">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L632–632"><code>const BOSS_SWAY = 0.45;      // ボスが左右に揺れる速さ(角速度)。振れ幅は ±130px</code></pre></figure>
+<figure class="code-block"><figcaption><span>game.html · L1012–1016</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1012-L1016">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1012–1016"><code>  } else {
     // 予告・照射中は止まるので、移動中だけ時間を進める(止まっている間も進めると攻撃後に瞬間移動する)。
     boss.t += dt;
     boss.x = W / 2 + Math.sin(boss.t * BOSS_SWAY) * 130;
@@ -110,10 +156,10 @@
 <h2 id="section-5">撃破と攻撃中断</h2>
 <p>コアを破壊するとボスと敵弾を消し、得点を加え、ボムを1個補充します。ボムを使う場合は <code>warning</code> と <code>laserT</code> を0にし、次の攻撃までの待ち時間を設定するため、予告中も発射中も中断できます。</p>
 <h2 id="section-6">ボス戦では通常弾を5発まで撃てる</h2>
-<figure class="code-block"><figcaption><span>game.html · L1292–1293</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1292-L1293">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1292–1293"><code>  // ボスは遠く弾の到達に時間がかかるので、ボス戦では画面内の通常弾の上限を緩める。
+<figure class="code-block"><figcaption><span>game.html · L1404–1405</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1404-L1405">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1404–1405"><code>  // ボスは遠く弾の到達に時間がかかるので、ボス戦では画面内の通常弾の上限を緩める。
   const maxB = (active.rapid &gt; 0 || active.wide &gt; 0) ? 12 : boss ? 5 : 3;</code></pre></figure>
-<p>画面内に同時に出せる通常弾の数は、ふだんは3発、WかRが有効なら12発です。ボス戦ではW・Rがなくても上限を5発に緩めています。ボスは画面上部の遠い位置にいて、弾が届くまでに時間がかかるためです。連結砲の弾はこの上限に数えません。</p>
-<aside class="exercise"><strong>確かめてみよう</strong><p><code>boss.targetX</code> への代入を探してください。毎フレーム自機を追う処理との違いを考えると、避けられる攻撃の作り方が見えてきます。</p>
+<p>画面内に同時に出せる通常弾の数は、ふだんは3発、WかRが有効なら12発です。ボス戦ではW・Rがなくても上限を5発に緩めています。ボスは画面上部の遠い位置にいて、弾が届くまでに時間がかかるためです。連結砲の弾はこの上限に数えず、1門につき1発までです。</p>
+<aside class="exercise"><strong>確かめてみよう</strong><p><code>boss.lanes</code> への代入を探してください。毎フレーム自機を追う処理との違いを考えると、避けられる攻撃の作り方が見えてきます。続けて、Lv.2のボスで <code>player.x = 240</code> のとき、挟み撃ちの2本が x=190 と x=290 になり、<code>inBossLane(playerRect())</code> が false になることを確かめてください。</p>
 </aside>
 </article>
 <nav class="page-nav" aria-label="前後の項目">

@@ -73,7 +73,7 @@
 <h2 id="section-1">音を作り、音量を通して出力する</h2>
 <ol class="flow"><li><strong>発振器</strong><small><code>OscillatorNode</code> が波形を作る</small></li><li><strong>音量</strong><small><code>GainNode</code> が減衰を付ける</small></li><li><strong>出力</strong><small><code>destination</code> へ接続</small></li></ol>
 <p><code>ac()</code> は初めて必要になったときに AudioContext を作り、中断中なら再開します。クリックやキー入力の入口で呼ぶ構成です。既存の音源ファイルを再生するのではなく、波形と音量の変化から効果音を作ります。</p>
-<figure class="code-block"><figcaption><span>game.html · L167–180</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L167-L180">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L167–180"><code>function beep({ f0 = 440, f1 = f0, dur = 0.1, type = &quot;square&quot;, vol = 0.12, delay = 0 }) {
+<figure class="code-block"><figcaption><span>game.html · L179–192</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L179-L192">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L179–192"><code>function beep({ f0 = 440, f1 = f0, dur = 0.1, type = &quot;square&quot;, vol = 0.12, delay = 0 }) {
   if (muted) return;
   try {
     const a = ac(), t = a.currentTime + delay;
@@ -91,7 +91,7 @@
 <h2 id="section-2">爆発はノイズとフィルター</h2>
 <p><code>ensureNoise()</code> は1秒分のホワイトノイズを一度作って共有します。<code>boom()</code> はそのバッファを再生し、ローパスフィルターで高い音を削り、音量を減衰させます。発射するたびにノイズ全体を作り直さないことが負荷の削減につながります。</p>
 <h2 id="section-3">BGMはオーディオの時計で予約する</h2>
-<figure class="code-block"><figcaption><span>game.html · L302–310</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L302-L310">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L302–310"><code>function musicTick() {
+<figure class="code-block"><figcaption><span>game.html · L314–322</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L314-L322">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L314–322"><code>function musicTick() {
   if (!actx) return;
   while (music.next &lt; actx.currentTime + 0.16) {
     if (music.next &lt; actx.currentTime) music.next = actx.currentTime + 0.05;

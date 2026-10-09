@@ -36,7 +36,7 @@
   </div>
   <figure class="hero-figure"><a href="../game.html" aria-label="ASTRO DEFENDERをプレイ"><img src="img/play.png" alt="敵の編隊、弾、自機、バリアをCanvasに描いたASTRO DEFENDERのプレイ画面" width="960" height="1280"></a><figcaption>この画面の絵も音も、コードから生成。</figcaption></figure>
 </div></header>
-<div class="container"><ul class="meta" aria-label="解説の概要"><li>全23項目 / 4つの分野</li><li>対象ソース v2.0.0</li><li>HTML・CSS・JavaScript</li><li>Canvas 2D / Web Audio</li></ul></div>
+<div class="container"><ul class="meta" aria-label="解説の概要"><li>全23項目 / 4つの分野</li><li>対象ソース v3.0.0</li><li>HTML・CSS・JavaScript</li><li>Canvas 2D / Web Audio</li></ul></div>
 
 <section class="container section" aria-labelledby="start-title">
   <div class="section-heading"><h2 id="start-title">まずは、この順番で。</h2><p>全体像をつかむための5項目</p></div>
@@ -68,7 +68,7 @@
 <a class="chapter-card" id="s06" href="guide/collision.html"><span class="chapter-number">06</span><h4>四角形の当たり判定</h4><p>4つの不等式で重なりを調べ、絵とは別に衝突範囲を定義します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
 </div></section>
 <section class="chapter-group" id="gameplay" aria-labelledby="gameplay-title"><div class="group-heading"><span>02 / 6 ITEMS</span><h3 id="gameplay-title">戦闘の仕組みを追う</h3></div><p>自機と敵を動かし、弾・バリア・得点・アイテムをつなぎます。</p><div class="chapter-grid">
-<a class="chapter-card" id="s07" href="guide/formation.html"><span class="chapter-number">07</span><h4>敵の編隊とウェーブ生成</h4><p>50体の相対位置、折り返し、残り数に応じた速度、射撃する敵の選び方を追います。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
+<a class="chapter-card" id="s07" href="guide/formation.html"><span class="chapter-number">07</span><h4>敵の編隊とウェーブ生成</h4><p>50体の相対位置、折り返し、残り数とウェーブに応じた速度、射撃する敵の選び方と、ウェーブが進むと厳しくなる射撃を追います。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
 <a class="chapter-card" id="s08" href="guide/input.html"><span class="chapter-number">08</span><h4>自機の移動と入力</h4><p>ポインターとキーボードを共通の状態にまとめ、移動速度と連射を制御します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
 <a class="chapter-card" id="s09" href="guide/bullets.html"><span class="chapter-number">09</span><h4>弾の移動と衝突の順序</h4><p>配列の逆順走査、弾が消える条件、シールドとミスの分岐を説明します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
 <a class="chapter-card" id="s10" href="guide/barriers.html"><span class="chapter-number">10</span><h4>崩れるバリアの実装</h4><p>小さなマスの配列で盾を表し、敵弾が触れた場所と周囲を削ります。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
@@ -78,7 +78,7 @@
 <section class="chapter-group" id="advanced" aria-labelledby="advanced-title"><div class="group-heading"><span>03 / 4 ITEMS</span><h3 id="advanced-title">戦闘の展開を広げる</h3></div><p>必殺技、ウェーブの切り替え、ボスと突入する敵を読み解きます。</p><div class="chapter-grid">
 <a class="chapter-card" id="s13" href="guide/specials.html"><span class="chapter-number">13</span><h4>合体レーザーとボム</h4><p>発動条件、射線と円形範囲の判定、ゲージや弾数の消費を整理します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
 <a class="chapter-card" id="s14" href="guide/upgrades.html"><span class="chapter-number">14</span><h4>ウェーブクリアと次のウェーブ</h4><p>敵を全滅させたら短いクリア表示のあと、操作を止めずに次のウェーブへ進みます。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s15" href="guide/boss.html"><span class="chapter-number">15</span><h4>大型戦艦のボス戦</h4><p>部位ごとの耐久値、コアの保護、予告位置を固定する攻撃を実装します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
+<a class="chapter-card" id="s15" href="guide/boss.html"><span class="chapter-number">15</span><h4>大型戦艦のボス戦</h4><p>部位ごとの耐久値、コアの保護、予告位置を固定する攻撃と、登場するたびに上がるボスのレベルを実装します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
 <a class="chapter-card" id="s16" href="guide/flights.html"><span class="chapter-number">16</span><h4>編隊から突入する敵</h4><p>敵に一時的な飛行状態を追加し、急降下・ジグザグ・横方向の突入を切り替えます。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
 </div></section>
 <section class="chapter-group" id="finishing" aria-labelledby="finishing-title"><div class="group-heading"><span>04 / 6 ITEMS</span><h3 id="finishing-title">演出・品質・改造を学ぶ</h3></div><p>絵と音を仕上げ、テストで確かめ、自分の変更につなげます。</p><div class="chapter-grid">

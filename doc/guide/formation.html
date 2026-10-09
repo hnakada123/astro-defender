@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <title>敵の編隊とウェーブ生成 | ASTRO DEFENDER ソースコード解説</title>
-  <meta name="description" content="50体の相対位置、折り返し、残り数に応じた速度、射撃する敵の選び方を追います。">
+  <meta name="description" content="50体の相対位置、折り返し、残り数とウェーブに応じた速度、射撃する敵の選び方と、ウェーブが進むと厳しくなる射撃を追います。">
   <link rel="stylesheet" href="../guide.css">
   <script src="../guide.js" defer></script>
   <link rel="icon" href="../../favicon.ico" sizes="16x16 32x32 48x48">
@@ -69,13 +69,13 @@
 </nav></details>
 <main id="main" class="doc-main">
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 07 敵の編隊とウェーブ生成</nav>
-<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 07 · 全23項目</p><h1>敵の編隊とウェーブ生成</h1><p class="lead">50体の相対位置、折り返し、残り数に応じた速度、射撃する敵の選び方を追います。</p><p class="source-ref">主な参照先：makeWave / form / formBounds / formSpeed</p></header>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 07 · 全23項目</p><h1>敵の編隊とウェーブ生成</h1><p class="lead">50体の相対位置、折り返し、残り数とウェーブに応じた速度、射撃する敵の選び方と、ウェーブが進むと厳しくなる射撃を追います。</p><p class="source-ref">主な参照先：makeWave / form / formBounds / formSpeed / pickShooter / enemyFireInterval / maxEnemyBullets / aimedChance / enemyShot</p></header>
 <h2 id="section-1">行と列に共通の原点を足す</h2>
-<figure class="code-block"><figcaption><span>game.html · L594–596</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L594-L596">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L594–596"><code>const ROWS = 5, COLS = 10, CELL_W = 36, CELL_H = 30, DROP = 14;
+<figure class="code-block"><figcaption><span>game.html · L610–612</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L610-L612">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L610–612"><code>const ROWS = 5, COLS = 10, CELL_W = 36, CELL_H = 30, DROP = 14;
 const ROW_TYPE = [&quot;a&quot;, &quot;b&quot;, &quot;b&quot;, &quot;c&quot;, &quot;c&quot;];
 const TOTAL = ROWS * COLS;</code></pre></figure>
 <p>通常ウェーブの編隊は5行 × 10列です。敵は行 <code>r</code> と列 <code>c</code> を持ち、共通の原点 <code>form.ox</code>・<code>form.oy</code> を動かすと全体が移動します。敵1体ごとに速度を持たせる必要はありません。5の倍数のウェーブでは編隊の代わりにボスを生成します。</p>
-<figure class="code-block"><figcaption><span>game.html · L714–726</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L714-L726">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L714–726"><code>function makeWave() {
+<figure class="code-block"><figcaption><span>game.html · L744–756</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L744-L756">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L744–756"><code>function makeWave() {
   aliens = [];
   boss = null;
   if (wave % 5 === 0) makeBoss();
@@ -91,17 +91,74 @@ const TOTAL = ROWS * COLS;</code></pre></figure>
 <h2 id="section-2">生きている敵の端で折り返す</h2>
 <p><code>formBounds()</code> は生存中で編隊に残っている敵だけの左右端を調べます。画面の端から8 pxの境界を越えたら超過分を戻し、向きを反転して <code>DROP</code> だけ下へ進めます。空になった列を除いて幅を測るため、敵が減ると移動できる範囲が広がります。</p>
 <h2 id="section-3">残り数で難しさを変える</h2>
-<figure class="code-block"><figcaption><span>game.html · L1162–1168</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1162-L1168">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1162–1168"><code>function formSpeed() {
+<figure class="code-block"><figcaption><span>game.html · L1271–1279</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1271-L1279">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1271–1279"><code>function formSpeed() {
   const r = aliveN / TOTAL;
-  let s = 16 + (wave - 1) * 7 + 130 * Math.pow(1 - r, 1.7);
+  // ウェーブごとの基本速度はウェーブ 13 で頭打ち。それ以上速いと端での折り返しが続いて一気に降下し、
+  // 弾をかわす前に侵攻で終わってしまうため、後半は弾の攻撃で難しくする。
+  let s = 16 + Math.min(wave - 1, 12) * 7 + 130 * Math.pow(1 - r, 1.7);
   if (aliveN &lt;= 3) s += 55;
   if (aliveN === 1) s += 75;
   return Math.min(s, 240);
 }</code></pre></figure>
 <p><code>r</code> は生存数の割合です。<code>1 - r</code> が大きいほど加速し、残り3体以下と最後の1体ではさらに加算します。最終的な速度は240で頭打ちです。アニメーションの切り替え周期も残り数に応じて短くなります。</p>
+<p>ウェーブごとの基本速度 <code>16 + (wave - 1) * 7</code> は、<code>Math.min(wave - 1, 12)</code> によってウェーブ13の毎秒100 pxで止まります。編隊は端で折り返すたびに <code>DROP</code> の14 pxずつ降りるので、横に速く動くほど折り返しが増えて速く降下します。基本速度が上がり続けると、50体そろった編隊が0.5秒ごとに折り返して一気に地上へ迫り、弾をかわす前に侵入で終わってしまいます。そのため後半は、次の節の射撃で難しくしています。</p>
 <h2 id="section-4">射撃と地上への侵入</h2>
-<p>各列で最も下にいる敵を候補にし、そこからランダムに射撃役を選びます。突入中の敵はこの候補に入りません。編隊内の敵が自機の高さまで到達したり自機と重なると、残機とは別に侵入によるゲームオーバーになります。</p>
-<aside class="exercise"><strong>確かめてみよう</strong><p><code>formBounds()</code> の <code>a.flight</code> を除外する条件を探してください。飛び出した敵が編隊全体の折り返し位置を変えないようにしています。</p>
+<figure class="code-block"><figcaption><span>game.html · L1260–1269</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1260-L1269">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1260–1269"><code>// 各列のいちばん下にいる(編隊にいる)敵から 1 体を選び、その矩形を返す。
+function pickShooter() {
+  const bottoms = [];
+  for (let c = 0; c &lt; COLS; c++) {
+    let low = null;
+    for (const a of aliens) if (a.alive &amp;&amp; !a.flight &amp;&amp; a.c === c &amp;&amp; (!low || a.r &gt; low.r)) low = a;
+    if (low) bottoms.push(low);
+  }
+  return bottoms.length ? alienRect(bottoms[(Math.random() * bottoms.length) | 0]) : null;
+}</code></pre></figure>
+<p><code>pickShooter()</code> は各列で最も下にいる敵を候補にし、そこからランダムに射撃役を選んで、その四角形を返します。突入中の敵はこの候補に入りません。</p>
+<figure class="code-block"><figcaption><span>game.html · L1472–1488</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1472-L1488">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1472–1488"><code>  // --- 敵の射撃 ---
+  fireT -= dt;
+  const maxEB = maxEnemyBullets();
+  if (fireT &lt;= 0 &amp;&amp; bannerT &lt;= 0 &amp;&amp; aliveN &gt; 0) {
+    fireT = enemyFireInterval() * rand(0.5, 1.5) * (0.55 + 0.45 * (aliveN / TOTAL));
+    const r = eBullets.length &lt; maxEB &amp;&amp; pickShooter();
+    if (r) enemyShot(r.x + r.w / 2 - 1.5, r.y + r.h, Math.random() &lt; aimedChance());
+  }
+  // ウェーブ 16 からは、ときどき編隊の 1 体が 3 方向に広がる弾をまとめて撃つ(間隔は少しずつ縮む)。
+  if (wave &gt;= VOLLEY_WAVE &amp;&amp; bannerT &lt;= 0 &amp;&amp; aliveN &gt; 0) {
+    volleyT -= dt;
+    if (volleyT &lt;= 0) {
+      volleyT = Math.max(2.5, 6 - (wave - VOLLEY_WAVE) * 0.25) * rand(0.8, 1.2);
+      const r = eBullets.length + 3 &lt;= maxEB &amp;&amp; pickShooter();
+      if (r) for (const vx of [-70, 0, 70]) enemyShot(r.x + r.w / 2 - 1.5, r.y + r.h, false, vx);
+    }
+  }</code></pre></figure>
+<p><code>fireT</code> が0になるたびに1発撃ち、次の発射までの時間を決め直します。間隔はウェーブで決まる基本値に乱数を掛け、さらに敵が減るほど短くします。画面内の敵弾が上限に達しているときは撃ちません。ウェーブ16からは別のタイマー <code>volleyT</code> で、ときどき1体が3方向に広がる弾をまとめて撃ちます。3発がすべて上限に収まるときだけ撃つので、上限を超えることはありません。</p>
+<p>編隊内の敵が自機の高さまで到達したり自機と重なると、残機とは別に侵入によるゲームオーバーになります。</p>
+<h2 id="section-5">ウェーブが進むほど射撃が厳しくなる</h2>
+<figure class="code-block"><figcaption><span>game.html · L1239–1258</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1239-L1258">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1239–1258"><code>// ---- 難易度の上がり方 ----
+// 序盤(〜13 ウェーブ)は従来どおりに上がり、その先も 30 ウェーブ前後までゆっくり厳しくなり続ける。
+function enemyFireInterval() {
+  return wave &lt;= 13 ? Math.max(0.3, 1.15 - (wave - 1) * 0.07) : Math.max(0.18, 0.3 - (wave - 13) * 0.007);
+}
+
+function maxEnemyBullets() { // 画面内の敵弾の上限。ウェーブ 5 で 7 発、以降 4 ウェーブごとに 1 発ずつ増えて最大 12 発
+  return wave &lt;= 5 ? 2 + wave : Math.min(12, 7 + Math.floor((wave - 5) / 4));
+}
+
+function aimedChance() { // 編隊の弾のうち自機を狙う割合。ウェーブ 6 の 15% から、ウェーブ 20 で 50% まで
+  return wave &lt; AIMED_WAVE ? 0 : Math.min(0.5, 0.15 + (wave - AIMED_WAVE) * 0.025);
+}
+
+// 敵弾を 1 発出す。狙い撃ち弾は撃った瞬間の自機の位置へ向かう(横の速さは避けられる程度に制限)。
+function enemyShot(x, y, aimed, vx = 0) {
+  const vy = Math.min(330, 150 + wave * 14) * rand(0.9, 1.1);
+  if (aimed) vx = clamp((player.x - x) * vy / Math.max(60, PLAYER_Y - y), -110, 110);
+  eBullets.push({ x, y, w: 3, h: 9, vx, vy, aimed });
+}</code></pre></figure>
+<p>射撃の厳しさは小さな関数に分けてあり、どれも <code>wave</code> だけから値を決めます。発射間隔はウェーブ13までは従来と同じ割合で縮み、その先も30ウェーブ前後まで少しずつ縮みます。画面内の敵弾の上限は、ウェーブ5の7発から4ウェーブごとに1発ずつ増え、最大12発です。</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="ウェーブごとの射撃の厳しさ"><table><thead><tr><th scope="col">ウェーブ</th><th scope="col">発射間隔の基本値</th><th scope="col">敵弾の上限</th><th scope="col">狙い撃ちの割合</th></tr></thead><tbody><tr><th scope="row">1</th><td>1.15秒</td><td>3発</td><td>0%</td></tr><tr><th scope="row">6</th><td>0.80秒</td><td>7発</td><td>15%</td></tr><tr><th scope="row">13</th><td>0.31秒</td><td>9発</td><td>33%</td></tr><tr><th scope="row">20</th><td>0.25秒</td><td>10発</td><td>50%</td></tr><tr><th scope="row">30</th><td>0.18秒</td><td>12発</td><td>50%</td></tr></tbody></table></div>
+<p>ウェーブ6からは、編隊の弾の一部が自機を狙って斜めに飛びます。<code>enemyShot()</code> は狙い撃ちのとき、撃った瞬間の自機の位置へ届くように横の速さ <code>vx</code> を計算します。自機までの縦の距離を落下の速さで割れば到達までの時間が分かり、その時間で横の距離を進めばよい、という考え方です。横の速さは避けられるよう毎秒110 pxまでに制限します。狙い撃ちの弾は <code>aimed</code> を持ち、画面では赤く描いて、まっすぐ落ちる黄色の弾と見分けられるようにしています。</p>
+<p>新しい攻撃が始まるウェーブ（6・11・16）とボスのレベルが上がるウェーブ（10・15・20）は <code>WAVE_NEWS</code> にまとめてあり、その直前のウェーブクリア画面で予告します（「<a href="upgrades.html">14 ウェーブクリアと次のウェーブ</a>」）。</p>
+<aside class="exercise"><strong>確かめてみよう</strong><p><code>formBounds()</code> の <code>a.flight</code> を除外する条件を探してください。飛び出した敵が編隊全体の折り返し位置を変えないようにしています。続けて、<code>enemyShot()</code> で <code>player.x = 200</code>、<code>x = 100</code>、<code>y = 200</code> のときの狙い撃ちの弾が、自機の高さで x=200 に届くことを計算で確かめてください。</p>
 </aside>
 </article>
 <nav class="page-nav" aria-label="前後の項目">
