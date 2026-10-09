@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
-  <title>ウェーブクリアと強化3択 | ASTRO DEFENDER ソースコード解説</title>
-  <meta name="description" content="戦闘を止めて候補を選ばせ、強化を保ったまま次のウェーブを作ります。">
+  <title>ウェーブクリアと次のウェーブ | ASTRO DEFENDER ソースコード解説</title>
+  <meta name="description" content="敵を全滅させたら短いクリア表示のあと、操作を止めずに次のウェーブへ進みます。">
   <link rel="stylesheet" href="../guide.css">
   <script src="../guide.js" defer></script>
   <link rel="icon" href="../../favicon.ico" sizes="16x16 32x32 48x48">
@@ -49,9 +49,9 @@
 </ol>
 </div>
 <div class="toc-group">
-<p class="nav-group">戦闘と成長を広げる</p><ol>
+<p class="nav-group">戦闘の展開を広げる</p><ol>
 <li><a href="specials.html"><span>13</span>合体レーザーとボム</a></li>
-<li><a href="upgrades.html" aria-current="page"><span>14</span>ウェーブクリアと強化3択</a></li>
+<li><a href="upgrades.html" aria-current="page"><span>14</span>ウェーブクリアと次のウェーブ</a></li>
 <li><a href="boss.html"><span>15</span>大型戦艦のボス戦</a></li>
 <li><a href="flights.html"><span>16</span>編隊から突入する敵</a></li>
 </ol>
@@ -68,42 +68,73 @@
 </div>
 </nav></details>
 <main id="main" class="doc-main">
-<nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 14 ウェーブクリアと強化3択</nav>
-<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 14 · 全23項目</p><h1>ウェーブクリアと強化3択</h1><p class="lead">戦闘を止めて候補を選ばせ、強化を保ったまま次のウェーブを作ります。</p><p class="source-ref">主な参照先：openUpgrades / chooseUpgrade / UPGRADE_DEFS / makeWave</p></header>
+<nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 14 ウェーブクリアと次のウェーブ</nav>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 14 · 全23項目</p><h1>ウェーブクリアと次のウェーブ</h1><p class="lead">敵を全滅させたら短いクリア表示のあと、操作を止めずに次のウェーブへ進みます。</p><p class="source-ref">主な参照先：updatePlay / update / drawOverlay / makeWave / startGame</p></header>
 <h2 id="section-1">通常の敵もボスもいなくなったらクリア</h2>
-<p><code>aliveN === 0 &amp;&amp; !boss</code> がクリア条件です。編隊から突入した敵も生存数に含むので、画面外へ飛び去っただけではクリアになりません。敵弾や自弾を消し、入力を解除して <code>clear</code> に移ります。ノーダメージなら <code>500 + wave * 100</code> 点を加えます。</p>
-<h2 id="section-2">上限に達した強化を除いて抽選する</h2>
-<figure class="code-block"><figcaption><span>game.html · L903–910</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L903-L910">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L903–910"><code>function openUpgrades() {
-  const pool = Object.keys(UPGRADE_DEFS).filter(k =&gt; !UPGRADE_DEFS[k].max || upgrades[k] &lt; UPGRADE_DEFS[k].max);
-  upgradeChoices = [];
-  while (upgradeChoices.length &lt; 3) upgradeChoices.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
-  upgradeIndex = 0;
-  releaseControls();
-  setState(&quot;upgrade&quot;);
+<figure class="code-block"><figcaption><span>game.html · L1457–1471</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1457-L1471">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1457–1471"><code>  // --- ウェーブクリア ---
+  if (aliveN === 0 &amp;&amp; !boss) {
+    saucerSoundStop();
+    pBullets = []; eBullets = []; powerups = [];
+    special.laserT = 0;
+    if (waveNoDamage) {
+      perfectBonus = 500 + wave * 100;
+      addScore(perfectBonus);
+      sfx.perfect();
+    } else {
+      perfectBonus = 0;
+      sfx.clear();
+    }
+    setState(&quot;clear&quot;);
+  }</code></pre></figure>
+<p><code>updatePlay()</code> の最後で <code>aliveN === 0 &amp;&amp; !boss</code> を調べます。<code>aliveN</code> は生き残っている敵の数で、編隊から突入中の敵も含みます。突入した敵は画面外へ出ると編隊の元の位置へ戻るだけなので、飛び去らせてもクリアにはなりません。ボス戦では敵の配列が空で、コアを壊して <code>boss</code> が <code>null</code> になった時点でクリアです。</p>
+<p>クリアの瞬間に、残っている自弾・敵弾・カプセルを消し、UFO の音と照射中の合体レーザーを止めます。<code>waveNoDamage</code> はウェーブ開始時に true になり、被弾すると（シールドで防いだ場合も）false になります。true のまま全滅させると、PERFECT ボーナスとして <code>500 + wave * 100</code> 点を加えます。ウェーブ4なら900点です。最後に <code>setState(&quot;clear&quot;)</code> で状態を切り替えますが、<code>releaseControls()</code> は呼ばず、押しっぱなしの入力をそのまま残します。</p>
+<h2 id="section-2">1.6秒たったら入力を待たずに次のウェーブへ</h2>
+<figure class="code-block"><figcaption><span>game.html · L1484–1487</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1484-L1487">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1484–1487"><code>  } else if (state === &quot;clear&quot;) {
+    // 操作を止めずに次のウェーブへ。押しっぱなしの射撃・移動キーもそのまま引き継ぐ。
+    if (stateT &gt; 1.6) { wave++; makeWave(); setState(&quot;play&quot;); }
+  }</code></pre></figure>
+<p><code>clear</code> の間、<code>update(dt)</code> は <code>updatePlay()</code> を呼びません。自機は動かず、弾も出ず、敵も攻撃しません。合体レーザーとボムも <code>canUseSpecial()</code> が <code>state === &quot;play&quot;</code> を条件にしているため使えません。<code>updateCommon()</code> だけが動くので、星やパーティクル、浮かぶ文字は流れ続けます。</p>
+<p><code>stateT</code> が1.6秒を超えたフレームで <code>wave++</code>、<code>makeWave()</code>、<code>setState(&quot;play&quot;)</code> を続けて実行し、次のウェーブが始まります。プレイヤーの入力は待ちません。<code>setState()</code> が状態を <code>play</code> に変えるので、この分岐が2回実行されることもありません。</p>
+<h2 id="section-3">押しっぱなしの操作を引き継ぐ</h2>
+<p>クリア表示は入力を待つ画面ではないので、入力を解除する理由がありません。解除すると、ウェーブのたびに射撃ボタンを押し直すことになります。そこでクリア時も次のウェーブの開始時も <code>releaseControls()</code> を呼ばず、<code>keys</code> と <code>shooting</code> のフラグを残します。クリア表示の間は <code>updatePlay()</code> が止まっているので何も起きず、<code>play</code> に戻った最初のフレームで <code>updatePlay()</code> がフラグを読み、すぐに射撃と移動を再開します。入力を解除するのは、ゲーム開始、ゲームオーバー、ポーズ開始、<code>pointercancel</code> のときです。</p>
+<figure class="code-block"><figcaption><span>game.html · L1042–1043</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1042-L1043">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1042–1043"><code>  // ミスからの復帰中やウェーブクリア表示中に押し始めても、そのまま連射が続くようにする(キーボードと同じ)。
+  if ((state === &quot;play&quot; || state === &quot;dying&quot; || state === &quot;clear&quot;) &amp;&amp; !paused) shooting = true;</code></pre></figure>
+<p>クリア表示中に押し始めた場合も同じです。<code>pointerdown</code> は、状態が <code>play</code>・<code>dying</code>・<code>clear</code> のどれかでポーズ中でなければ <code>shooting</code> を true にします。直前の <code>handlePress()</code> は <code>clear</code> では何もしないので、クリックがゲーム開始やリトライとして扱われることはありません。キーボードの Space・Enter は状態に関係なく <code>keys.fire</code> を立てるので、マウスでもキーボードでも同じ結果になります。ボタンを離すと <code>pointerup</code> で <code>shooting</code> が false に戻ります。</p>
+<h2 id="section-4">クリア表示と次のウェーブの予告</h2>
+<figure class="code-block"><figcaption><span>game.html · L1900–1906</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1900-L1906">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1900–1906"><code>function drawOverlay(t) {
+  if (state === &quot;clear&quot;) {
+    drawText(&quot;WAVE CLEAR!&quot;, W / 2, 290, { size: 30, color: &quot;#7dff7a&quot;, weight: 900 });
+    if (perfectBonus &gt; 0) {
+      drawText(`PERFECT! +${perfectBonus}`, W / 2, 326, { size: 17, color: &quot;#ffe066&quot; });
+    }
+    drawText(`NEXT: WAVE ${wave + 1}${(wave + 1) % 5 === 0 ? &quot; / BOSS&quot; : &quot;&quot;}`, W / 2, 356, { size: 14, color: &quot;#cfd8ff&quot; });</code></pre></figure>
+<p><code>draw()</code> はタイトル以外の画面で <code>drawGame()</code> と <code>drawHud()</code> のあとに <code>drawOverlay()</code> を呼ぶので、クリアの文字は戦場の上に重なります。<code>clear</code> の間はまだ <code>wave++</code> をしていないため、次のウェーブ番号は <code>wave + 1</code> です。<code>makeWave()</code> は <code>wave % 5 === 0</code> のウェーブをボス戦にするので、同じ式を <code>wave + 1</code> に当てはめ、次がボス戦なら「 / BOSS」を付け足します。PERFECT の行は <code>perfectBonus</code> が0より大きいときだけ表示します。</p>
+<p>PERFECT ボーナスで残機が増えた場合の「1UP!」は y=430 に出します。中央の WAVE CLEAR!・PERFECT!・ウェーブ開始の表示（y=244〜356）と重ならない高さです。</p>
+<figure class="shot"><img src="../img/clear.png" alt="ウェーブ4をノーダメージでクリアした画面。WAVE CLEAR!、PERFECT! +900、NEXT: WAVE 5 / BOSS と表示されている。" width="960" height="1280" loading="lazy"><figcaption>ウェーブ4をノーダメージでクリアした画面。次のウェーブ5はボス戦なので「/ BOSS」が付く。</figcaption></figure>
+<h2 id="section-5">次のウェーブへ持ち越すもの</h2>
+<figure class="code-block"><figcaption><span>game.html · L727–735</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L727-L735">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L727–735"><code>  pBullets = []; eBullets = []; particles = []; popups = []; rings = []; powerups = [];
+  saucer = null; saucerSoundStop(); saucerT = rand(10, 20);
+  fireT = 1.5; bannerT = 1.3; freezeT = 0;
+  waveNoDamage = true; perfectBonus = 0;
+  player.alive = true; player.inv = 1.5; player.cool = 0;
+  special.laserT = 0; special.bombT = 0;
+  flightT = 6; flightCount = 0;
+  makeBarriers();
 }</code></pre></figure>
-<p>ビーム・速度・回収には最大レベル5が設定されています。上限の候補を除いてから、配列から1つずつ取り出すため重複しません。レベルを持たない緊急整備・防衛補給・エネルギー補給が残るので、3つの恒久強化がすべて上限でも3択を作れます。</p>
-<figure class="shot"><img src="../img/upgrade.png" alt="ウェーブ間の強化画面。1・2・3キー、上下キーと決定、またはカードのクリックで選択する。" width="960" height="1280" loading="lazy"><figcaption>ウェーブ間の強化画面。1・2・3キー、上下キーと決定、またはカードのクリックで選択する。</figcaption></figure>
-<h2 id="section-3">選択を確定してからウェーブを進める</h2>
-<figure class="code-block"><figcaption><span>game.html · L912–928</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L912-L928">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L912–928"><code>function chooseUpgrade(index) {
-  if (state !== &quot;upgrade&quot; || paused || !upgradeChoices[index]) return false;
-  const key = upgradeChoices[index];
-  if (key in upgrades) upgrades[key]++;
-  else if (key === &quot;repair&quot;) {
-    if (lives &lt; 5) lives++; else addScore(1000);
-  } else if (key === &quot;supply&quot;) {
-    special.bombs = Math.min(BOMB_MAX, special.bombs + 1); active.shield = 1; addScore(300);
-  } else if (key === &quot;charge&quot;) {
-    special.charge = LASER_MAX; addScore(300);
-  }
-  releaseControls();
-  wave++; makeWave(); setState(&quot;play&quot;);
-  popup(W / 2, 350, upgradeText(key).name, UPGRADE_DEFS[key].color, 16);
-  sfx.pickup();
-  return true;
+<p><code>makeWave()</code> の前半は敵の配列と編隊の位置を作り直します（<a href="formation.html">敵の編隊とウェーブ生成</a>）。後半では弾・エフェクト・カプセル・UFO・攻撃のタイマーを初期化し、自機に1.5秒の無敵時間を与え、バリアを新品に作り直します。スコアや残機、ゲージやボム、パワーアップには触れません。</p>
+<figure class="code-block"><figcaption><span>game.html · L737–746</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L737-L746">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L737–746"><code>function startGame() {
+  score = 0; scoreShown = 0; wave = 1; lives = 3; nextLife = FIRST_LIFE;
+  newRecord = false; maxMult = 1;
+  active.wide = 0; active.rapid = 0; active.shield = 0; active.beam = 0;
+  special.charge = 0; special.bombs = 2;
+  paused = false; releaseControls();
+  resetCombo();
+  makeWave();
+  setState(&quot;play&quot;);
 }</code></pre></figure>
-<p>関数の冒頭で状態と選択の有効性を検査します。1回選ぶとすぐに <code>play</code> へ移るため、同じ入力が重なっても二重に次へ進みません。<code>makeWave()</code> は敵や弾やバリアを作り直しますが、恒久強化のレベルを初期化しません。</p>
-<div class="table-wrap" tabindex="0" role="region" aria-label="候補・効果"><table><thead><tr><th scope="col">候補</th><th scope="col">効果</th></tr></thead><tbody><tr><th scope="row">ビーム強化</th><td>通常の連結ビームの貫通数・対ボス威力、合体レーザーの幅・威力を増加</td></tr><tr><th scope="row">エンジン強化</th><td>基準の移動速度へ1レベルあたり15%を加算</td></tr><tr><th scope="row">回収フィールド</th><td>カプセルを引き寄せる範囲を拡大</td></tr><tr><th scope="row">緊急整備</th><td>残機+1。最大5なら1000点</td></tr><tr><th scope="row">防衛補給</th><td>ボム+1（最大3）、シールド、300点</td></tr><tr><th scope="row">エネルギー補給</th><td>ゲージ満タン、300点</td></tr></tbody></table></div>
-<aside class="exercise"><strong>確かめてみよう</strong><p><code>startGame()</code> と <code>makeWave()</code> の初期化項目を比較してください。新しいゲームで消える強化と、次のウェーブへ持ち越す強化が区別できます。</p>
+<p><code>startGame()</code> はそれらを初期値に戻してから <code>makeWave()</code> を呼びます。2つを比べると、ウェーブをまたいで持ち越すものと、新しいゲームで初めて消えるものが分かります。</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="値・次のウェーブ・新しいゲーム"><table><thead><tr><th scope="col">値</th><th scope="col">次のウェーブ（<code>makeWave()</code>）</th><th scope="col">新しいゲーム（<code>startGame()</code>）</th></tr></thead><tbody><tr><th scope="row">スコア・残機・次の1UP（<code>score</code>、<code>lives</code>、<code>nextLife</code>）</th><td>持ち越す</td><td>0点・3機・10000点に戻す</td></tr><tr><th scope="row">合体レーザーのゲージ・ボム（<code>special.charge</code>、<code>special.bombs</code>）</th><td>持ち越す</td><td>0%・2個に戻す</td></tr><tr><th scope="row">連結砲・シールド（<code>active.beam</code>、<code>active.shield</code>）</th><td>持ち越す</td><td>0に戻す</td></tr><tr><th scope="row">3方向弾・連射の残り時間（<code>active.wide</code>、<code>active.rapid</code>）</th><td>持ち越す。クリア表示中は減らない</td><td>0に戻す</td></tr><tr><th scope="row">コンボ（<code>combo</code>）</th><td>消さない。ただしタイマーはクリア表示中も減るので、残りは最大でも約0.6秒</td><td><code>resetCombo()</code> で消す</td></tr><tr><th scope="row">押しっぱなしの入力（<code>keys</code>、<code>shooting</code>）</th><td>持ち越す</td><td><code>releaseControls()</code> で解除</td></tr><tr><th scope="row">敵・弾・カプセル・UFO・バリア</th><td>作り直す</td><td><code>makeWave()</code> を呼ぶので同じく作り直す</td></tr></tbody></table></div>
+<aside class="exercise"><strong>確かめてみよう</strong><p>ウェーブの最後の1機を倒すとき、射撃ボタンを押したままにしてみましょう。クリア表示の1.6秒が過ぎると、押し直さなくても次のウェーブですぐに弾が出ます。そのあと <code>makeWave()</code> と <code>startGame()</code> を見比べ、上の表の各行がどの代入に当たるかを確かめてください。<code>tests/arcade-features.test.cjs</code> のテスト「wave clear advances to the next wave on its own and keeps held controls」も同じ流れを確かめています。</p>
 </aside>
 </article>
 <nav class="page-nav" aria-label="前後の項目">

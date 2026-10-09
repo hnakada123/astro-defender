@@ -49,9 +49,9 @@
 </ol>
 </div>
 <div class="toc-group">
-<p class="nav-group">戦闘と成長を広げる</p><ol>
+<p class="nav-group">戦闘の展開を広げる</p><ol>
 <li><a href="specials.html"><span>13</span>合体レーザーとボム</a></li>
-<li><a href="upgrades.html"><span>14</span>ウェーブクリアと強化3択</a></li>
+<li><a href="upgrades.html"><span>14</span>ウェーブクリアと次のウェーブ</a></li>
 <li><a href="boss.html"><span>15</span>大型戦艦のボス戦</a></li>
 <li><a href="flights.html"><span>16</span>編隊から突入する敵</a></li>
 </ol>
@@ -71,7 +71,7 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 19 日本語・英語と設定の保存</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 19 · 全23項目</p><h1>日本語・英語と設定の保存</h1><p class="lead">文言を辞書に集め、CanvasとHTMLの表示をまとめて切り替えます。</p><p class="source-ref">主な参照先：STRINGS / detectLang / T / applyLang / localStorage</p></header>
 <h2 id="section-1">保存済みの設定を優先する</h2>
-<figure class="code-block"><figcaption><span>game.html · L152–159</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L152-L159">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L152–159"><code>function detectLang() {
+<figure class="code-block"><figcaption><span>game.html · L128–135</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L128-L135">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L128–135"><code>function detectLang() {
   try {
     const saved = localStorage.getItem(LANG_KEY);
     if (Object.hasOwn(STRINGS, saved)) return saved;
@@ -81,13 +81,13 @@
 }</code></pre></figure>
 <p>言語はブラウザに保存した値が辞書に存在すればそれを採用します。保存値がなければブラウザの言語を調べ、<code>ja</code> で始まれば日本語、それ以外は英語です。ストレージが使えなくても検出処理を続けます。</p>
 <h2 id="section-2">固定文言も、値を埋め込む文言も同じ入口にする</h2>
-<figure class="code-block"><figcaption><span>game.html · L164–167</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L164-L167">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L164–167"><code>function T(key, ...args) {
+<figure class="code-block"><figcaption><span>game.html · L140–143</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L140-L143">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L140–143"><code>function T(key, ...args) {
   const v = STRINGS[lang][key];
   return typeof v === &quot;function&quot; ? v(...args) : v;
 }</code></pre></figure>
-<p><code>STRINGS</code> の値は、普通の文字列だけでなく関数にもできます。ゲージや残数を埋め込む文言は関数にし、<code>T()</code> が必要な引数を渡します。呼び出し元は文字列か関数かを意識する必要がありません。強化カードには専用の <code>upgradeText()</code> があります。</p>
+<p><code>STRINGS</code> の値は、普通の文字列だけでなく関数にもできます。ゲージや残数を埋め込む文言は関数にし、<code>T()</code> が必要な引数を渡します。呼び出し元は文字列か関数かを意識する必要がありません。操作説明の <code>hint</code> は4行分の配列で、<code>applyLang()</code> が改行タグでつないで表示します。</p>
 <h2 id="section-3">切り替えるときに更新するもの</h2>
-<figure class="code-block"><figcaption><span>game.html · L1118–1129</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1118-L1129">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1118–1129"><code>function applyLang(next) {
+<figure class="code-block"><figcaption><span>game.html · L1053–1064</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1053-L1064">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1053–1064"><code>function applyLang(next) {
   if (next &amp;&amp; next !== lang) {
     lang = next;
     try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}

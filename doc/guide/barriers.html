@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <title>崩れるバリアの実装 | ASTRO DEFENDER ソースコード解説</title>
-  <meta name="description" content="小さなマスの配列で盾を表し、弾が触れた場所と周囲を削ります。">
+  <meta name="description" content="小さなマスの配列で盾を表し、敵弾が触れた場所と周囲を削ります。">
   <link rel="stylesheet" href="../guide.css">
   <script src="../guide.js" defer></script>
   <link rel="icon" href="../../favicon.ico" sizes="16x16 32x32 48x48">
@@ -49,9 +49,9 @@
 </ol>
 </div>
 <div class="toc-group">
-<p class="nav-group">戦闘と成長を広げる</p><ol>
+<p class="nav-group">戦闘の展開を広げる</p><ol>
 <li><a href="specials.html"><span>13</span>合体レーザーとボム</a></li>
-<li><a href="upgrades.html"><span>14</span>ウェーブクリアと強化3択</a></li>
+<li><a href="upgrades.html"><span>14</span>ウェーブクリアと次のウェーブ</a></li>
 <li><a href="boss.html"><span>15</span>大型戦艦のボス戦</a></li>
 <li><a href="flights.html"><span>16</span>編隊から突入する敵</a></li>
 </ol>
@@ -69,11 +69,11 @@
 </nav></details>
 <main id="main" class="doc-main">
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 10 崩れるバリアの実装</nav>
-<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 10 · 全23項目</p><h1>崩れるバリアの実装</h1><p class="lead">小さなマスの配列で盾を表し、弾が触れた場所と周囲を削ります。</p><p class="source-ref">主な参照先：makeBarriers / barrierHit / erodeBarriers / drawBarriers</p></header>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 10 · 全23項目</p><h1>崩れるバリアの実装</h1><p class="lead">小さなマスの配列で盾を表し、敵弾が触れた場所と周囲を削ります。</p><p class="source-ref">主な参照先：makeBarriers / barrierHit / erodeBarriers / drawBarriers</p></header>
 <h2 id="section-1">1枚の画像ではなく、マスの集まり</h2>
 <figure class="shot wide"><img src="../img/barriers.png" alt="4つのバリア。小さなマスが消えることで穴が開く。" width="960" height="140" loading="lazy"><figcaption>4つのバリア。小さなマスが消えることで穴が開く。</figcaption></figure>
 <p>バリアは14列 × 10行、1マス4 pxの格子です。<code>g[r][c]</code> が1なら存在し、0なら穴です。生成時に上の角と下中央を切り抜き、描画時は値が残っているマスだけを塗ります。</p>
-<figure class="code-block"><figcaption><span>game.html · L723–739</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L723-L739">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L723–739"><code>function makeBarriers() {
+<figure class="code-block"><figcaption><span>game.html · L693–709</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L693-L709">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L693–709"><code>function makeBarriers() {
   barriers = [];
   const cols = 14, rows = 10, cell = 4, bw = cols * cell;
   for (let i = 0; i &lt; 4; i++) {
@@ -91,7 +91,7 @@
       g.push(line);
     }</code></pre></figure>
 <h2 id="section-2">画面座標をマスの番号に変える</h2>
-<figure class="code-block"><figcaption><span>game.html · L1192–1201</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1192-L1201">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1192–1201"><code>function barrierHit(rect, blast) {
+<figure class="code-block"><figcaption><span>game.html · L1119–1128</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1119-L1128">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1119–1128"><code>function barrierHit(rect, blast) {
   for (const b of barriers) {
     if (!hit(rect, b)) continue;
     const c0 = Math.max(0, Math.floor((rect.x - b.x) / b.cell));
@@ -101,10 +101,11 @@
     for (let r = r0; r &lt;= r1; r++) {
       for (let c = c0; c &lt;= c1; c++) {
         if (!b.g[r][c]) continue;</code></pre></figure>
-<p>まず弾とバリア全体の四角形を調べ、その内側で弾が重なる列・行だけを走査します。座標からバリアの原点を引き、マスの大きさで割って切り捨てると列番号になります。右端と下端の <code>0.01</code> は境界の次のマスまで含めないための調整です。</p>
+<p>まず敵弾とバリア全体の四角形を調べ、その内側で弾が重なる列・行だけを走査します。座標からバリアの原点を引き、マスの大きさで割って切り捨てると列番号になります。右端と下端の <code>0.01</code> は境界の次のマスまで含めないための調整です。</p>
 <h2 id="section-3">命中点の周囲を削る</h2>
-<p>実体のあるマスを見つけたら、<code>blast</code> の範囲を調べます。命中点と上下左右は確実に削り、周辺の一部は乱数で削るため、毎回少し違う穴になります。最初の命中を処理したら true を返し、弾側の処理がその弾を消します。</p>
-<p>編隊がバリアへ下りてきた場合は <code>erodeBarriers()</code> が重なったマスを削ります。合体レーザーとボムは <code>barrierHit()</code> を通らないため、バリアを壊しません。次のウェーブでは <code>makeBarriers()</code> で作り直します。</p>
+<p>実体のあるマスを見つけたら、<code>blast</code> の範囲を調べます。命中点と上下左右は確実に削り、周辺の一部は乱数で削るため、毎回少し違う穴になります。最初の命中を処理したら true を返し、敵弾の処理がその弾を消します。</p>
+<p><code>barrierHit()</code> を呼ぶのは敵弾の処理だけです。自機の弾は通常弾・3方向ショット・連結ビームのどれもバリアを素通りするので、自分の射撃でバリアが削れることはありません。バリアは敵弾から自機を守るための盾です。</p>
+<p>敵弾のほかに、編隊がバリアへ下りてきた場合は <code>erodeBarriers()</code> が敵と重なったマスを削ります。合体レーザーとボムは <code>barrierHit()</code> を通らないため、バリアを壊しません。次のウェーブでは <code>makeBarriers()</code> で作り直します。</p>
 <aside class="exercise"><strong>確かめてみよう</strong><p><code>cell</code> を変えると、バリアの見た目だけでなく全体の幅も変わります。マス数・マスの大きさ・全体の寸法の関係を確認してください。</p>
 </aside>
 </article>

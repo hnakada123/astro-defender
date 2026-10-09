@@ -49,9 +49,9 @@
 </ol>
 </div>
 <div class="toc-group">
-<p class="nav-group">戦闘と成長を広げる</p><ol>
+<p class="nav-group">戦闘の展開を広げる</p><ol>
 <li><a href="specials.html" aria-current="page"><span>13</span>合体レーザーとボム</a></li>
-<li><a href="upgrades.html"><span>14</span>ウェーブクリアと強化3択</a></li>
+<li><a href="upgrades.html"><span>14</span>ウェーブクリアと次のウェーブ</a></li>
 <li><a href="boss.html"><span>15</span>大型戦艦のボス戦</a></li>
 <li><a href="flights.html"><span>16</span>編隊から突入する敵</a></li>
 </ol>
@@ -71,21 +71,21 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 13 合体レーザーとボム</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 13 · 全23項目</p><h1>合体レーザーとボム</h1><p class="lead">発動条件、射線と円形範囲の判定、ゲージや弾数の消費を整理します。</p><p class="source-ref">主な参照先：canUseSpecial / activateLaser / updateLaser / activateBomb</p></header>
 <h2 id="section-1">発動できる条件を共通にする</h2>
-<figure class="code-block"><figcaption><span>game.html · L852–852</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L852-L852">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L852–852"><code>function canUseSpecial() { return state === &quot;play&quot; &amp;&amp; !paused &amp;&amp; player.alive &amp;&amp; bannerT &lt;= 0; }</code></pre></figure>
+<figure class="code-block"><figcaption><span>game.html · L822–822</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L822-L822">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L822–822"><code>function canUseSpecial() { return state === &quot;play&quot; &amp;&amp; !paused &amp;&amp; player.alive &amp;&amp; bannerT &lt;= 0; }</code></pre></figure>
 <p>プレイ中、ポーズしていない、自機が生存中、ウェーブ開始バナーが消えている、という条件を両方の必殺技で使います。そのうえでレーザーは満タンのゲージ、ボムは残数と再使用までの待ち時間を確認します。使えない場合は false を返し、資源を消費しません。</p>
 <h2 id="section-2">レーザーは縦長の四角形</h2>
-<figure class="code-block"><figcaption><span>game.html · L854–863</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L854-L863">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L854–863"><code>function activateLaser() {
+<figure class="code-block"><figcaption><span>game.html · L824–833</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L824-L833">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L824–833"><code>function activateLaser() {
   if (!canUseSpecial() || special.charge &lt; LASER_MAX || special.laserT &gt; 0) return false;
   special.charge = 0;
   special.laserT = 1.2;
-  special.laserW = 14 + active.beam * 10 + upgrades.beam * 3;
-  special.laserDps = 20 + active.beam * 8 + upgrades.beam * 4;
+  special.laserW = 14 + active.beam * 10;
+  special.laserDps = 20 + active.beam * 8;
   shake = 0.18;
   beep({ f0: 180, f1: 1800, dur: 0.7, type: &quot;sawtooth&quot;, vol: 0.1 });
   return true;
 }</code></pre></figure>
-<p>発射時にゲージを0にし、1.2秒の持続時間、幅、毎秒のダメージを決めます。連結砲の数とビーム強化レベルが、幅と威力の両方に反映されます。連結砲自体は消費しません。</p>
-<figure class="code-block"><figcaption><span>game.html · L884–896</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L884-L896">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L884–896"><code>function updateLaser(dt) {
+<p>発射時にゲージを0にし、1.2秒の持続時間、幅、毎秒のダメージを決めます。幅は <code>14 + 連結砲の数 × 10</code> px、威力は毎秒 <code>20 + 連結砲の数 × 8</code> なので、連結砲がなければ幅14 px・毎秒20、4門なら幅54 px・毎秒52になります。連結砲自体は消費しません。</p>
+<figure class="code-block"><figcaption><span>game.html · L854–866</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L854-L866">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L854–866"><code>function updateLaser(dt) {
   if (special.laserT &lt;= 0) return;
   const duration = Math.min(dt, special.laserT);
   const beam = { x: player.x - special.laserW / 2, y: 58, w: special.laserW, h: PLAYER_Y - 58 };
@@ -102,14 +102,16 @@
 <aside class="note"><strong>読み解くポイント</strong><p><code>gainCharge()</code> はレーザー発射中に何もしません。レーザー自身の撃破で再充電され、連続発射できてしまう循環を防いでいます。</p>
 </aside>
 <h2 id="section-3">ボムは敵弾全体と近くの敵に作用する</h2>
-<p>ボムは初期2個、最大3個です。使用すると敵弾をすべて消し、自機から半径240 px以内に中心がある敵を撃破します。距離は <code>Math.hypot(dx, dy)</code> で求めます。ボスの攻撃を中断し、各部位へ10ダメージを試みますが、コアの保護条件は通常どおり適用されます。</p>
-<p>ボム使用後は少なくとも1.6秒の無敵時間が付きます。レーザーもボムもバリアを削りません。ボス撃破や強化選択ではボムを補充できますが、ミスでの復帰では補充されません。</p>
+<p>ボムは初期2個、最大3個です。使用すると敵弾をすべて消し、自機から半径240 px以内に中心がある敵を撃破します。距離は <code>Math.hypot(dx, dy)</code> で求めます。ボスに対しては攻撃を中断し、各部位へ <code>BOSS_BOMB_DAMAGE</code> のダメージを試みます。</p>
+<figure class="code-block"><figcaption><span>game.html · L611–611</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L611-L611">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L611–611"><code>const BOSS_BOMB_DAMAGE = 5;  // ボムがボスの各部位に与えるダメージ</code></pre></figure>
+<p>ボム1個で各部位に5ダメージを与えます。コアの保護条件は通常どおり適用されるので、砲台が残っている間はコアへのダメージは無効です。</p>
+<p>ボム使用後は少なくとも1.6秒の無敵時間が付きます。レーザーもボムもバリアを削りません。ボムが補充されるのはボスを撃破したときの1個だけで、ウェーブクリアやミスでの復帰では補充されません。</p>
 <aside class="exercise"><strong>確かめてみよう</strong><p>画面下のボタンとキーボード入力が同じ <code>activateLaser()</code> / <code>activateBomb()</code> を呼ぶことを確認してください。入口が違っても使用条件は共通です。</p>
 </aside>
 </article>
 <nav class="page-nav" aria-label="前後の項目">
 <a href="powerups.html"><span>← 前の項目</span>12 カプセルと連結ビーム砲</a>
-<a href="upgrades.html"><span>次の項目 →</span>14 ウェーブクリアと強化3択</a>
+<a href="upgrades.html"><span>次の項目 →</span>14 ウェーブクリアと次のウェーブ</a>
 </nav></main></div>
 <footer class="site-footer"><div class="container footer-inner">
   <p>ASTRO DEFENDER · ソースコード解説<br>HTML / CSS / JavaScript · CC0 1.0</p>

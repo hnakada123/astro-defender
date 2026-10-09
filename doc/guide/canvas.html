@@ -49,9 +49,9 @@
 </ol>
 </div>
 <div class="toc-group">
-<p class="nav-group">戦闘と成長を広げる</p><ol>
+<p class="nav-group">戦闘の展開を広げる</p><ol>
 <li><a href="specials.html"><span>13</span>合体レーザーとボム</a></li>
-<li><a href="upgrades.html"><span>14</span>ウェーブクリアと強化3択</a></li>
+<li><a href="upgrades.html"><span>14</span>ウェーブクリアと次のウェーブ</a></li>
 <li><a href="boss.html"><span>15</span>大型戦艦のボス戦</a></li>
 <li><a href="flights.html"><span>16</span>編隊から突入する敵</a></li>
 </ol>
@@ -76,13 +76,13 @@ const cvs = document.getElementById(&quot;game&quot;);
 const ctx = cvs.getContext(&quot;2d&quot;, { alpha: false }); // 毎フレーム全面を塗るので不透明にし、ページとの合成コストを下げる</code></pre></figure>
 <p>Canvas の内部座標は左上が <code>(0, 0)</code>、右へ進むと x、下へ進むと y が増えます。CSS で画面を縮めても内部の480 × 640という寸法は変わりません。ゲーム中の速度や当たり判定は、この内部座標で計算します。</p>
 <h2 id="section-2">ポインターの座標を変換する</h2>
-<figure class="code-block"><figcaption><span>game.html · L1072–1075</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1072-L1075">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1072–1075"><code>function canvasX(e) {
+<figure class="code-block"><figcaption><span>game.html · L1014–1017</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1014-L1017">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1014–1017"><code>function canvasX(e) {
   const r = cvs.getBoundingClientRect();
   return ((e.clientX - r.left) * W) / r.width;
 }</code></pre></figure>
-<p>イベントの <code>clientX</code> から Canvas の表示位置を引き、表示幅に対する比率を求めて内部幅 <code>W</code> を掛けます。例えば表示幅が240 pxなら、左端から120 pxの位置は内部座標240になります。カード選択では y方向にも同じ変換を使います。</p>
+<p>イベントの <code>clientX</code> から Canvas の表示位置を引き、表示幅に対する比率を求めて内部幅 <code>W</code> を掛けます。例えば表示幅が240 pxなら、左端から120 pxの位置は内部座標240になります。ポインターの移動とクリックのどちらでもこの関数で自機の目標位置 <code>mouseX</code> を求めます。ゲームで使うのは横方向だけなので、y方向の変換はありません。</p>
 <h2 id="section-3">文字も図形として描く</h2>
-<figure class="code-block"><figcaption><span>game.html · L171–177</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L171-L177">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L171–177"><code>function drawTextOn(g, s, x, y, o = {}) {
+<figure class="code-block"><figcaption><span>game.html · L145–151</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L145-L151">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L145–151"><code>function drawTextOn(g, s, x, y, o = {}) {
   g.font = `${o.weight || 700} ${o.size || 13}px &#x27;Courier New&#x27;, ui-monospace, monospace`;
   g.fillStyle = o.color || &quot;#cfd8ff&quot;;
   g.textAlign = o.align || &quot;center&quot;;

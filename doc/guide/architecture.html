@@ -49,9 +49,9 @@
 </ol>
 </div>
 <div class="toc-group">
-<p class="nav-group">戦闘と成長を広げる</p><ol>
+<p class="nav-group">戦闘の展開を広げる</p><ol>
 <li><a href="specials.html"><span>13</span>合体レーザーとボム</a></li>
-<li><a href="upgrades.html"><span>14</span>ウェーブクリアと強化3択</a></li>
+<li><a href="upgrades.html"><span>14</span>ウェーブクリアと次のウェーブ</a></li>
 <li><a href="boss.html"><span>15</span>大型戦艦のボス戦</a></li>
 <li><a href="flights.html"><span>16</span>編隊から突入する敵</a></li>
 </ol>
@@ -87,7 +87,7 @@
 <ol class="flow"><li><strong>1. 入力</strong><small><code>keys</code> や <code>mouseX</code> を更新</small></li><li><strong>2. 計算</strong><small><code>update(dt)</code> が状態を進める</small></li><li><strong>3. 描画</strong><small><code>draw(t)</code> が画面を作る</small></li></ol>
 <p>例えば右キーを押すと、入力イベントが <code>keys.right</code> を true にします。<code>updatePlay()</code> がそれを読んで <code>player.x</code> を増やし、<code>drawGame()</code> が新しい座標に自機を描きます。入力イベントと描画の間にゲーム状態がある、と考えると読みやすくなります。</p>
 <h2 id="section-3">ソースを探すための地図</h2>
-<div class="table-wrap" tabindex="0" role="region" aria-label="まとまり・主な名前"><table><thead><tr><th scope="col">まとまり</th><th scope="col">主な名前</th></tr></thead><tbody><tr><th scope="row">基本設定・文言</th><td><code>W</code>、<code>H</code>、<code>STRINGS</code>、<code>T()</code></td></tr><tr><th scope="row">音と画像の準備</th><td><code>beep()</code>、<code>musicTick()</code>、<code>makeSprite()</code>、<code>prerender()</code></td></tr><tr><th scope="row">ゲームの状態</th><td><code>player</code>、<code>aliens</code>、<code>active</code>、<code>upgrades</code>、<code>special</code></td></tr><tr><th scope="row">ルールと入力</th><td><code>makeWave()</code>、<code>activateLaser()</code>、<code>updateBoss()</code>、イベント登録</td></tr><tr><th scope="row">フレーム処理</th><td><code>update()</code>、<code>draw()</code>、<code>frame()</code></td></tr></tbody></table></div>
+<div class="table-wrap" tabindex="0" role="region" aria-label="まとまり・主な名前"><table><thead><tr><th scope="col">まとまり</th><th scope="col">主な名前</th></tr></thead><tbody><tr><th scope="row">基本設定・文言</th><td><code>W</code>、<code>H</code>、<code>STRINGS</code>、<code>T()</code></td></tr><tr><th scope="row">音と画像の準備</th><td><code>beep()</code>、<code>musicTick()</code>、<code>makeSprite()</code>、<code>prerender()</code></td></tr><tr><th scope="row">ゲームの状態</th><td><code>player</code>、<code>aliens</code>、<code>active</code>、<code>special</code>、<code>boss</code></td></tr><tr><th scope="row">ルールと入力</th><td><code>makeWave()</code>、<code>activateLaser()</code>、<code>updateBoss()</code>、イベント登録</td></tr><tr><th scope="row">フレーム処理</th><td><code>update()</code>、<code>draw()</code>、<code>frame()</code></td></tr></tbody></table></div>
 <aside class="note"><strong>読み解くポイント</strong><p>関数はファイル末尾からさかのぼって読む方法も有効です。<code>ensureLoop()</code> → <code>frame()</code> → <code>update()</code> と <code>draw()</code> の順に呼び出し先を追うと、プログラム全体の入口をつかめます。</p>
 </aside>
 </article>

@@ -49,9 +49,9 @@
 </ol>
 </div>
 <div class="toc-group">
-<p class="nav-group">戦闘と成長を広げる</p><ol>
+<p class="nav-group">戦闘の展開を広げる</p><ol>
 <li><a href="specials.html"><span>13</span>合体レーザーとボム</a></li>
-<li><a href="upgrades.html"><span>14</span>ウェーブクリアと強化3択</a></li>
+<li><a href="upgrades.html"><span>14</span>ウェーブクリアと次のウェーブ</a></li>
 <li><a href="boss.html"><span>15</span>大型戦艦のボス戦</a></li>
 <li><a href="flights.html"><span>16</span>編隊から突入する敵</a></li>
 </ol>
@@ -71,12 +71,12 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 08 自機の移動と入力</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 08 · 全23項目</p><h1>自機の移動と入力</h1><p class="lead">ポインターとキーボードを共通の状態にまとめ、移動速度と連射を制御します。</p><p class="source-ref">主な参照先：keys / mouseX / inputMode / releaseControls / updatePlay</p></header>
 <h2 id="section-1">イベントでは操作を覚えておく</h2>
-<figure class="code-block"><figcaption><span>game.html · L1077–1079</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1077-L1079">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1077–1079"><code>function releaseControls() {
+<figure class="code-block"><figcaption><span>game.html · L1019–1021</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1019-L1021">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1019–1021"><code>function releaseControls() {
   shooting = false; keys.left = false; keys.right = false; keys.fire = false;
 }</code></pre></figure>
 <p>ポインター移動は目標位置 <code>mouseX</code>、左右キーは <code>keys.left</code> と <code>keys.right</code>、射撃は <code>shooting</code> または <code>keys.fire</code> に記録します。実際の移動と弾の生成は、毎フレームの <code>updatePlay()</code> が担当します。</p>
 <h2 id="section-2">どちらの入力も速度を通して動かす</h2>
-<figure class="code-block"><figcaption><span>game.html · L1354–1362</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1354-L1362">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1354–1362"><code>  const speed = 340 * (1 + upgrades.speed * 0.15);
+<figure class="code-block"><figcaption><span>game.html · L1280–1288</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1280-L1288">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1280–1288"><code>  const speed = 340;
   if (inputMode === &quot;mouse&quot;) {
     const target = clampPlayerX(mouseX);
     player.x = clampPlayerX(player.x + clamp(target - player.x, -speed * dt * 2, speed * dt * 2));
@@ -85,12 +85,13 @@
   player.inv = Math.max(0, player.inv - dt);
   active.wide = Math.max(0, active.wide - dt);
   active.rapid = Math.max(0, active.rapid - dt);</code></pre></figure>
-<p>キーボードは左右の真偽値を -1・0・1の向きに変換します。ポインター操作は目標へ瞬間移動するのではなく、1回に進める距離を制限して追従します。エンジン強化の速度倍率は両方に効き、ポインターの追従上限はキーボード移動の2倍です。</p>
+<p>キーボードは左右の真偽値を -1・0・1の向きに変換します。ポインター操作は目標へ瞬間移動するのではなく、1回に進める距離を制限して追従します。速度 <code>speed</code> は毎秒340 pxで固定です。ポインターで追従するときは1フレームに最大 <code>speed * dt * 2</code> まで進めるので、キーボード移動の2倍の速さまで出せます。</p>
 <p><code>clampPlayerX()</code> は画面端で位置を制限します。連結砲があるときは砲の幅も考慮しますが、敵弾と当たるのは自機本体だけです。</p>
 <h2 id="section-3">長押しの射撃はクールダウンで調整する</h2>
-<p><code>player.cool</code> が0以下で、通常弾数が上限未満なら発射します。基本間隔は0.27秒、連射強化中は0.12秒です。通常弾の上限は基本3、3方向ショットまたは連射強化中は12を条件判定に使います。連結ビームはこの通常弾数に数えません。</p>
+<p><code>player.cool</code> が0以下で、通常弾数が上限未満なら発射します。基本間隔は0.27秒、連射(R)の効果中は0.12秒です。通常弾の上限は基本3、ボス戦では5です。3方向ショットまたは連射の効果中は、ボス戦かどうかにかかわらず12になります。連結ビームはこの通常弾数に数えません。</p>
 <h2 id="section-4">入力が残る場面をなくす</h2>
-<p>キーを離す、ポインターを離す、操作がキャンセルされる、といったイベントで入力を解除します。ポーズや強化選択への遷移時も <code>releaseControls()</code> を呼びます。ウィンドウがフォーカスを失うと、プレイ中なら自動でポーズになります。</p>
+<p>キーを離す、ポインターを離す、操作がキャンセルされる、といったイベントで入力を解除します。ポーズ、ゲーム開始、ゲームオーバーのときも <code>releaseControls()</code> を呼びます。ウィンドウがフォーカスを失うと、プレイ中なら自動でポーズになります。</p>
+<p>一方、ミスとウェーブクリアでは入力を解除しません。射撃や移動のキーを押したままなら、復帰後や次のウェーブでもそのまま撃ち続け、動き続けます。ポインターも同じで、<code>play</code> に加えてミス後の <code>dying</code> とクリア表示中の <code>clear</code> で押し始めた場合も <code>shooting</code> を立てます。</p>
 <aside class="exercise"><strong>確かめてみよう</strong><p>左右キーを押したままポーズを入れてから、キーを離して再開します。移動が勝手に続かないことと、<code>setPaused()</code> の入力解除を対応させてください。</p>
 </aside>
 </article>

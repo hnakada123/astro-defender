@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
   <title>改造するときの着眼点 | ASTRO DEFENDER ソースコード解説</title>
-  <meta name="description" content="数値、絵、アイテム、強化を変更するときに、関連する処理を一緒に確認します。">
+  <meta name="description" content="数値、絵、アイテム、ボスの強さを変更するときに、関連する処理を一緒に確認します。">
   <link rel="stylesheet" href="../guide.css">
   <script src="../guide.js" defer></script>
   <link rel="icon" href="../../favicon.ico" sizes="16x16 32x32 48x48">
@@ -49,9 +49,9 @@
 </ol>
 </div>
 <div class="toc-group">
-<p class="nav-group">戦闘と成長を広げる</p><ol>
+<p class="nav-group">戦闘の展開を広げる</p><ol>
 <li><a href="specials.html"><span>13</span>合体レーザーとボム</a></li>
-<li><a href="upgrades.html"><span>14</span>ウェーブクリアと強化3択</a></li>
+<li><a href="upgrades.html"><span>14</span>ウェーブクリアと次のウェーブ</a></li>
 <li><a href="boss.html"><span>15</span>大型戦艦のボス戦</a></li>
 <li><a href="flights.html"><span>16</span>編隊から突入する敵</a></li>
 </ol>
@@ -69,14 +69,14 @@
 </nav></details>
 <main id="main" class="doc-main">
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 21 改造するときの着眼点</nav>
-<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 21 · 全23項目</p><h1>改造するときの着眼点</h1><p class="lead">数値、絵、アイテム、強化を変更するときに、関連する処理を一緒に確認します。</p><p class="source-ref">主な参照先：TYPES / PU_DEFS / UPGRADE_DEFS / startGame / tests</p></header>
+<article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 21 · 全23項目</p><h1>改造するときの着眼点</h1><p class="lead">数値、絵、アイテム、ボスの強さを変更するときに、関連する処理を一緒に確認します。</p><p class="source-ref">主な参照先：TYPES / PU_DEFS / SHOT_SPEED / makeBoss / startGame / tests</p></header>
 <h2 id="section-1">小さな変更から始める</h2>
-<div class="table-wrap" tabindex="0" role="region" aria-label="変更したいこと・主な場所・合わせて確認すること"><table><thead><tr><th scope="col">変更したいこと</th><th scope="col">主な場所</th><th scope="col">合わせて確認すること</th></tr></thead><tbody><tr><th scope="row">編隊の行・列</th><td><code>ROWS</code> / <code>COLS</code> / <code>ROW_TYPE</code></td><td>初期位置・横幅・キャッシュ用キーの整数精度</td></tr><tr><th scope="row">敵の点数・見た目</th><td><code>TYPES</code></td><td>画像寸法と当たり判定、アニメーション2コマ</td></tr><tr><th scope="row">コンボの猶予</th><td><code>COMBO_WINDOW</code></td><td>ゲームの説明文と時間切れの処理</td></tr><tr><th scope="row">残機獲得の間隔</th><td><code>LIFE_STEP</code></td><td><code>nextLife</code> の初期化と加点処理</td></tr><tr><th scope="row">ボムの範囲</th><td><code>BOMB_RADIUS</code></td><td>距離判定とリングの広がり</td></tr><tr><th scope="row">BGMのテンポ</th><td><code>BPM</code></td><td><code>MSTEP</code> に基づく長さと予約</td></tr></tbody></table></div>
+<div class="table-wrap" tabindex="0" role="region" aria-label="変更したいこと・主な場所・合わせて確認すること"><table><thead><tr><th scope="col">変更したいこと</th><th scope="col">主な場所</th><th scope="col">合わせて確認すること</th></tr></thead><tbody><tr><th scope="row">編隊の行・列</th><td><code>ROWS</code> / <code>COLS</code> / <code>ROW_TYPE</code></td><td>初期位置・横幅・キャッシュ用キーの整数精度</td></tr><tr><th scope="row">敵の点数・見た目</th><td><code>TYPES</code></td><td>画像寸法と当たり判定、アニメーション2コマ</td></tr><tr><th scope="row">コンボの猶予</th><td><code>COMBO_WINDOW</code></td><td>ゲームの説明文と時間切れの処理</td></tr><tr><th scope="row">残機獲得の得点</th><td><code>FIRST_LIFE</code> / <code>LIFE_STEP</code></td><td><code>nextLife</code> の初期化と加点処理</td></tr><tr><th scope="row">自機の弾の速さ</th><td><code>SHOT_SPEED</code> / <code>SHOT_H</code></td><td>1フレーム（最大0.05秒）に進む距離と、敵の高さ・弾の長さの関係（定数のコメントと、すり抜けを確かめるテスト）</td></tr><tr><th scope="row">ミスで失う連結砲</th><td><code>BEAM_LOSS</code></td><td>ミス後に残る門数と、テストの期待値</td></tr><tr><th scope="row">ボムの範囲</th><td><code>BOMB_RADIUS</code></td><td>距離判定とリングの広がり</td></tr><tr><th scope="row">BGMのテンポ</th><td><code>BPM</code></td><td><code>MSTEP</code> に基づく長さと予約</td></tr></tbody></table></div>
 <h2 id="section-2">パワーアップを追加するなら</h2>
 <ul><li><code>PU_DEFS</code> に表示と効果の定義を追加する。</li><li><code>active</code> に状態を持ち、<code>applyPU()</code> で取得時の値を設定する。</li><li>時間制限があるなら <code>updatePlay()</code> で残り時間を減らす。</li><li>射撃や移動など、実際に効果を使う処理へ反映する。</li><li>HUD・文言・新規ゲーム・ミス・次ウェーブでどう扱うかを決める。</li></ul>
 <p>定義表へ項目を足すだけでは、新しいルールの全体は完成しません。「取得していること」と「それが何を変えるか」は別の処理だからです。既存の <code>wide</code> や <code>beam</code> を入口から出口まで追うと、変更箇所を整理できます。</p>
-<h2 id="section-3">ウェーブ間の強化を追加するなら</h2>
-<p><code>UPGRADE_DEFS</code> の候補、<code>upgrades</code> の保存状態、<code>chooseUpgrade()</code> の効果、日本語・英語のカード文言をそろえます。上限に達した候補を除外しても3択を用意できるか、ミスと再スタートで意図どおり保持・初期化されるかを確認します。</p>
+<h2 id="section-3">ボス戦の手応えを変えるなら</h2>
+<p><code>makeBoss()</code> の耐久値（砲台 <code>7 + level * 2</code>、コア <code>20 + level * 8</code>）、左右に揺れる速さ <code>BOSS_SWAY</code>、ボムが各部位に与えるダメージ <code>BOSS_BOMB_DAMAGE</code>、ボス戦での通常弾の上限（<code>maxB</code> の5）をまとめて見直します。耐久値を上げると倒すまでの時間が延び、ボムの価値も変わります。ボムの後の残り耐久値やボス戦の弾数は数値でテストしているため、期待値も合わせて更新します。</p>
 <h2 id="section-4">変更を確かめる順番</h2>
 <ol class="flow"><li><strong>1. 小さく変更</strong><small>まず定数や関数を1つ変える</small></li><li><strong>2. ルールを確認</strong><small><code>node --test tests/*.test.cjs</code></small></li><li><strong>3. 画面で確認</strong><small>入力・表示・音・画面端を試す</small></li></ol>
 <p>表示の変更は実際のブラウザで、ルールの変更は再現できるテストで確認します。配布する際にバージョンを上げる場合は、<code>VERSION</code>、README、CHANGELOGの説明も合わせて更新します。</p>

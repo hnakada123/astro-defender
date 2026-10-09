@@ -49,9 +49,9 @@
 </ol>
 </div>
 <div class="toc-group">
-<p class="nav-group">戦闘と成長を広げる</p><ol>
+<p class="nav-group">戦闘の展開を広げる</p><ol>
 <li><a href="specials.html"><span>13</span>合体レーザーとボム</a></li>
-<li><a href="upgrades.html"><span>14</span>ウェーブクリアと強化3択</a></li>
+<li><a href="upgrades.html"><span>14</span>ウェーブクリアと次のウェーブ</a></li>
 <li><a href="boss.html"><span>15</span>大型戦艦のボス戦</a></li>
 <li><a href="flights.html"><span>16</span>編隊から突入する敵</a></li>
 </ol>
@@ -71,11 +71,11 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 07 敵の編隊とウェーブ生成</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 07 · 全23項目</p><h1>敵の編隊とウェーブ生成</h1><p class="lead">50体の相対位置、折り返し、残り数に応じた速度、射撃する敵の選び方を追います。</p><p class="source-ref">主な参照先：makeWave / form / formBounds / formSpeed</p></header>
 <h2 id="section-1">行と列に共通の原点を足す</h2>
-<figure class="code-block"><figcaption><span>game.html · L620–622</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L620-L622">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L620–622"><code>const ROWS = 5, COLS = 10, CELL_W = 36, CELL_H = 30, DROP = 14;
+<figure class="code-block"><figcaption><span>game.html · L594–596</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L594-L596">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L594–596"><code>const ROWS = 5, COLS = 10, CELL_W = 36, CELL_H = 30, DROP = 14;
 const ROW_TYPE = [&quot;a&quot;, &quot;b&quot;, &quot;b&quot;, &quot;c&quot;, &quot;c&quot;];
 const TOTAL = ROWS * COLS;</code></pre></figure>
 <p>通常ウェーブの編隊は5行 × 10列です。敵は行 <code>r</code> と列 <code>c</code> を持ち、共通の原点 <code>form.ox</code>・<code>form.oy</code> を動かすと全体が移動します。敵1体ごとに速度を持たせる必要はありません。5の倍数のウェーブでは編隊の代わりにボスを生成します。</p>
-<figure class="code-block"><figcaption><span>game.html · L744–756</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L744-L756">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L744–756"><code>function makeWave() {
+<figure class="code-block"><figcaption><span>game.html · L714–726</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L714-L726">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L714–726"><code>function makeWave() {
   aliens = [];
   boss = null;
   if (wave % 5 === 0) makeBoss();
@@ -91,7 +91,7 @@ const TOTAL = ROWS * COLS;</code></pre></figure>
 <h2 id="section-2">生きている敵の端で折り返す</h2>
 <p><code>formBounds()</code> は生存中で編隊に残っている敵だけの左右端を調べます。画面の端から8 pxの境界を越えたら超過分を戻し、向きを反転して <code>DROP</code> だけ下へ進めます。空になった列を除いて幅を測るため、敵が減ると移動できる範囲が広がります。</p>
 <h2 id="section-3">残り数で難しさを変える</h2>
-<figure class="code-block"><figcaption><span>game.html · L1235–1241</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1235-L1241">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1235–1241"><code>function formSpeed() {
+<figure class="code-block"><figcaption><span>game.html · L1162–1168</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1162-L1168">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1162–1168"><code>function formSpeed() {
   const r = aliveN / TOTAL;
   let s = 16 + (wave - 1) * 7 + 130 * Math.pow(1 - r, 1.7);
   if (aliveN &lt;= 3) s += 55;

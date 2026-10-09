@@ -49,9 +49,9 @@
 </ol>
 </div>
 <div class="toc-group">
-<p class="nav-group">戦闘と成長を広げる</p><ol>
+<p class="nav-group">戦闘の展開を広げる</p><ol>
 <li><a href="specials.html"><span>13</span>合体レーザーとボム</a></li>
-<li><a href="upgrades.html"><span>14</span>ウェーブクリアと強化3択</a></li>
+<li><a href="upgrades.html"><span>14</span>ウェーブクリアと次のウェーブ</a></li>
 <li><a href="boss.html"><span>15</span>大型戦艦のボス戦</a></li>
 <li><a href="flights.html"><span>16</span>編隊から突入する敵</a></li>
 </ol>
@@ -71,7 +71,7 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 17 演出と描画の高速化</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 17 · 全23項目</p><h1>演出と描画の高速化</h1><p class="lead">パーティクル、加算合成、ヒットストップと、画像を再利用する工夫を整理します。</p><p class="source-ref">主な参照先：spawnBurst / updateCommon / removeAt / refreshFormLayer / refreshSky</p></header>
 <h2 id="section-1">短い寿命のオブジェクトで演出する</h2>
-<figure class="code-block"><figcaption><span>game.html · L1052–1060</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1052-L1060">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1052–1060"><code>function spawnBurst(x, y, color, n = 12, sp = 110) {
+<figure class="code-block"><figcaption><span>game.html · L994–1002</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L994-L1002">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L994–1002"><code>function spawnBurst(x, y, color, n = 12, sp = 110) {
   for (let i = 0; i &lt; n; i++) {
     const a = Math.random() * Math.PI * 2, v = sp * rand(0.35, 1);
     particles.push({
@@ -82,7 +82,7 @@
 }</code></pre></figure>
 <p>爆発はランダムな方向へ進む粒子の集まりです。<code>cos</code> と <code>sin</code> で角度から横・縦の速度を作り、毎フレーム座標を進め、<code>life</code> を減らします。衝撃波は半径が増える <code>rings</code>、得点表示は上へ浮く <code>popups</code> として管理します。</p>
 <h2 id="section-2">描く順序が不要なものは素早く削除する</h2>
-<figure class="code-block"><figcaption><span>game.html · L1313–1316</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1313-L1316">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1313–1316"><code>function removeAt(arr, i) {
+<figure class="code-block"><figcaption><span>game.html · L1239–1242</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1239-L1242">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1239–1242"><code>function removeAt(arr, i) {
   const last = arr.pop();
   if (i &lt; arr.length) arr[i] = last;
 }</code></pre></figure>

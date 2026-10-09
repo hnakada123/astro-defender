@@ -55,14 +55,14 @@
   <nav class="category-nav" aria-label="解説の分野">
 <a href="#basics">ゲームの土台を知る</a>
 <a href="#gameplay">戦闘の仕組みを追う</a>
-<a href="#advanced">戦闘と成長を広げる</a>
+<a href="#advanced">戦闘の展開を広げる</a>
 <a href="#finishing">演出・品質・改造を学ぶ</a>
 </nav>
 <section class="chapter-group" id="basics" aria-labelledby="basics-title"><div class="group-heading"><span>01 / 7 ITEMS</span><h3 id="basics-title">ゲームの土台を知る</h3></div><p>ファイルの構成から、時間・状態・描画・当たり判定まで。</p><div class="chapter-grid">
 <a class="chapter-card" id="s00" href="guide/getting-started.html"><span class="chapter-number">00</span><h4>この解説の読み方</h4><p>ゲームを動かし、画面の変化とコードを結び付けるところから始めます。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
 <a class="chapter-card" id="s01" href="guide/architecture.html"><span class="chapter-number">01</span><h4>1ファイルの全体構成</h4><p>HTML・CSS・JavaScript の役割と、入力から描画までのデータの流れを整理します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
 <a class="chapter-card" id="s02" href="guide/game-loop.html"><span class="chapter-number">02</span><h4>ゲームループと時間</h4><p>経過時間 dt、フレームの予約、ポーズ中の停止処理を読み解きます。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s03" href="guide/state-machine.html"><span class="chapter-number">03</span><h4>画面と状態遷移</h4><p>タイトル、プレイ、ミス、クリア、強化選択、ゲームオーバーを状態で管理します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
+<a class="chapter-card" id="s03" href="guide/state-machine.html"><span class="chapter-number">03</span><h4>画面と状態遷移</h4><p>タイトル、プレイ、ミス、クリア、ゲームオーバーを状態で管理します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
 <a class="chapter-card" id="s04" href="guide/canvas.html"><span class="chapter-number">04</span><h4>Canvas の座標と描画</h4><p>内部座標と表示サイズの違い、文字描画、重ねる順序を確認します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
 <a class="chapter-card" id="s05" href="guide/sprites.html"><span class="chapter-number">05</span><h4>文字列からドット絵を作る</h4><p>X と . の配列を画像に変換し、2コマのスプライトとして再利用します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
 <a class="chapter-card" id="s06" href="guide/collision.html"><span class="chapter-number">06</span><h4>四角形の当たり判定</h4><p>4つの不等式で重なりを調べ、絵とは別に衝突範囲を定義します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
@@ -71,13 +71,13 @@
 <a class="chapter-card" id="s07" href="guide/formation.html"><span class="chapter-number">07</span><h4>敵の編隊とウェーブ生成</h4><p>50体の相対位置、折り返し、残り数に応じた速度、射撃する敵の選び方を追います。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
 <a class="chapter-card" id="s08" href="guide/input.html"><span class="chapter-number">08</span><h4>自機の移動と入力</h4><p>ポインターとキーボードを共通の状態にまとめ、移動速度と連射を制御します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
 <a class="chapter-card" id="s09" href="guide/bullets.html"><span class="chapter-number">09</span><h4>弾の移動と衝突の順序</h4><p>配列の逆順走査、弾が消える条件、シールドとミスの分岐を説明します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s10" href="guide/barriers.html"><span class="chapter-number">10</span><h4>崩れるバリアの実装</h4><p>小さなマスの配列で盾を表し、弾が触れた場所と周囲を削ります。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
+<a class="chapter-card" id="s10" href="guide/barriers.html"><span class="chapter-number">10</span><h4>崩れるバリアの実装</h4><p>小さなマスの配列で盾を表し、敵弾が触れた場所と周囲を削ります。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
 <a class="chapter-card" id="s11" href="guide/score.html"><span class="chapter-number">11</span><h4>スコア・コンボ・残機</h4><p>撃破時の加点、2.2秒のコンボ猶予、残機の増加とハイスコア保存を追います。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s12" href="guide/powerups.html"><span class="chapter-number">12</span><h4>カプセルと連結ビーム砲</h4><p>時間制限のある強化と、シールド・連結砲のような回数で管理する効果を分けます。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
+<a class="chapter-card" id="s12" href="guide/powerups.html"><span class="chapter-number">12</span><h4>カプセルと連結ビーム砲</h4><p>時間制限のあるパワーアップと、シールド・連結砲のように数で管理する効果を分けます。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
 </div></section>
-<section class="chapter-group" id="advanced" aria-labelledby="advanced-title"><div class="group-heading"><span>03 / 4 ITEMS</span><h3 id="advanced-title">戦闘と成長を広げる</h3></div><p>必殺技、ウェーブ間の選択、ボスと突入する敵を読み解きます。</p><div class="chapter-grid">
+<section class="chapter-group" id="advanced" aria-labelledby="advanced-title"><div class="group-heading"><span>03 / 4 ITEMS</span><h3 id="advanced-title">戦闘の展開を広げる</h3></div><p>必殺技、ウェーブの切り替え、ボスと突入する敵を読み解きます。</p><div class="chapter-grid">
 <a class="chapter-card" id="s13" href="guide/specials.html"><span class="chapter-number">13</span><h4>合体レーザーとボム</h4><p>発動条件、射線と円形範囲の判定、ゲージや弾数の消費を整理します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s14" href="guide/upgrades.html"><span class="chapter-number">14</span><h4>ウェーブクリアと強化3択</h4><p>戦闘を止めて候補を選ばせ、強化を保ったまま次のウェーブを作ります。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
+<a class="chapter-card" id="s14" href="guide/upgrades.html"><span class="chapter-number">14</span><h4>ウェーブクリアと次のウェーブ</h4><p>敵を全滅させたら短いクリア表示のあと、操作を止めずに次のウェーブへ進みます。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
 <a class="chapter-card" id="s15" href="guide/boss.html"><span class="chapter-number">15</span><h4>大型戦艦のボス戦</h4><p>部位ごとの耐久値、コアの保護、予告位置を固定する攻撃を実装します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
 <a class="chapter-card" id="s16" href="guide/flights.html"><span class="chapter-number">16</span><h4>編隊から突入する敵</h4><p>敵に一時的な飛行状態を追加し、急降下・ジグザグ・横方向の突入を切り替えます。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
 </div></section>
@@ -86,7 +86,7 @@
 <a class="chapter-card" id="s18" href="guide/audio.html"><span class="chapter-number">18</span><h4>効果音と BGM の合成</h4><p>発振器・音量・ノイズから音を作り、BGMを少し先の時刻へ予約します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
 <a class="chapter-card" id="s19" href="guide/localization.html"><span class="chapter-number">19</span><h4>日本語・英語と設定の保存</h4><p>文言を辞書に集め、CanvasとHTMLの表示をまとめて切り替えます。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
 <a class="chapter-card" id="s20" href="guide/tests.html"><span class="chapter-number">20</span><h4>ゲームロジックのテスト</h4><p>ブラウザ部分を置き換え、本番のJavaScriptに対してルールを検証します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
-<a class="chapter-card" id="s21" href="guide/modding.html"><span class="chapter-number">21</span><h4>改造するときの着眼点</h4><p>数値、絵、アイテム、強化を変更するときに、関連する処理を一緒に確認します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
+<a class="chapter-card" id="s21" href="guide/modding.html"><span class="chapter-number">21</span><h4>改造するときの着眼点</h4><p>数値、絵、アイテム、ボスの強さを変更するときに、関連する処理を一緒に確認します。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
 <a class="chapter-card" id="s22" href="guide/glossary.html"><span class="chapter-number">22</span><h4>用語集と読み返し先</h4><p>解説に登場する用語を、実際の変数・関数・関連項目と結び付けます。</p><span class="card-link">解説を読む <span aria-hidden="true">→</span></span></a>
 </div></section>
 </section>

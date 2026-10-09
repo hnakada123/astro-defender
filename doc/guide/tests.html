@@ -49,9 +49,9 @@
 </ol>
 </div>
 <div class="toc-group">
-<p class="nav-group">戦闘と成長を広げる</p><ol>
+<p class="nav-group">戦闘の展開を広げる</p><ol>
 <li><a href="specials.html"><span>13</span>合体レーザーとボム</a></li>
-<li><a href="upgrades.html"><span>14</span>ウェーブクリアと強化3択</a></li>
+<li><a href="upgrades.html"><span>14</span>ウェーブクリアと次のウェーブ</a></li>
 <li><a href="boss.html"><span>15</span>大型戦艦のボス戦</a></li>
 <li><a href="flights.html"><span>16</span>編隊から突入する敵</a></li>
 </ol>
@@ -73,7 +73,7 @@
 <h2 id="section-1">本体からスクリプトを取り出して実行する</h2>
 <figure class="code-block"><figcaption><span>tests/helpers/game.cjs · L5–6</span><a href="https://github.com/hnakada123/astro-defender/blob/main/tests/helpers/game.cjs#L5-L6">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="tests/helpers/game.cjs · L5–6"><code>const html = readFileSync(join(__dirname, &quot;..&quot;, &quot;..&quot;, &quot;game.html&quot;), &quot;utf8&quot;);
 const source = html.match(/&lt;script&gt;([\s\S]*?)&lt;\/script&gt;/)[1];</code></pre></figure>
-<p>テスト用にゲームを別実装するのではなく、<code>game.html</code> の script 内を読み込んで Node.js の <code>vm</code> で実行します。Canvas、DOM、音声、時刻、フレームの予約などは簡単な代用品へ置き換えます。ゲームのルールを担う関数は本番のものです。</p>
+<p>テスト用にゲームを別実装するのではなく、<code>game.html</code> の script 内を読み込んで Node.js の <code>vm</code> で実行します。Canvas、DOM、音声、時刻、フレームの予約などは簡単な代用品へ置き換えます。ゲームのルールを担う関数は本番のものです。読み込んだ後は <code>startGame()</code> を呼び、敵の射撃・ボーナス円盤・突入のタイマーを <code>Infinity</code> にして、偶然の出来事がテストに割り込まないようにします。Bカプセルを指定した回数だけ拾わせる <code>collectBeam(times = 1)</code> もここで定義しており、<code>collectBeam(4)</code> で連結砲を4門そろえられます。</p>
 <h2 id="section-2">状態を用意し、操作して、結果を調べる</h2>
 <figure class="code-block"><figcaption><span>tests/arcade-features.test.cjs · L50–65</span><a href="https://github.com/hnakada123/astro-defender/blob/main/tests/arcade-features.test.cjs#L50-L65">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="tests/arcade-features.test.cjs · L50–65"><code>test(&quot;a bomb clears bullets, destroys nearby enemies, preserves distant enemies and cover, and grants invulnerability&quot;, () =&gt; {
   const run = game();
@@ -94,10 +94,11 @@ const source = html.match(/&lt;script&gt;([\s\S]*?)&lt;\/script&gt;/)[1];</code>
 <p>このテストは近い敵・遠い敵・敵弾・バリアを用意し、ボムを使った結果を調べています。近い敵だけが消え、敵弾が空になり、バリアが保持され、無敵時間が付くことを検証します。直後の再使用が拒否されることまで含めて仕様を表しています。</p>
 <h2 id="section-3">実行する</h2>
 <figure class="code-block"><figcaption>リポジトリのルートで実行</figcaption><pre tabindex="0"><code>node --test tests/*.test.cjs</code></pre></figure>
-<div class="table-wrap" tabindex="0" role="region" aria-label="ファイル・主な対象"><table><thead><tr><th scope="col">ファイル</th><th scope="col">主な対象</th></tr></thead><tbody><tr><th scope="row"><code>tests/beam-link.test.cjs</code></th><td>連結砲の取得・射撃・併用・持ち越し・画面端・ミス</td></tr><tr><th scope="row"><code>tests/arcade-features.test.cjs</code></th><td>レーザー・ボム・ボス・強化選択・突入・入力・連続ウェーブ</td></tr></tbody></table></div>
+<p>2つのファイルに合計31個のテストがあります。</p>
+<div class="table-wrap" tabindex="0" role="region" aria-label="ファイル・主な対象"><table><thead><tr><th scope="col">ファイル</th><th scope="col">主な対象</th></tr></thead><tbody><tr><th scope="row"><code>tests/beam-link.test.cjs</code></th><td>連結砲の取得（1個で1門）・射撃・併用・バリアの素通り・持ち越し・画面端・ミスで2門減（9個）</td></tr><tr><th scope="row"><code>tests/arcade-features.test.cjs</code></th><td>レーザー・ボム・ボス・ウェーブクリア後の自動進行・突入・入力・1UP・弾のすり抜け防止・連続ウェーブ（22個）</td></tr></tbody></table></div>
 <h2 id="section-4">このテストでは分からないこと</h2>
-<p>Canvasの描画命令と音声出力を置き換えているため、実際の絵の崩れ、文字の見切れ、音の聴こえ方、描画速度は確認できません。ロジックのテストに加え、ブラウザで通常プレイ・強化選択・ボス戦・ポーズを確認します。</p>
-<aside class="exercise"><strong>確かめてみよう</strong><p>強化の上限や無敵時間を変更するときは、正常に使える場合に加え、上限到達時・資源不足・ポーズ中の結果も確認してください。</p>
+<p>Canvasの描画命令と音声出力を置き換えているため、実際の絵の崩れ、文字の見切れ、音の聴こえ方、描画速度は確認できません。ロジックのテストに加え、ブラウザで通常プレイ・ウェーブの切り替わり・ボス戦・ポーズを確認します。</p>
+<aside class="exercise"><strong>確かめてみよう</strong><p>連結砲やボムの上限、無敵時間を変更するときは、正常に使える場合に加え、上限到達時・資源不足・ポーズ中の結果も確認してください。</p>
 </aside>
 </article>
 <nav class="page-nav" aria-label="前後の項目">
