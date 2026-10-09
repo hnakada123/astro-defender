@@ -75,7 +75,7 @@
 <p class="hint" id="hint"></p>
 <p class="site-link">
   <a href="https://hnakada123.github.io/astro-defender/">hnakada123.github.io/astro-defender</a>
-  <a id="shareLink" href="https://x.com/intent/post?url=https%3A%2F%2Fhnakada123.github.io%2Fastro-defender%2Findex.html" target="_blank" rel="noopener noreferrer"><svg role="img" aria-label="X" viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span id="shareLabel">でポスト</span></a>
+  <a id="shareLink" href="https://x.com/intent/post?url=https%3A%2F%2Fhnakada123.github.io%2Fastro-defender%2Fgame.html" target="_blank" rel="noopener noreferrer"><svg role="img" aria-label="X" viewBox="0 0 24 24" width="12" height="12"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span id="shareLabel">でポスト</span></a>
 </p>
 
 <script>
@@ -162,11 +162,12 @@ const STRINGS = {
   },
 };
 
-// X への投稿リンクの文言と共有する URL。カード画像を出せる紹介ページを、表示中の言語で共有する。
+// X への投稿リンクで共有するゲーム本体の URL と、言語ごとの文言。
 // 画面に描く文言ではない(ドット文字の字形がない文字も使う)ので STRINGS とは分けておく。
+const SHARE_URL = "https://hnakada123.github.io/astro-defender/game.html";
 const SHARE = {
-  ja: { label: "でポスト", text: "ブラウザで遊べるネオンアーケードシューティング「ASTRO DEFENDER」", url: "https://hnakada123.github.io/astro-defender/index.html" },
-  en: { label: "Post", text: "ASTRO DEFENDER — a neon arcade shooter you can play in your browser", url: "https://hnakada123.github.io/astro-defender/doc/index.en.html" },
+  ja: { label: "でポスト", text: "ブラウザで遊べるネオンアーケードシューティング「ASTRO DEFENDER」" },
+  en: { label: "Post", text: "ASTRO DEFENDER — a neon arcade shooter you can play in your browser" },
 };
 
 function detectLang() {
@@ -1329,7 +1330,7 @@ function applyLang(next) {
   const shareEl = document.getElementById("shareLink");
   if (shareEl) {
     const share = SHARE[lang];
-    shareEl.href = `https://x.com/intent/post?text=${encodeURIComponent(share.text)}&url=${encodeURIComponent(share.url)}`;
+    shareEl.href = `https://x.com/intent/post?text=${encodeURIComponent(share.text)}&url=${encodeURIComponent(SHARE_URL)}`;
     document.getElementById("shareLabel").textContent = share.label;
   }
   for (const code in langButtons) langButtons[code].setAttribute("aria-pressed", String(code === lang));

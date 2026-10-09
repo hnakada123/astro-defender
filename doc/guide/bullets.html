@@ -71,7 +71,7 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 09 弾の移動と衝突の順序</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 09 · 全23項目</p><h1>弾の移動と衝突の順序</h1><p class="lead">配列の逆順走査、弾が消える条件、シールドとミスの分岐を説明します。</p><p class="source-ref">主な参照先：pBullets / eBullets / damagePlayer / hitPlayer</p></header>
 <h2 id="section-1">弾は位置と速度を持つオブジェクト</h2>
-<figure class="code-block"><figcaption><span>game.html · L1721–1728</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1721-L1728">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1721–1728"><code>  // --- 自弾 ---
+<figure class="code-block"><figcaption><span>game.html · L1722–1729</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1722-L1729">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1722–1729"><code>  // --- 自弾 ---
   for (let i = pBullets.length - 1; i &gt;= 0; i--) {
     const p = pBullets[i];
     p.y -= SHOT_SPEED * dt;
@@ -87,7 +87,7 @@
 <h2 id="section-3">削除しながら調べるなら後ろから</h2>
 <p><code>splice(i, 1)</code> は要素を消し、後ろの要素を前へ詰めます。前から進むループだと、詰まってきた要素を飛ばすことがあります。末尾から先頭へ調べれば、まだ調べていない要素の位置は変わりません。</p>
 <h2 id="section-4">シールドと残機減少を分ける</h2>
-<figure class="code-block"><figcaption><span>game.html · L1534–1546</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1534-L1546">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1534–1546"><code>function damagePlayer() {
+<figure class="code-block"><figcaption><span>game.html · L1535–1547</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L1535-L1547">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L1535–1547"><code>function damagePlayer() {
   waveNoDamage = false;
   resetCombo();
   if (active.shield &gt; 0) {

@@ -71,7 +71,7 @@
 <nav class="breadcrumb" aria-label="現在の位置"><a href="../source.html">ソースコード解説</a> / 02 ゲームループと時間</nav>
 <article class="article"><header class="article-header"><p class="eyebrow">CHAPTER 02 · 全23項目</p><h1>ゲームループと時間</h1><p class="lead">経過時間 dt、フレームの予約、速い画面での描画の間引き、ポーズ中の停止処理を読み解きます。</p><p class="source-ref">主な参照先：frame / ensureLoop / update / redrawIfPaused</p></header>
 <h2 id="section-1">次のフレームを自分で予約する</h2>
-<figure class="code-block"><figcaption><span>game.html · L2293–2318</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L2293-L2318">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L2293–2318"><code>// 描画の目標間隔。プレイ中は 60fps、動きの少ないタイトルとゲームオーバーは 30fps に抑える。
+<figure class="code-block"><figcaption><span>game.html · L2294–2319</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L2294-L2319">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L2294–2319"><code>// 描画の目標間隔。プレイ中は 60fps、動きの少ないタイトルとゲームオーバーは 30fps に抑える。
 // 120Hz・144Hz などの画面では requestAnimationFrame がもっと頻繁に呼ばれるので、間引いて更新と描画の回数を減らす
 // (動きは経過時間 dt で進めるので、間引いても速さは変わらない)。
 const PLAY_FRAME_MS = 1000 / 60, IDLE_FRAME_MS = 1000 / 30;
@@ -108,7 +108,7 @@ function frame(now) {
 <h2 id="section-3">速度に経過秒数を掛ける</h2>
 <p><code>now</code> はミリ秒単位なので、前回との差を1000で割って秒に直します。速度が毎秒120 pxなら移動量は <code>120 * dt</code>。30 fpsでも60 fpsでも、同じ1秒ならほぼ同じ距離を進みます。ただし本体は <code>dt</code> を最大0.05秒に制限し、長い停止後に大きく飛ばないようにしています。前の節の間引きで描画が毎秒60回になっても72回になっても、自機や敵の速さが変わらないのはこのためです。</p>
 <section class="lab" data-lab="speed"><h3>計算してみる：フレーム数と移動量</h3><p>毎秒120 pxで進む場合の、1回あたりの移動量を比較します。</p><label for="fps">1秒あたりのフレーム数</label><input id="fps" type="range" min="20" max="144" value="60"><output for="fps" aria-live="polite"></output><noscript>60 fpsなら1回で2 px、30 fpsなら1回で4 px進みます。操作にはJavaScriptが必要です。</noscript></section><h2 id="section-4">ポーズではループの予約も止める</h2>
-<figure class="code-block"><figcaption><span>game.html · L2320–2324</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L2320-L2324">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L2320–2324"><code>function ensureLoop() {
+<figure class="code-block"><figcaption><span>game.html · L2321–2325</span><a href="https://github.com/hnakada123/astro-defender/blob/main/game.html#L2321-L2325">ソースを見る ↗</a></figcaption><pre tabindex="0" aria-label="game.html · L2321–2325"><code>function ensureLoop() {
   if (rafId || paused) return;
   last = performance.now();
   rafId = requestAnimationFrame(frame);
