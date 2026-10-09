@@ -1,3 +1,5 @@
+<img src="assets/icons/icon-192.png" width="128" height="128" alt="ASTRO DEFENDER のアイコン">
+
 # ASTRO DEFENDER — NEON ARCADE EDITION
 
 *[English version / 英語版はこちら](README.en.md)*
