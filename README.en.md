@@ -1,6 +1,6 @@
 <p align="center"><img src="assets/icons/icon-192.png" width="128" height="128" alt="ASTRO DEFENDER icon"></p>
 
-# ASTRO DEFENDER — NEON ARCADE EDITION
+<h1 align="center">ASTRO DEFENDER — NEON ARCADE EDITION</h1>
 
 *[日本語版はこちら / Japanese version](README.md)*
 
