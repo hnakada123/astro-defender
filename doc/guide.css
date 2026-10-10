@@ -75,8 +75,8 @@ button { cursor: pointer; }
 .header-links { display: flex; flex-wrap: wrap; gap: 4px 22px; align-items: center; font-size: 14px; }
 .header-links a { color: var(--text-2); text-decoration: none; padding: 6px 0; }
 .header-links a:hover { color: var(--cyan); }
-.header-links a[href$="game.html"] { order: 1; display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; background: var(--yellow); color: #161200; font-weight: 700; border-radius: 8px; }
-.header-links a[href$="game.html"]:hover { background: #fff0a8; color: #161200; }
+.header-links a:is([href$="game.html"], [href$="game.html?lang=en"]) { order: 1; display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; background: var(--yellow); color: #161200; font-weight: 700; border-radius: 8px; }
+.header-links a:is([href$="game.html"], [href$="game.html?lang=en"]):hover { background: #fff0a8; color: #161200; }
 .container { max-width: 1132px; margin: auto; padding: 0 24px; }
 
 .hero, .game-hero {

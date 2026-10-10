@@ -141,7 +141,7 @@ The English guide puts all 23 chapters on one page; the Japanese guide lists the
 | `promo/` | Trailer videos (v1.0.0, English and Japanese) |
 | `tests/` | Tests for the game logic |
 
-When you change the CSS or JavaScript of the guide pages, also bump the `?v=20261009-4` number that each page adds to those files,
+When you change the CSS or JavaScript of the guide pages, also bump the `?v=date-number` tag (for example `?v=20261010-1`) that each page adds to those files,
 so browsers don't pair a new page with an old cached file.
 
 ## Tests

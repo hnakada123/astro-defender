@@ -5,6 +5,16 @@
 This project follows [Semantic Versioning](https://semver.org/).
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Changed
+
+- Links to the game from the English game guide and the English source code guide now open `game.html?lang=en`, so the game appears in English whatever the browser language or the saved choice (the saved choice is left alone)
+
+### Fixed
+
+- Posting the English game guide on X showed no card image, because X had read the page before it had card tags. The post link now passes `doc/index.en.html?lang=en`, which points to the same page
+
 ## [3.1.0] - 2026-10-09
 
 This release draws the on-screen letters and digits in a dot font and lowers browser load further. The game guide and source code guide now share the game’s look, and links for posting on X arrive with share card images. How the game plays is unchanged and the release adds features, so the minor version goes up.
